@@ -1,0 +1,227 @@
+<nav
+  class="navbar navbar-expand-xxl"
+  [ngClass]="{ 'navbar-scrolled': isScrolled, 'bg-transparent': !isScrolled }"
+>
+  <div class="container-fluid">
+    <a class="navbar-brand" [routerLink]="['landing-page/home']">
+      <img
+        [src]="isScrolled ? 'assets/img/logo.png' : 'assets/img/logo white.png'"
+        alt="logo"
+      />
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div
+      #navbarCollapse
+      class="collapse navbar-collapse"
+      id="navbarSupportedContent"
+    >
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a
+            (click)="closeNavbar()"
+            [routerLink]="['landing-page/home']"
+            routerLinkActive="active"
+            class="nav-link"
+            aria-current="page"
+            >{{ resourcePath + 'home' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            (click)="closeNavbar()"
+            class="nav-link"
+            aria-current="page"
+            [routerLink]="['landing-page/union']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'whoUs' | translate }}</a
+          >
+        </li>
+
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            {{ resourcePath + 'rooms' | translate }}
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a
+                class="dropdown-item"
+                (click)="closeNavbar()"
+                routerLinkActive="active"
+                [routerLink]="['landing-page/hotel-room']"
+                >{{ resourcePath + 'hotelRoom' | translate }}</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a
+                class="dropdown-item"
+                (click)="closeNavbar()"
+                routerLinkActive="active"
+                [routerLink]="['landing-page/travel-room']"
+                >{{ resourcePath + 'travelRoom' | translate }}</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a
+                class="dropdown-item"
+                (click)="closeNavbar()"
+                routerLinkActive="active"
+                [routerLink]="['landing-page/eat-room']"
+                >{{ resourcePath + 'eatRoom' | translate }}</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a
+                (click)="closeNavbar()"
+                class="dropdown-item"
+                routerLinkActive="active"
+                [routerLink]="['landing-page/diving-room']"
+                >{{ resourcePath + 'divingRoom' | translate }}</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+
+            <li>
+              <a
+                class="dropdown-item"
+                routerLinkActive="active"
+                (click)="closeNavbar()"
+                [routerLink]="['landing-page/product-room']"
+                >{{ resourcePath + 'productsRoom' | translate }}</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            (click)="closeNavbar()"
+            [routerLink]="['/landing-page/training']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'training' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            (click)="closeNavbar()"
+            [routerLink]="['/landing-page/training']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'courses' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            (click)="closeNavbar()"
+            [routerLink]="['/landing-page/Tourism-legislation']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'tourst' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            (click)="closeNavbar()"
+            [routerLink]="['/landing-page/news']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'news' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            (click)="closeNavbar()"
+            [routerLink]="['/landing-page/contact-us']"
+            routerLinkActive="active"
+            >{{ resourcePath + 'contact' | translate }}</a
+          >
+        </li>
+
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle lang"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            {{ resourcePath + currentLang | translate }}
+          </a>
+          <ul class="dropdown-menu lang">
+            <li>
+              <a class="dropdown-item" (click)="changeLang('ar')">
+                {{ resourcePath + 'arabic' | translate }}
+              </a>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+
+            <li>
+              <a class="dropdown-item" (click)="changeLang('en')">
+                {{ resourcePath + 'english' | translate }}
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="">
+          <img
+            *ngIf="currentLang === 'ar'"
+            class="egyptFlag"
+            src="../../../../assets/svg/Flag_of_Egypt.svg.svg"
+            alt="egyFlag"
+          />
+          <img
+            *ngIf="currentLang === 'en'"
+            class="egyptFlag"
+            src="../../../../assets/img/[CITYPNG.COM]HD Round Uk United Kingdom Flag Icon PNG - 1500x1500.png"
+            alt="egyFlag"
+          />
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            {{ resourcePath + 'chooseYourColor' | translate }}
+          </a>
+          <ul class="dropdown-menu">
+            <li class="dropdown-item">
+              <div class="colors d-flex gap-2">
+                <div
+                  *ngFor="let theme of themes"
+                  class="color-dot"
+                  [ngStyle]="{ 'background-color': theme.color }"
+                  (click)="changeTheme(theme.class)"
+                  title="{{ theme.class }}"
+                ></div>
+              </div>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

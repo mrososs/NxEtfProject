@@ -4,7 +4,9 @@
       <div class="about-union__text">
         <h1>{{ 'union.pageTitle' | translate }}</h1>
         <nav class="breadcrumb">
-          <a [routerLink]="['/landing-page/home']">{{ 'navbar.home' | translate }}</a>
+          <a [routerLink]="['/landing-page/home']">{{
+            'navbar.home' | translate
+          }}</a>
           <span>&nbsp;>&nbsp;</span>
           <span>{{ 'union.pageTitle' | translate }}</span>
         </nav>
@@ -39,7 +41,10 @@
           <p>{{ 'union.mission.description' | translate }}</p>
         </div>
         <div class="col-12 col-md-5 text-center d-none d-md-block">
-          <img src="../../../../../assets/img/visionMessage.jpg" alt="mission" />
+          <img
+            src="../../../../../assets/img/visionMessage.jpg"
+            alt="mission"
+          />
         </div>
       </div>
     </div>
@@ -49,12 +54,19 @@
   <div class="container mt-5 about-union__committees text-center">
     <h1>{{ 'union.committeesTitle' | translate }}</h1>
     <div class="row justify-content-center gap-3">
-      <div class="col-12 col-sm-10 col-md-6 col-lg-4 card-committees p-4" *ngFor="let committee of committees">
+      <div
+        class="col-12 col-sm-10 col-md-6 col-lg-4 card-committees p-4"
+        *ngFor="let committee of committees"
+      >
         <img [src]="committee.icon" [alt]="committee.title" class="mb-3" />
         <h2>{{ committee.title }}</h2>
         <h1>{{ committee.head }}</h1>
         <p *ngFor="let point of committee.points">
-          <img class="me-2" src="../../../../../assets/svg/arrowCommittess.svg" alt="arrow" />
+          <img
+            class="me-2"
+            src="../../../../../assets/svg/arrowCommittess.svg"
+            alt="arrow"
+          />
           {{ point }}
         </p>
       </div>
@@ -65,9 +77,25 @@
   <div class="container mt-5 about-union__reports text-center">
     <h1>{{ 'union.reportsTitle' | translate }}</h1>
     <div class="row justify-content-center gap-3">
-      <div class="col-12 col-sm-10 col-md-6 col-lg-3 card-report p-4" *ngFor="let report of reports">
+      <div
+        class="col-12 col-sm-10 col-md-6 col-lg-3 card-report p-4"
+        *ngFor="let report of reports"
+      >
         <h1>{{ 'union.reportLabel' | translate }} {{ report.year }}</h1>
         <p>{{ report.description }}</p>
+        <p class="text-center">
+          <!-- View -->
+          <a [href]="report.link" target="_blank" rel="noopener" class="me-2">
+            {{ 'tourism.card.view' | translate }}
+          </a>
+
+          /
+
+          <!-- Download -->
+          <a [href]="report.link" download rel="noopener">
+            {{ 'tourism.card.download' | translate }}
+          </a>
+        </p>
       </div>
     </div>
   </div>

@@ -403,5 +403,16 @@
       font-weight: bold;
       color: $color-primary;
     }
+    img{
+      width: 10rem;
+      height: 10rem;
+      &.last-logo{
+        height: 8rem;
+      }
+      &.food-logo{
+        width: 12rem;
+        height: 12rem;
+      }
+    }
   }
 }

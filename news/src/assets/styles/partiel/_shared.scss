@@ -1,137 +1,7 @@
 // 1. تأكد أنك استوردت ملف الألوان في ملف الـ SCSS دا
-@import '../colors';
+@import "../colors";
 
-// Navbar
-.navbar {
-  position: fixed; // بدل absolute عشان يمشي مع scroll
-  top: 0;
-  width: 100%;
-  z-index: 11111;
-  font-size: 0.95rem;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  .colors {
-    background-color: gray;
-    padding: 1rem;
-    height: 3rem;
-    width: 8rem;
-    .color-dot {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid white;
-      transition: transform 0.2s;
-      &:hover {
-        transform: scale(1.2);
-        border-color: var(--color-primary);
-      }
-    }
 
-    .colorOne {
-      background-color: #f7931d;
-      width: 20px;
-      height: 20px;
-    }
-    .colorTwo {
-      background-color: #feca0a;
-      width: 20px;
-      height: 20px;
-    }
-    .colorThree {
-      background-color: #c5499b;
-      width: 20px;
-      height: 20px;
-    }
-    .colorFour {
-      background-color: #1cbfdf;
-      width: 20px;
-      height: 20px;
-    }
-    .colorFive {
-      background-color: #71bf44;
-      width: 20px;
-      height: 20px;
-    }
-  }
-  .egyptFlag {
-    width: 3rem;
-    background-color: white;
-    padding: 0.5rem;
-    border-radius: 50%;
-  }
-  .dropdown-item {
-    color: $color-primary !important;
-  }
-  ul {
-    margin-right: 0.1rem;
-  }
-  a.lang{
-    margin-left: 0rem !important;
-  }
-
-  @media screen and (max-width: 1400px) {
-    ul {
-      margin-right: 0rem;
-    }
-    .navbar-collapse {
-      background-color: white;
-      li a {
-        color: black;
-        font-weight: normal;
-      }
-    }
-    .navbar-toggler {
-      background-color: white;
-
-      border: none;
-      &:focus {
-        outline: none;
-        box-shadow: none;
-      }
-    }
-  }
-
-  li a {
-    color: white;
-    font-size: 1rem;
-    margin-left: 1rem;
-    transition: color 0.3s ease;
-    white-space: nowrap;
-
-    &:hover {
-      color: $color-primary;
-    }
-
-    &.active {
-      color: $color-primary !important;
-      font-weight: bold;
-    }
-  }
-  &.navbar-scrolled {
-    background-color: white !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
-    li a {
-      color: black;
-
-      &.active {
-        color: $color-primary !important;
-        font-weight: bold;
-      }
-    }
-  }
-
-  img {
-    width: 8rem;
-  }
-}
-
-[dir='rtl'] .navbar .dropdown-toggle::after {
-  float: right;
-  margin-right: 0;
-  margin-top: 0.6rem;
-  margin-left: 0.255em;
-}
 
 // Footer
 .footer {
@@ -250,7 +120,7 @@
 
   &::before,
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 1px;
     rotate: 45deg;
@@ -279,7 +149,7 @@
 
     &::before,
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       width: 1px;
       rotate: 45deg;
@@ -446,7 +316,7 @@ button.news_btn {
     border-radius: 50%;
     position: relative;
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       top: -4.3px;
       left: -8px;

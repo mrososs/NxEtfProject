@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "auth": ["shared/src/index.ts"]
+      "@shared": ["libs/shared/src/index.ts"]
     }
   }
 }

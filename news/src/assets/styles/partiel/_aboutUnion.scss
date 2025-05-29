@@ -4,7 +4,6 @@
   width: 100%;
   position: relative;
   margin-bottom: 5rem;
-  
 
   &__image {
     width: 100vw;
@@ -174,6 +173,20 @@
 
       &:nth-child(even) {
         background-color: white;
+      }
+      p {
+        font-size: 1rem;
+        font-weight: normal;
+        margin-top: 1rem;
+        a {
+          opacity: 1;
+          text-decoration: none;
+          color: $color-primary;
+          margin-inline: 10px;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
       }
 
       h1 {

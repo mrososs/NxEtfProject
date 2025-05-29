@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs/operators';
-import { LangService } from './core/services/lang.service';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +10,6 @@ import { LangService } from './core/services/lang.service';
 })
 export class AppComponent {
   title = 'etf-app';
-  private _langService = inject(LangService);
   private _titleService = inject(Title);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
