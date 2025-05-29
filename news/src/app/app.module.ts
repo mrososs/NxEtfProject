@@ -10,7 +10,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavbarSharedComponent } from 'shared/src/lib/shared/navbar/navbarShared.component';
 // Factory function
 export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, '../assets/i18n/', '.json');
+  return new TranslateHttpLoader(http, 'assets/i18n/', '.json');
 }
 @NgModule({
   declarations: [AppComponent],

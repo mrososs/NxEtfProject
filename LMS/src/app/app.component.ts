@@ -1,13 +1,21 @@
+import { NavbarSharedComponent } from 'shared/src/lib/shared/navbar/navbarShared.component';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {NavigationService} from 'shared/src/lib/shared/navigation/navigation.service';
 
 @Component({
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, NavbarSharedComponent, TranslateModule],
+  providers: [NavigationService],
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'LMS';
+  constructor(private translate: TranslateService) {
+  translate.setDefaultLang('en');
+  translate.use('en'); // أو 'ar' حسب الحاجة
+}
 }

@@ -2,10 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs/operators';
+import { NavigationService } from 'shared/src/lib/shared/navigation/navigation.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  providers: [NavigationService],
   styleUrl: './app.component.scss',
 })
 export class AppComponent {

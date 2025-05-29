@@ -5,7 +5,11 @@
   top: 0;
   width: 100%;
   z-index: 11111;
+  
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  a{
+    cursor: pointer;
+  }
   .colors {
     background-color: gray;
     padding: 1rem;

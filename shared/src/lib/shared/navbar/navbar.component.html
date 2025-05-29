@@ -3,7 +3,7 @@
   [ngClass]="{ 'navbar-scrolled': isScrolled, 'bg-transparent': !isScrolled }"
 >
   <div class="container-fluid">
-    <a class="navbar-brand" [routerLink]="['landing-page/home']">
+    <a class="navbar-brand" (click)="navigateToProject('news', 'home')">
       <img
         [src]="isScrolled ? 'assets/img/logo.png' : 'assets/img/logo white.png'"
         alt="logo"
@@ -20,6 +20,7 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div
       #navbarCollapse
       class="collapse navbar-collapse"
@@ -28,21 +29,17 @@
       <ul class="navbar-nav mb-2 mb-lg-0">
         <li class="nav-item">
           <a
-            (click)="closeNavbar()"
-            [routerLink]="['landing-page/home']"
-            routerLinkActive="active"
             class="nav-link"
-            aria-current="page"
+            (click)="navigateToProject('news', 'home')"
+            [class.active]="checkIfRouteActive('news', 'home')"
             >{{ resourcePath + 'home' | translate }}</a
           >
         </li>
         <li class="nav-item">
           <a
-            (click)="closeNavbar()"
             class="nav-link"
-            aria-current="page"
-            [routerLink]="['landing-page/union']"
-            routerLinkActive="active"
+            (click)="navigateToProject('news', 'union')"
+            [class.active]="checkIfRouteActive('news', 'union')"
             >{{ resourcePath + 'whoUs' | translate }}</a
           >
         </li>
@@ -60,102 +57,82 @@
             <li>
               <a
                 class="dropdown-item"
-                (click)="closeNavbar()"
-                routerLinkActive="active"
-                [routerLink]="['landing-page/hotel-room']"
+                (click)="navigateToProject('news', 'hotelRoom')"
                 >{{ resourcePath + 'hotelRoom' | translate }}</a
               >
             </li>
-            <li><hr class="dropdown-divider" /></li>
             <li>
               <a
                 class="dropdown-item"
-                (click)="closeNavbar()"
-                routerLinkActive="active"
-                [routerLink]="['landing-page/travel-room']"
+                (click)="navigateToProject('news', 'travelRoom')"
                 >{{ resourcePath + 'travelRoom' | translate }}</a
               >
             </li>
-            <li><hr class="dropdown-divider" /></li>
             <li>
               <a
                 class="dropdown-item"
-                (click)="closeNavbar()"
-                routerLinkActive="active"
-                [routerLink]="['landing-page/eat-room']"
+                (click)="navigateToProject('news', 'eatRoom')"
                 >{{ resourcePath + 'eatRoom' | translate }}</a
               >
             </li>
-            <li><hr class="dropdown-divider" /></li>
             <li>
               <a
-                (click)="closeNavbar()"
                 class="dropdown-item"
-                routerLinkActive="active"
-                [routerLink]="['landing-page/diving-room']"
+                (click)="navigateToProject('news', 'divingRoom')"
                 >{{ resourcePath + 'divingRoom' | translate }}</a
               >
             </li>
-            <li><hr class="dropdown-divider" /></li>
-
             <li>
               <a
                 class="dropdown-item"
-                routerLinkActive="active"
-                (click)="closeNavbar()"
-                [routerLink]="['landing-page/product-room']"
+                (click)="navigateToProject('news', 'productsRoom')"
                 >{{ resourcePath + 'productsRoom' | translate }}</a
               >
             </li>
           </ul>
         </li>
+
         <li class="nav-item">
           <a
             class="nav-link"
-            aria-current="page"
-            (click)="closeNavbar()"
-            [routerLink]="['/landing-page/training']"
-            routerLinkActive="active"
+            (click)="navigateToProject('news', 'training')"
+            [class.active]="checkIfRouteActive('news', 'training')"
             >{{ resourcePath + 'training' | translate }}</a
           >
         </li>
+
         <li class="nav-item">
           <a
             class="nav-link"
-            aria-current="page"
-            (click)="closeNavbar()"
-            [routerLink]="['/landing-page/training']"
-            routerLinkActive="active"
+            (click)="navigateToProject('lms', 'courses')"
+            [class.active]="checkIfRouteActive('lms', 'courses')"
             >{{ resourcePath + 'courses' | translate }}</a
           >
         </li>
+
         <li class="nav-item">
           <a
             class="nav-link"
-            aria-current="page"
-            (click)="closeNavbar()"
-            [routerLink]="['/landing-page/Tourism-legislation']"
-            routerLinkActive="active"
+            (click)="navigateToProject('news', 'tourism')"
+            [class.active]="checkIfRouteActive('news', 'tourism')"
             >{{ resourcePath + 'tourst' | translate }}</a
           >
         </li>
+
         <li class="nav-item">
           <a
             class="nav-link"
-            aria-current="page"
-            (click)="closeNavbar()"
-            [routerLink]="['/landing-page/news']"
-            routerLinkActive="active"
+            (click)="navigateToProject('news', 'news')"
+            [class.active]="checkIfRouteActive('news', 'news')"
             >{{ resourcePath + 'news' | translate }}</a
           >
         </li>
+
         <li class="nav-item">
           <a
             class="nav-link"
-            aria-current="page"
-            (click)="closeNavbar()"
-            [routerLink]="['/landing-page/contact-us']"
-            routerLinkActive="active"
+            (click)="navigateToProject('news', 'contact')"
+            [class.active]="checkIfRouteActive('news', 'contact')"
             >{{ resourcePath + 'contact' | translate }}</a
           >
         </li>
@@ -171,19 +148,18 @@
           </a>
           <ul class="dropdown-menu lang">
             <li>
-              <a class="dropdown-item" (click)="changeLang('ar')">
-                {{ resourcePath + 'arabic' | translate }}
-              </a>
+              <a class="dropdown-item" (click)="changeLang('ar')">{{
+                resourcePath + 'arabic' | translate
+              }}</a>
             </li>
-            <li><hr class="dropdown-divider" /></li>
-
             <li>
-              <a class="dropdown-item" (click)="changeLang('en')">
-                {{ resourcePath + 'english' | translate }}
-              </a>
+              <a class="dropdown-item" (click)="changeLang('en')">{{
+                resourcePath + 'english' | translate
+              }}</a>
             </li>
           </ul>
         </li>
+
         <li class="">
           <img
             *ngIf="currentLang === 'ar'"
@@ -198,6 +174,7 @@
             alt="egyFlag"
           />
         </li>
+
         <li class="nav-item dropdown">
           <a
             class="nav-link dropdown-toggle"
