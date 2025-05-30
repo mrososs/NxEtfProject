@@ -198,6 +198,18 @@
             </li>
           </ul>
         </li>
+        <li class="nav-item">
+          <button
+            *ngIf="!(isAuthenticated$ | async); else logoutBtn"
+            (click)="login()"
+          >
+            تسجيل الدخول
+          </button>
+
+          <ng-template #logoutBtn>
+            <button (click)="logout()">تسجيل الخروج</button>
+          </ng-template>
+        </li>
       </ul>
     </div>
   </div>

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 export class NavigationService {
   private projectRoutes = {
     news: {
-      baseUrl: 'http://localhost:54148', // بورت مشروع news
+      baseUrl: 'http://localhost:55431', // بورت مشروع news
       routes: {
         home: '/landing-page/home',
         union: '/landing-page/union',

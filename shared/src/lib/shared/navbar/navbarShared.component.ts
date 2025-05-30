@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import Collapse from 'bootstrap/js/dist/collapse';
 import { LangService } from '../../services/lang.service';
 import { NavigationService } from '../navigation/navigation.service';
+import { AuthService } from '@auth0/auth0-angular';
 
 @Component({
   selector: 'etf-navbar',
@@ -23,7 +24,7 @@ import { NavigationService } from '../navigation/navigation.service';
 export class NavbarSharedComponent implements OnInit {
   resourcePath = 'navbar.';
   isScrolled = false;
-
+  isAuthenticated$: any;
   themes = [
     { class: 'theme-orange-yellow', color: '#f7931d' },
     { class: 'theme-green-cyan', color: '#71bf44' },
@@ -33,18 +34,34 @@ export class NavbarSharedComponent implements OnInit {
 
   private langService = inject(LangService);
   public navigationService = inject(NavigationService);
+  constructor(private auth: AuthService) {}
 
   @ViewChild('navbarCollapse') navbarCollapse!: ElementRef;
 
   ngOnInit(): void {
     window.addEventListener('scroll', this.onScroll, true);
+    this.isAuthenticated$ = this.auth.isAuthenticated$;
   }
 
   @HostListener('window:scroll', [])
   onScroll = () => {
     this.isScrolled = window.scrollY > 50;
   };
+  login() {
+    this.auth.loginWithRedirect({
+      authorizationParams: {
+        redirect_uri: window.location.origin,
+      },
+    });
+  }
 
+  logout() {
+    this.auth.logout({
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    });
+  }
   closeNavbar() {
     const collapseEl = this.navbarCollapse?.nativeElement;
     if (collapseEl && window.innerWidth < 992) {
