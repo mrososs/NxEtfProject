@@ -1,0 +1,52 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "title": "المنهج الأول: إدارة الفنادق الحديثة",
+      "image": "assets/img/courses/hotel-management.png",
+      "lectures": 20,
+      "level": "مبتدئ",
+      "rating": 4.5,
+      "reviewsCount": 9200,
+      "instructor": {
+        "name": "أحمد",
+        "avatar": "assets/img/instructors/ahmed.png",
+        "specialization": "إدارة الفنادق"
+      },
+      "price": 200,
+      "category": "إدارة الفنادق",
+      "durationWeeks": 4,
+      "skills": ["الإدارة", "الخدمة", "التخطيط"]
+    },
+    {
+      "id": 2,
+      "title": "المنهج الثاني: السياحة المستدامة",
+      "image": "assets/img/courses/sustainable-tourism.png",
+      "lectures": 15,
+      "level": "متوسط",
+      "rating": 4.7,
+      "reviewsCount": 7500,
+      "instructor": {
+        "name": "محمد",
+        "avatar": "assets/img/instructors/mohamed.png"
+      },
+      "price": 15000000,
+      "isFeatured": true
+    },
+    {
+      "id": 3,
+      "title": "المنهج الثالث: الطبخ",
+      "image": "assets/img/courses/sustainable-tourism.png",
+      "lectures": 10,
+      "level": "مبتدئ",
+      "rating": 4.7,
+      "reviewsCount": 7500,
+      "instructor": {
+        "name": "محمد",
+        "avatar": "assets/img/instructors/mohamed.png"
+      },
+      "price": 15000000,
+      "isFeatured": true
+    }
+  ]
+}
