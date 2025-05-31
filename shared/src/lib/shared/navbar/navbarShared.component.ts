@@ -1,10 +1,11 @@
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import {
   Component,
   ElementRef,
   HostListener,
   inject,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -13,6 +14,7 @@ import Collapse from 'bootstrap/js/dist/collapse';
 import { LangService } from '../../services/lang.service';
 import { NavigationService } from '../navigation/navigation.service';
 import { AuthService } from '@auth0/auth0-angular';
+import { SSOService } from '../../auth/sso/sso.service';
 
 @Component({
   selector: 'etf-navbar',
@@ -21,7 +23,7 @@ import { AuthService } from '@auth0/auth0-angular';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
-export class NavbarSharedComponent implements OnInit {
+export class NavbarSharedComponent implements OnInit, OnDestroy {
   resourcePath = 'navbar.';
   isScrolled = false;
   isAuthenticated$: any;
@@ -34,31 +36,74 @@ export class NavbarSharedComponent implements OnInit {
 
   private langService = inject(LangService);
   public navigationService = inject(NavigationService);
-  constructor(private auth: AuthService) {}
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  constructor(private auth: AuthService, private ssoService: SSOService) {}
 
   @ViewChild('navbarCollapse') navbarCollapse!: ElementRef;
 
   ngOnInit(): void {
     window.addEventListener('scroll', this.onScroll, true);
     this.isAuthenticated$ = this.auth.isAuthenticated$;
-  }
 
+    // Force a silent authentication check to update isAuthenticated$
+    this.auth.getAccessTokenSilently().subscribe({
+      next: (token) => {
+        console.log('Silent authentication successful, token:', token);
+      },
+      error: (err) => {
+        console.log('Silent authentication failed:', err);
+        // If silent auth fails, the user is not logged in, so isAuthenticated$ will be false
+      },
+    });
+
+    // Handle redirect to LMS after login
+    this.auth.appState$.subscribe((appState) => {
+      if (appState?.['target'] === '/redirect-to-lms') {
+        this.auth.getAccessTokenSilently().subscribe((token) => {
+          this.ssoService.redirectTo('LMS', token);
+        });
+      }
+    });
+  }
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onScroll, true);
+  }
   @HostListener('window:scroll', [])
   onScroll = () => {
     this.isScrolled = window.scrollY > 50;
   };
+  stateIsValid(state: string | null): boolean {
+    const storedState = localStorage.getItem('sso_state');
+    return state !== null && storedState !== null && state === storedState;
+  }
+  extractTokenFromUrl(): string | null {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token');
+  }
   login() {
+    const state = this.generateRandomState();
     this.auth.loginWithRedirect({
       authorizationParams: {
         redirect_uri: window.location.origin,
+        state: state,
+        appState: {
+          target: '/redirect-to-lms', // إشارة لإعادة التوجيه بعد تسجيل الدخول
+        },
+        scope: 'openid profile email',
       },
     });
+  }
+  generateRandomState(): string {
+    const state = crypto.randomUUID(); // أو أي random string
+    localStorage.setItem('sso_state', state);
+    return state;
   }
 
   logout() {
     this.auth.logout({
       logoutParams: {
-        returnTo: window.location.origin,
+        returnTo: 'https://localhost:4200', // Redirect to News after logout
       },
     });
   }

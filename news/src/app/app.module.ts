@@ -18,10 +18,10 @@ export function HttpLoaderFactory(http: HttpClient) {
   imports: [
     BrowserModule,
     AuthModule.forRoot({
-      domain: 'dev-ot5sgjwycfwdb73k.us.auth0.com',
-      clientId: 'VeYeArRgvkXqdM2i1HBlMoEXwADvOAmd',
+      domain: 'dev-rzc7torub3i1zvqu.us.auth0.com',
+      clientId: 'cOOKZwR3a6WMK7SRLNC0yosSFZ4lCs7K',
       authorizationParams: {
-        redirect_uri: window.location.origin, // مثال: https://project1.com
+        redirect_uri: window.location.origin,
         scope: 'openid profile email',
       },
       useRefreshTokens: true,

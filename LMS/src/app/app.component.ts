@@ -1,8 +1,9 @@
 import { NavbarSharedComponent } from 'shared/src/lib/shared/navbar/navbarShared.component';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import {NavigationService} from 'shared/src/lib/shared/navigation/navigation.service';
+import { NavigationService } from 'shared/src/lib/shared/navigation/navigation.service';
+import { SSOLmsService } from 'shared/src/lib/auth/sso/sso-lms.service';
 
 @Component({
   standalone: true,
@@ -12,10 +13,19 @@ import {NavigationService} from 'shared/src/lib/shared/navigation/navigation.ser
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'LMS';
-  constructor(private translate: TranslateService) {
-  translate.setDefaultLang('en');
-  translate.use('en'); // أو 'ar' حسب الحاجة
-}
+  storgeServiceSSOState = localStorage.getItem('sso_state')
+  constructor(
+    private translate: TranslateService,
+    private ssoLmsService: SSOLmsService
+  ) {
+    translate.setDefaultLang('en');
+    translate.use('en'); // أو 'ar' حسب الحاجة
+  }
+  ngOnInit(): void {
+    if (this.storgeServiceSSOState) {
+      this.ssoLmsService.handleAuthCallback();
+    }
+  }
 }

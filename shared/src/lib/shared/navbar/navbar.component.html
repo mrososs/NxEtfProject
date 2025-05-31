@@ -202,15 +202,11 @@
           </ul>
         </li>
         <li class="nav-item">
-          <button
-            *ngIf="!(isAuthenticated$ | async); else logoutBtn"
-            (click)="login()"
-          >
-            تسجيل الدخول
-          </button>
-
-          <ng-template #logoutBtn>
-            <button (click)="logout()">تسجيل الخروج</button>
+          <ng-container *ngIf="isAuthenticated$ | async; else loginTemplate">
+            <button (click)="logout()">Logout</button>
+          </ng-container>
+          <ng-template #loginTemplate>
+            <button (click)="login()">Sign In</button>
           </ng-template>
         </li>
       </ul>

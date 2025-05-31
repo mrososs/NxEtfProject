@@ -32,9 +32,9 @@ export class NavigationService {
 
   constructor(private router: Router) {}
 
-  getCurrentProject(): 'news' | 'lms' {
-    const url = window.location.pathname;
-    if (url.startsWith('/lms')) return 'lms';
+   getCurrentProject(): 'news' | 'lms' {
+    const url = window.location.href;
+    if (url.includes('localhost:4200')) return 'lms';
     return 'news'; // default fallback
   }
 
