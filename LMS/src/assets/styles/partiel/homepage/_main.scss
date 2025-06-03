@@ -1,0 +1,46 @@
+.homePage {
+  min-height: 100vh;
+  height: 100%;
+  background-color: #f0f0f0;
+  &__title {
+    h1 {
+      font-size: 2.25rem;
+      font-style: normal;
+      font-weight: 700;
+    }
+    p {
+      font-size: 1.5rem;
+      margin-top: 20px;
+      font-style: normal;
+      font-weight: 600;
+    }
+  }
+  &__Courses {
+    h1 {
+      font-size: 1.25rem;
+      font-style: normal;
+      font-weight: 700;
+    }
+    .freeCourses {
+      padding: 1rem;
+      background-color: #123456;
+      border-radius: 0.98406rem;
+      position: relative; /* Keep this if you have other absolutely positioned elements */
+
+      // Add these lines for repeating the background image
+      background-image: url('../../../svg/Line\ 78.svg');
+      background-repeat: repeat-x; /* or 'repeat-y' or 'repeat' based on your desired pattern */
+      background-position: top left; /* Adjust as needed */
+      background-size: auto; /* Or specify 'contain', 'cover', '10px 10px', etc. */
+
+      h1 {
+        font-size: 2rem;
+        font-style: normal;
+        font-weight: 500;
+        color: white;
+        // You might need to add padding-top to h1 or freeCourses to make space for the line if it overlaps.
+        // padding-top: 20px; /* Example to push heading down if line is at top */
+      }
+    }
+  }
+}

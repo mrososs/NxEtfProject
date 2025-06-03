@@ -1,0 +1,34 @@
+{
+  "instructors": [
+    {
+      "id": 1,
+      "img": "assets/img/image_99-removebg-preview.png",
+      "name": "الاء هاني",
+      "technicalSkill": "خبير لغة وتواصل ثقافي",
+      "course": "18 منهج",
+      "rating": 4.5,
+      "review": "9k",
+      "students": 16
+    },
+    {
+      "id": 1,
+      "img": "assets/img/image_99-removebg-preview.png",
+      "name": "سارة احمد",
+      "technicalSkill": "خبير التواصل و الحجوزات",
+      "course": "18 منهج",
+      "rating": 4.5,
+      "review": "9k",
+      "students": 16
+    },
+    {
+      "id": 3,
+      "img": "assets/img/image_99-removebg-preview.png",
+      "name": "رضوي محمد",
+      "technicalSkill": "خبير طبخ مطاعم الفنادق",
+      "course": "18 منهج",
+      "rating": 4.5,
+      "review": "9k",
+      "students": 16
+    }
+  ]
+}

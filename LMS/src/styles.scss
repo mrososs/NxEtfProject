@@ -72,7 +72,80 @@ p {
   font-family: 'Cairo', 'Poppins', sans-serif !important;
 }
 p-card {
-  border-radius: 0.9375rem !important;
+  &.homePageCards {
+    .p-card {
+      border: 3px solid #c3960b;
+      border-radius: 0.9375rem !important;
+      margin-bottom: 1rem;
+    }
+    .p-card-header {
+      position: relative;
+      img {
+        width: 100%;
+        height: 20rem;
+        position: relative; /* Make the img a positioning context for its pseudo-elements */
+        display: block; /* Images are inline by default, block helps with sizing/positioning sometimes */
+
+        /* The ::after pseudo-element will now be positioned relative to this img */
+        &::after {
+          content: '';
+          background-color: #00000080; /* Black with 50% opacity */
+          position: absolute;
+          top: 0; /* Align to the top of the img */
+          left: 0; /* Align to the left of the img */
+          width: 100%; /* Take full width of the img */
+          height: 100%; /* Take full height of the img */
+          z-index: 1; /* Ensure it's above the image, if needed */
+        }
+      }
+
+      .courseDetails {
+        position: absolute;
+        top: 50%;
+        right: 40px;
+        transform: translateY(-30px);
+        color: white;
+        h1 {
+          font-size: 1rem;
+          font-style: normal;
+          font-weight: 700;
+          margin-bottom: 1rem;
+        }
+        p {
+          font-size: 0.52588rem;
+          font-style: normal;
+          font-weight: 400;
+        }
+      }
+    }
+
+    .p-card-title {
+      img {
+        width: 3rem;
+        border-radius: 50%;
+        border: 0.841px solid #00007f;
+      }
+      h3 {
+        font-size: 1rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+        font-style: normal;
+        font-weight: 700;
+      }
+    }
+    .p-card-footer {
+      background-color: #c3960b80;
+      border: 1px solid #123456b2;
+      border-radius: 3rem;
+
+      p-button {
+        button {
+          color: #000000;
+        }
+      }
+    }
+  }
 
   .p-card-header {
     padding: 1rem;

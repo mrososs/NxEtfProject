@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { types } from '../model/types.model';
 import { Course } from '../model/course.model';
+import { Instructor } from '../model/instructor.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +18,15 @@ export class HomePageService {
       .get<{ courses: Course[] }>('../../../../assets/data/courses.data.json')
       .pipe(
         map((response) => response.courses) // Extract the courses array
+      );
+  }
+  getInstructors(): Observable<Instructor[]> {
+    return this._http
+      .get<{ instructors: Instructor[] }>(
+        '../../../../assets/data/instructor.data.json'
+      )
+      .pipe(
+        map((response) => response.instructors) // Extract the courses array
       );
   }
 }
