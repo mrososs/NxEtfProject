@@ -1,0 +1,67 @@
+.instructor-details {
+  margin-top: 4rem;
+  .photo {
+    background-color: $color-primary; // تأكد أن اللون البرتقالي مضبوط في المتغير
+    border-radius: 50%;
+    width: 20rem;
+    height: 20rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+  h1 {
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 700;
+    color: $color-primary;
+    margin-bottom: 1rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  h3 {
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  p {
+    font-size: 0.8125rem;
+    font-style: normal;
+    font-weight: 500;
+    margin-bottom: 0;
+    text-align: justify;
+  }
+  .contact {
+    margin-bottom: 5rem;
+    .icon {
+      background-color: $color-primary; // تأكد أن اللون البرتقالي مضبوط في المتغير
+      border-radius: 10px;
+      padding: 0.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+
+      img {
+        width: 1rem;
+        height: auto;
+      }
+    }
+  }
+}

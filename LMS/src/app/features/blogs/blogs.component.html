@@ -1,0 +1,15 @@
+<app-banner
+  [title]="'المدونة'"
+  [back]="'الرئيسية'"
+  [here]="'المدونة'"
+></app-banner>
+<div class="container">
+  <div class="row mt-5">
+    <div
+      class="col-12 col-md-6 col-lg-4 mb-4"
+      *ngFor="let blog of blog$ | async"
+    >
+      <app-blog-card [blog]="blog"></app-blog-card>
+    </div>
+  </div>
+</div>

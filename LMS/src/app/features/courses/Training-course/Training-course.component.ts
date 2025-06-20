@@ -4,11 +4,12 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { HomePageService } from '../services/home-page.service';
 import { Course } from '../model/course.model';
+import { CourseCardComponent } from '../../homepage/course-card/course-card.component';
 
 @Component({
   selector: 'app-training-course',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule],
+  imports: [CommonModule, CardModule, ButtonModule,CourseCardComponent],
   templateUrl: './Training-course.component.html',
   styleUrl: './Training-course.component.scss',
 })

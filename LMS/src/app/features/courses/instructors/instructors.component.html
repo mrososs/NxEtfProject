@@ -12,63 +12,7 @@
         class="col-12 col-md-6 col-lg-4 mb-4"
         *ngFor="let instructor of instructorsData$ | async"
       >
-        <p-card [style]="{ overflow: 'hidden' }">
-          <ng-template pTemplate="header">
-            <img alt="Card" class="w-full" [src]="instructor.img" />
-            <div class="plus-button"><span class="pi pi-plus"></span></div>
-          </ng-template>
-
-          <ng-template pTemplate="title"> {{ instructor.name }} </ng-template>
-
-          <div class="row d-flex justify-content-between align-items-center">
-            <div class="col-6 mb-3">
-              <div class="d-flex gap-2">
-                <img
-                  src="../../../../assets/svg/card/bookmark.svg"
-                  alt="video"
-                />
-                <span>{{ instructor.technicalSkill }}</span>
-              </div>
-            </div>
-            <div class="col-6 mb-3">
-              <div class="d-flex justify-content-center gap-2">
-                <img src="../../../../assets/svg/card/clock.svg" alt="chart" />
-                <span>{{ instructor.course }} منهج</span>
-              </div>
-            </div>
-            <div class="col-6 mb-3">
-              <div class="d-flex gap-2">
-                <img src="../../../../assets/svg/card/star.svg" alt="star" />
-                <span>({{ instructor.review }}k){{ instructor.rating }}</span>
-              </div>
-            </div>
-            <div class="col-6 mb-3">
-              <div
-                class="d-flex justify-content-center align-items-center gap-2"
-              >
-                <img
-                  src="../../../../assets/svg/card/profile-2user.svg"
-                  alt="student"
-                />
-                <span>{{ instructor.students }} طالب</span>
-              </div>
-            </div>
-          </div>
-          <div class="row d-flex justify-content-center">
-            <div class="col-md-6">
-              <hr class="dotted-line" />
-            </div>
-          </div>
-
-          <ng-template pTemplate="footer">
-            <div class="d-flex justify-content-center mt-1">
-              <p-button
-                label="اللأطلاع علي المدرب"
-                styleClass="w-full"
-              ></p-button>
-            </div>
-          </ng-template>
-        </p-card>
+        <app-instructor-card [instructor]="instructor"></app-instructor-card>
       </div>
     </div>
   </div>

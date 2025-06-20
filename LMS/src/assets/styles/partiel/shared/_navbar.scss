@@ -1,0 +1,37 @@
+.navbar {
+  background: linear-gradient(
+    90deg,
+    rgba(247, 148, 30, 0.3) 1.45%,
+    rgba(252, 217, 176, 0.75) 5.38%,
+    #fff 48.81%
+  );
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 11111;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+  &.scrolled {
+    background-color: #fff !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-brand {
+    img {
+      width: 10rem;
+    }
+  }
+
+  #navbarNav {
+    justify-content: center;
+    margin-left: 10rem;
+  }
+  .nav-item {
+    .nav-link {
+      &.active {
+        color: $color-primary;
+        font-weight: bold;
+      }
+    }
+  }
+}

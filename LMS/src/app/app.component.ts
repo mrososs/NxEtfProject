@@ -3,10 +3,11 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {NavigationService} from 'shared/src/lib/shared/navigation/navigation.service';
+import { NavbarComponent } from './shared/components/navbar/navbar.component';
 
 @Component({
   standalone: true,
-  imports: [RouterModule, NavbarSharedComponent, TranslateModule],
+  imports: [RouterModule, NavbarComponent, TranslateModule],
   providers: [NavigationService],
   selector: 'app-root',
   templateUrl: './app.component.html',

@@ -13,6 +13,11 @@ body {
 p {
   text-align: justify;
 }
+main,
+router-outlet,
+.page-content {
+  padding-top: 80px; // نفس ارتفاع الـ navbar تقريبا
+}
 .btn-primary {
   background-color: $color-primary;
   color: $color-white;
@@ -130,4 +135,11 @@ p-card {
     border-top: 2px dotted #000; // adjust thickness and color
     margin: 1rem 0; // optional spacing
   }
+}
+.dotted-line {
+  border: none;
+  width: 100%;
+  height: 1rem;
+  border-top: 2px dotted #000; // adjust thickness and color
+  margin: 1rem 0; // optional spacing
 }

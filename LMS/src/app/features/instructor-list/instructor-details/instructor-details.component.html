@@ -1,1 +1,92 @@
-<p>instructor-details works!</p>
+<app-banner
+  [title]="'المدربين'"
+  [back]="'الرئيسية'"
+  [here]="'المدربين'"
+></app-banner>
+<div class="instructor-details container">
+  <div class="row gap-3">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="photo">
+        <img
+          src="../../../../assets/img/326364fc4b9ae7136d94b13f5777fa1619a37c04.png"
+          alt="instructorImg"
+        />
+      </div>
+    </div>
+    <div class="col">
+      <h1>المدرب</h1>
+      <h2>{{ instructor?.name }}</h2>
+      <h3>{{ instructor?.technicalSkill }}</h3>
+
+      <div
+        class="row d-flex justify-content-between align-items-center instructor-info"
+      >
+        <div class="col-6 mb-3">
+          <div class="d-flex gap-2">
+            <img src="../../../../assets/svg/card/bookmark.svg" alt="video" />
+            <span>{{ instructor?.technicalSkill }}</span>
+          </div>
+        </div>
+        <div class="col-6 mb-3">
+          <div class="d-flex justify-content-center gap-2">
+            <img src="../../../../assets/svg/card/clock.svg" alt="chart" />
+            <span>{{ instructor?.course }} منهج</span>
+          </div>
+        </div>
+        <div class="col-6 mb-3">
+          <div class="d-flex gap-2">
+            <img src="../../../../assets/svg/card/star.svg" alt="star" />
+            <span>({{ instructor?.review }}k){{ instructor?.rating }}</span>
+          </div>
+        </div>
+        <div class="col-6 mb-3">
+          <div class="d-flex justify-content-center align-items-center gap-2">
+            <img
+              src="../../../../assets/svg/card/profile-2user.svg"
+              alt="student"
+            />
+            <span>{{ instructor?.students }} طالب</span>
+          </div>
+        </div>
+      </div>
+      <hr class="dotted-line" />
+      <div class="description">
+        <h2>نبذة تعريفية</h2>
+        <p>{{ instructor?.description }}</p>
+      </div>
+      <hr class="dotted-line" />
+      <div class="contact">
+        <h2>طرق التواصل</h2>
+        <div class="contact-details">
+          <div class="d-flex align-items-center mb-3  gap-3">
+            <div class="icon">
+              <img
+                src="../../../../assets/svg/contact/linkedin-svgrepo-com (2).svg"
+                alt="linkedIn logo"
+              />
+            </div>
+            <p>{{ instructor?.contact?.linkedIn }}</p>
+          </div>
+          <div class="d-flex align-items-center mb-3 gap-3">
+            <div class="icon">
+              <img
+                src="../../../../assets/svg/contact/sms.svg"
+                alt="email logo"
+              />
+            </div>
+            <p>{{ instructor?.contact?.gmail }}</p>
+          </div>
+          <div class="d-flex align-items-center mb-3  gap-3">
+            <div class="icon">
+              <img
+                src="../../../../assets/svg/contact/call.svg"
+                alt="phone logo"
+              />
+            </div>
+            <p>{{ instructor?.contact?.phone }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

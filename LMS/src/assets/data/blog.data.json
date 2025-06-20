@@ -1,0 +1,28 @@
+{
+  "blog": [
+    {
+      "id": 1,
+      "img": "assets/img/blog.png",
+      "title": "افضل عشر نصائح للنجاح في التعليم عن بعد",
+      "writer": "بواسطة المشرف",
+      "comment": 24,
+      "seen": 300
+    },
+    {
+      "id": 2,
+      "img": "assets/img/blog.png",
+      "title": "افضل عشر نصائح للنجاح في التعليم عن بعد",
+      "writer": "بواسطة المشرف",
+      "comment": 24,
+      "seen": 300
+    },
+    {
+      "id": 3,
+      "img": "assets/img/blog.png",
+      "title": "افضل عشر نصائح للنجاح في التعليم عن بعد",
+      "writer": "بواسطة المشرف",
+      "comment": 24,
+      "seen": 300
+    }
+  ]
+}

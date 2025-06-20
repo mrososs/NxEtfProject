@@ -6,9 +6,10 @@ export interface Instructor {
 export interface Course {
   id: number;
   title: string;
-  image: string;
+  img: string;
   lectures: number;
-  isFeatured?:boolean;
+  isFeatured?: boolean;
+  path: string;
   level: 'مبتدئ' | 'متوسط' | 'متقدم' | string; // Union type with string fallback
   rating: number;
   reviews: string; // Formatted as "9k"

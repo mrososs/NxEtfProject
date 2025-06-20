@@ -7,4 +7,11 @@ export interface Instructor {
   rating: number;
   review: string;
   students: number;
+  description:string;
+  contact:contact;
+}
+export interface contact{
+  linkedIn:string;
+  gmail:string;
+  phone:string;
 }

@@ -7,18 +7,18 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-course-card',
   standalone: true,
-  imports: [CommonModule,CardModule, ButtonModule,RouterModule],
+  imports: [CommonModule, CardModule, ButtonModule, RouterModule],
   templateUrl: './course-card.component.html',
   styleUrl: './course-card.component.scss',
 })
 export class CourseCardComponent {
-    @Input() course!: {
+  @Input() course!: {
     title: string;
-    rating: string;
+    rating: number; // ✅ التعديل هنا
     level: string;
     lectures: number;
     img: string;
-    instructor: string;
-    path: string;
+    instructor: any; // لأنك في الداتا حاطط object مش مجرد string
+    path?: string;
   };
 }

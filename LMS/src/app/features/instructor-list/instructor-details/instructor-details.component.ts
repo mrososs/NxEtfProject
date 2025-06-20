@@ -1,13 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Instructor } from '../../courses/model/instructor.model';
 import { ActivatedRoute } from '@angular/router';
 import { HomePageService } from '../../courses/services/home-page.service';
+import { BannerComponent } from '../../homepage/banner/banner.component';
+import { Instructor } from '../../courses/model/instructor.model';
 
 @Component({
   selector: 'app-instructor-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BannerComponent],
   templateUrl: './instructor-details.component.html',
   styleUrl: './instructor-details.component.scss',
 })
@@ -29,6 +30,7 @@ export class InstructorDetailsComponent implements OnInit {
   loadInstructorById(id: number) {
     this.homepageService.getInstructorDetails(id).subscribe((inst) => {
       this.instructor = inst;
+      console.log(this.instructor);
     });
   }
 }

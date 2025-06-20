@@ -35,6 +35,18 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'blogs',
+    loadComponent: () =>
+      import('./features/blogs/blogs.component').then((c) => c.BlogsComponent),
+  },
+  {
+    path: 'favorites',
+    loadComponent: () =>
+      import('./features/favorites/favorites.component').then(
+        (c) => c.FavoritesComponent
+      ),
+  },
+  {
     path: 'courses',
     loadComponent: () =>
       import('./features/courses/courses.component').then(
