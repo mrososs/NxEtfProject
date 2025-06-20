@@ -1,5 +1,4 @@
 <section class="top-banner">
-  
   <div class="container mt-5">
     <div class="row justify-content-between">
       <div class="col-12 col-md-6 col-lg-6">
@@ -21,11 +20,11 @@
           </p>
         </div>
         <div class="mt-5 d-flex gap-3">
-          <button class="btn-primary">
+          <button class="btn-primary" [routerLink]="['/homepage']">
             الاطلاع علي المناهج
             <img src="../../../../assets/svg/arrow-left.svg" alt="arrow" />
           </button>
-          <button class="btn-secondary">
+          <button class="btn-secondary" (click)="scrollToDreams()">
             من نحن
             <img
               src="../../../../assets/svg/arrow-left-color.svg"
