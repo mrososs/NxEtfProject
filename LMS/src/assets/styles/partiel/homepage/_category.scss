@@ -1,0 +1,26 @@
+.categoryFilter {
+  border: 1px solid #f39200;
+  border-radius: 12px;
+  padding: 15px 16px;
+  width: 100%;
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      .p-checkbox-box {
+        &.p-highlight {
+          background-color: $color-primary;
+        }
+      }
+      h3 {
+        font-size: 1.1355rem;
+        font-style: normal;
+        font-weight: 500;
+      }
+    }
+  }
+}

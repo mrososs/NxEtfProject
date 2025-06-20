@@ -1,1 +1,14 @@
-<p>course-level works!</p>
+<div class="categoryFilter">
+  <div class="d-flex justify-content-between align-items-center">
+    <h1 class="mt-2">المستوي</h1>
+    <img src="../../../../assets/svg/3square.svg" alt="category" />
+  </div>
+  <div class="checkList">
+    <ul>
+      <li *ngFor="let category of categories">
+        <p-checkbox [(ngModel)]="category.checked" [binary]="true"></p-checkbox>
+        <h3>{{ category.label }}</h3>
+      </li>
+    </ul>
+  </div>
+</div>

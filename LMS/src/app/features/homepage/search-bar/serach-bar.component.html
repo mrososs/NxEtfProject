@@ -1,1 +1,11 @@
-<p>serach-bar works!</p>
+<div class="searchbar">
+  <input
+    type="text"
+    pInputText
+    [(ngModel)]="initialSearchTerm"
+    (ngModelChange)="searchTermChange.emit(initialSearchTerm)"
+    placeholder="ابحث عن منهج معين"
+  />
+      <img src="../../../../assets/svg/search-normal.svg" alt="searcIcon">
+
+</div>

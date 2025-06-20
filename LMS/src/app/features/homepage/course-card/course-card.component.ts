@@ -1,13 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-course-card',
   standalone: true,
-  imports: [CommonModule,CardModule, ButtonModule],
+  imports: [CommonModule,CardModule, ButtonModule,RouterModule],
   templateUrl: './course-card.component.html',
   styleUrl: './course-card.component.scss',
 })
-export class CourseCardComponent {}
+export class CourseCardComponent {
+    @Input() course!: {
+    title: string;
+    rating: string;
+    level: string;
+    lectures: number;
+    img: string;
+    instructor: string;
+    path: string;
+  };
+}

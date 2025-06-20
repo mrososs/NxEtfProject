@@ -7,6 +7,13 @@ export const appRoutes: Route[] = [
     pathMatch: 'full',
   },
   {
+    path: 'course-viewer',
+    loadComponent: () =>
+      import('./features/course-viewer/course-viewer.component').then(
+        (m) => m.CourseViewerComponent
+      ),
+  },
+  {
     path: 'homepage',
     loadComponent: () =>
       import('./features/homepage/homepage.component').then(

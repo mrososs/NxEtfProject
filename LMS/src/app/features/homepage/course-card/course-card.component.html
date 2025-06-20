@@ -1,29 +1,57 @@
-<p-card class="homePageCards" [style]="{ overflow: 'hidden' }">
+<p-card [style]="{ overflow: 'hidden' }">
   <ng-template pTemplate="header">
-    <img
-      alt="Card"
-      class="w-full"
-      src="../../../../assets/img/homePagecourse.png"
-    />
-    <div class="courseDetails">
-      <h1>المنهج الأول</h1>
-      <p>ناك حقيقة مثبتة منذ زمن طويل وهي أن المحتوى المقروء لصفحة ما</p>
-    </div>
+    <img [src]="course.img" alt="Course Image" class="w-full" />
   </ng-template>
 
   <ng-template pTemplate="title">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="instructor d-flex gap-3 align-items-center">
-        <img src="../../../../assets/img/student img.png" alt="instructor" />
-        <h3>يشرحه الأستاذ الأول</h3>
-      </div>
-      <h1>مجانا !</h1>
-    </div>
+    {{ course.title }}
   </ng-template>
+
+  <div class="row d-flex justify-content-between align-items-center">
+    <div class="col-6 mb-3">
+      <div class="d-flex gap-2">
+        <img src="../../../../assets/svg/card/video.svg" alt="video" />
+        <span>{{ course.lectures }} محاضره</span>
+      </div>
+    </div>
+    <div class="col-6 mb-3">
+      <div class="d-flex justify-content-center gap-2">
+        <img src="../../../../assets/svg/card/chart.svg" alt="chart" />
+        <span>{{ course.level }}</span>
+      </div>
+    </div>
+    <div class="col-6 mb-3">
+      <div class="d-flex gap-2">
+        <img src="../../../../assets/svg/card/star.svg" alt="star" />
+        <span>(4.2k) {{ course.rating }}</span>
+      </div>
+    </div>
+    <div class="col-6 mb-3">
+      <div class="d-flex justify-content-center align-items-center gap-2">
+        <img
+          class="img-profile"
+          src="../../../../assets/img/student img.png"
+          alt="student"
+        />
+        <span>{{ course.instructor }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row d-flex justify-content-center">
+    <div class="col-md-6">
+      <hr class="dotted-line" />
+    </div>
+  </div>
 
   <ng-template pTemplate="footer">
     <div class="d-flex justify-content-center mt-1">
-      <p-button label="بداء التعلم" styleClass="w-full"></p-button>
+      <p-button
+        label="بداء التعلم"
+        styleClass="w-full"
+        [routerLink]="['/course-viewer']"
+        [queryParams]="{ folder: course.path }"
+      ></p-button>
     </div>
   </ng-template>
 </p-card>

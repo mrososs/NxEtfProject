@@ -1,0 +1,63 @@
+.banner {
+  width: 100%;
+  background: rgba(247, 148, 30, 0.3);
+  height: 20rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  position: relative;
+  .bookIcon{
+    position: absolute;
+    left: 10rem;
+    @media screen and (max-width:711px) {
+        display: none;
+        
+    }
+
+  }
+  .bookIcon2{
+    position: absolute;
+    bottom: 0;
+    @media screen and (max-width:711px) {
+        // display: none;
+        
+    }
+
+  }
+  .bookIcon3{
+    position: absolute;
+    top: 0;
+    right: 10rem;
+    @media screen and (max-width:711px) {
+       right: 20rem;
+        
+    }
+
+  }
+  h1 {
+    font-size: 3rem;
+    font-style: normal;
+    font-weight: 700;
+  }
+  .breadcumb {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.2rem;
+   
+    h2 {
+      font-size: 0.875rem;
+      font-style: normal;
+      font-weight: 600;
+
+      &.back {
+        color: black;
+      }
+      &.here {
+        color: $color-primary;
+      }
+    }
+  }
+}
