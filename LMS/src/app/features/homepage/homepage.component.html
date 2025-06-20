@@ -42,7 +42,10 @@
     <div class="homePage__Courses">
       <div class="container d-block d-md-none mt-3 mb-3">
         <div class="text-center">
-          <button class="btn btn-primary p-2" (click)="showFilters = !showFilters">
+          <button
+            class="btn btn-primary p-2"
+            (click)="showFilters = !showFilters"
+          >
             {{ showFilters ? 'إغلاق الفلاتر' : 'عرض الفلاتر' }}
           </button>
         </div>
@@ -68,7 +71,7 @@
       </div>
 
       <div class="row">
-        <div class="col-9 ">
+        <div class="col-12 col-md-9">
           <div class="freeCourses d-flex justify-content-center">
             <h1>المناهح التعليميه المجانيه الخاصه بالموسم</h1>
           </div>
