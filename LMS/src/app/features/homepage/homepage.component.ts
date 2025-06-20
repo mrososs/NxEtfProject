@@ -26,6 +26,8 @@ import { CourseInstructorComponent } from './course-instructor/course-instructor
 })
 export class HomepageComponent implements AfterViewInit {
   searchTerm: string = '';
+  showFilters: boolean = false;
+
   selectedCategories: string[] = [];
   private searchSubject = new Subject<string>();
   firstCategorySelected = false;
@@ -47,26 +49,30 @@ export class HomepageComponent implements AfterViewInit {
     this.searchSubject.next(term); // send value to subject
   }
 
-onCategoryChange(selected: string[]) {
-  const hadNoSelectionBefore = this.selectedCategories.length === 0;
-  this.selectedCategories = selected;
+  onCategoryChange(selected: string[]) {
+    const hadNoSelectionBefore = this.selectedCategories.length === 0;
+    this.selectedCategories = selected;
 
-  // Only scroll if the user added the *first* selection
-  if (hadNoSelectionBefore && selected.length > 0 && !this.firstCategorySelected) {
-    this.firstCategorySelected = true;
-    setTimeout(() => {
-      if (this.categorySectionRef) {
-        this.categorySectionRef.nativeElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-      }
-    }, 100);
-  }
+    // Only scroll if the user added the *first* selection
+    if (
+      hadNoSelectionBefore &&
+      selected.length > 0 &&
+      !this.firstCategorySelected
+    ) {
+      this.firstCategorySelected = true;
+      setTimeout(() => {
+        if (this.categorySectionRef) {
+          this.categorySectionRef.nativeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }
+      }, 100);
+    }
 
-  // Reset scroll flag if all unchecked
-  if (selected.length === 0) {
-    this.firstCategorySelected = false;
+    // Reset scroll flag if all unchecked
+    if (selected.length === 0) {
+      this.firstCategorySelected = false;
+    }
   }
-}
 }
