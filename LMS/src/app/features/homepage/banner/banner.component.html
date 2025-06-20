@@ -1,10 +1,22 @@
 <div class="banner w-100">
-    <img class="bookIcon" src="../../../../assets/svg/book-saved.svg" alt="bookicon">
-    <img class="bookIcon2" src="../../../../assets/svg/book-saved.svg" alt="bookicon">
-    <img class="bookIcon3" src="../../../../assets/svg/book-saved.svg" alt="bookicon">
-  <h1>{{title}}</h1>
+  <img
+    class="bookIcon"
+    src="../../../../assets/svg/book-saved.svg"
+    alt="bookicon"
+  />
+  <img
+    class="bookIcon2 d-none d-md-block"
+    src="../../../../assets/svg/book-saved.svg"
+    alt="bookicon"
+  />
+  <img
+    class="bookIcon3 d-none d-md-block"
+    src="../../../../assets/svg/book-saved.svg"
+    alt="bookicon"
+  />
+  <h1>{{ title }}</h1>
   <div class="breadcumb">
-    <h2 class="back">{{back}}/</h2>
-    <h2 class="here">{{here}}</h2>
+    <h2 class="back" [routerLink]="['/courses']">{{ back }}/</h2>
+    <h2 class="here">{{ here }}</h2>
   </div>
 </div>

@@ -72,7 +72,6 @@ p {
   font-family: 'Cairo', 'Poppins', sans-serif !important;
 }
 p-card {
-
   .p-card-header {
     padding: 1rem;
     position: relative;
@@ -119,6 +118,10 @@ p-card {
   }
   .p-card-content {
     padding: 0;
+    height: 10rem;
+    max-height: 10rem;
+    display: flex;
+    flex-direction: column;
   }
   .dotted-line {
     border: none;

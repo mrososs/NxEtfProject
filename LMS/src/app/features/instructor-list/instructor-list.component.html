@@ -1,0 +1,19 @@
+<app-banner
+  [title]="'المدربين'"
+  [back]="'الرئيسية'"
+  [here]="'المدربين'"
+></app-banner>
+<div class="instructor-list container mt-5">
+  <div class="d-flex justify-content-center align-items-center flex-column">
+    <h1>مدربين الدورات</h1>
+    <p>
+      نخبة من الخبراء يقودونك بخطى واثقة نحو التميز، بخبراتهم الواقعية وأسلوبهم
+      <br>العملي الذي يحوّل المعرفة إلى إنجاز
+    </p>
+  </div>
+  <div class="row">
+    <div class="col-12 col-md-6 col-lg-3 mb-4" *ngFor="let instructor of instructorsData$ | async">
+        <app-instructor-card [instructor]="instructor"></app-instructor-card>
+    </div>
+  </div>
+</div>

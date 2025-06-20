@@ -20,6 +20,11 @@ export class HomePageService {
         map((response) => response.courses) // Extract the courses array
       );
   }
+  getInstructorDetails(id: number): Observable<Instructor | undefined> {
+    return this.getInstructors().pipe(
+      map((instructors) => instructors.find((inst) => inst.id === id))
+    );
+  }
   getInstructors(): Observable<Instructor[]> {
     return this._http
       .get<{ instructors: Instructor[] }>(
