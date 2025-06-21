@@ -3,7 +3,7 @@
     {
       "id": 1,
       "title": "المنهج الأول: إدارة الفنادق الحديثة",
-      "img": "assets/img/courses/hotel-management.png",
+      "img": "assets/img/homePagecourse.png",
       "lectures": 20,
       "level": "مبتدئ",
       "rating": 4.5,
@@ -21,7 +21,7 @@
     {
       "id": 2,
       "title": "المنهج الثاني: السياحة المستدامة",
-      "img": "assets/img/courses/sustainable-tourism.png",
+      "img": "assets/img/homePagecourse.png",
       "lectures": 15,
       "level": "متوسط",
       "rating": 4.7,
@@ -36,7 +36,7 @@
     {
       "id": 3,
       "title": "المنهج الثالث: الطبخ",
-      "img": "assets/img/courses/sustainable-tourism.png",
+      "img": "assets/img/homePagecourse.png",
       "lectures": 10,
       "level": "مبتدئ",
       "rating": 4.7,

@@ -1,1 +1,37 @@
-<p>favorites works!</p>
+<app-banner
+  [title]="'المفضلة'"
+  [back]="'الرئيسية'"
+  [here]="'المفضلة'"
+></app-banner>
+<section class="favorites container">
+  <div class="tabs mt-4">
+    <button
+      [ngClass]="{ active: activeTab() === 'courses' }"
+      (click)="setActiveTab('courses')"
+    >
+      الدورات
+    </button>
+    <button
+      [ngClass]="{ active: activeTab() === 'blogs' }"
+      (click)="setActiveTab('blogs')"
+    >
+      المدونات
+    </button>
+  </div>
+  <div class="search mt-3 d-flex justify-content-center align-items-center">
+    <app-serach-bar></app-serach-bar>
+  </div>
+  <div class="row mt-4">
+    <ng-container *ngIf="activeTab() === 'courses'">
+      <div class="col-md-4 mb-4" *ngFor="let course of course$ | async">
+        <app-course-card [course]="course" />
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="activeTab() === 'blogs'">
+      <div class="col-md-4 mb-4" *ngFor="let blog of blogs$ | async">
+        <app-blog-card [blog]="blog" />
+      </div>
+    </ng-container>
+  </div>
+</section>

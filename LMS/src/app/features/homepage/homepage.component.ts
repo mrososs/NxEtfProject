@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CourseCardComponent } from './course-card/course-card.component';
 import { SerachBarComponent } from './search-bar/serach-bar.component';
@@ -8,6 +8,7 @@ import { CourseLevelComponent } from './course-level/course-level.component';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
+import { HomePageService } from '../courses/services/home-page.service';
 
 @Component({
   selector: 'app-homepage',
@@ -25,6 +26,8 @@ import { CourseInstructorComponent } from './course-instructor/course-instructor
   styleUrl: './homepage.component.scss',
 })
 export class HomepageComponent implements AfterViewInit {
+  private homepageService= inject(HomePageService);
+  course$=this.homepageService.getCourses();
   searchTerm: string = '';
   showFilters: boolean = false;
 
