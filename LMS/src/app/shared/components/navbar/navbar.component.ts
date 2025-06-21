@@ -16,4 +16,7 @@ export class NavbarComponent {
   onWindowScroll() {
     this.isScrolled = window.scrollY > 50;
   }
+  logout(){
+    
+  }
 }
