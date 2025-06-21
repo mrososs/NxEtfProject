@@ -13,4 +13,9 @@ export class BlogsService {
       .get<{ blog: blog[] }>('assets/data/blog.data.json')
       .pipe(map((response) => response.blog));
   }
+  getBlogDetails(id: number): Observable<blog | undefined> {
+    return this.getBlogs().pipe(
+      map((blog) => blog.find((blo) => blo.id === id))
+    );
+  }
 }

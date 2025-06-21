@@ -40,6 +40,13 @@ export const appRoutes: Route[] = [
       import('./features/blogs/blogs.component').then((c) => c.BlogsComponent),
   },
   {
+    path: 'blogsDetails/:id',
+    loadComponent: () =>
+      import('./features/blogs/blog-details/blog-details.component').then(
+        (c) => c.BlogDetailsComponent
+      ),
+  },
+  {
     path: 'favorites',
     loadComponent: () =>
       import('./features/favorites/favorites.component').then(

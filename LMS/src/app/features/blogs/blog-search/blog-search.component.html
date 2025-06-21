@@ -1,0 +1,14 @@
+<div class="searchbar">
+  <input
+    type="text"
+    pInputText
+    [(ngModel)]="initialSearchTerm"
+    (ngModelChange)="searchTermChange.emit(initialSearchTerm)"
+    placeholder="ابحث عن شيئ معين"
+  />
+  <img
+    src="../../../../assets/svg/search-normal.svg"
+    alt="searcIcon"
+    class="d-none d-lg-block"
+  />
+</div>
