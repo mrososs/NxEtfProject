@@ -9,36 +9,7 @@
       <h1>مرحبا بعودتك احمد ياسر</h1>
       <p>هل تريد متابعة منهجك</p>
     </div>
-    <div class="homePage__firstCards mt-3 mb-3">
-      <div class="row">
-        <div class="col-12 col-md-6 col-lg-4 mb-3">
-          <app-course-card
-            [course]="{
-              title: 'التواصل',
-              rating: 4.5,
-              level: 'مبتدئ',
-              lectures: 12,
-              img: 'assets/img/homePagecourse.png',
-              instructor: 'الأستاذ أحمد',
-              path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-            }"
-          ></app-course-card>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-3">
-          <app-course-card
-            [course]="{
-              title: 'ادارة الوقت',
-              rating: 4.5,
-              level: 'مبتدئ',
-              lectures: 12,
-              img: 'assets/img/homePagecourse.png',
-              instructor: 'الأستاذ أحمد',
-              path: '2022_time-management-إدارة-الوقت-scorm12-A9qTLmpG'
-            }"
-          ></app-course-card>
-        </div>
-      </div>
-    </div>
+
     <div class="homePage__Courses">
       <div class="container d-block d-md-none mt-3 mb-3">
         <div class="text-center">
@@ -50,6 +21,7 @@
           </button>
         </div>
       </div>
+
       <div class="searchFilter" *ngIf="showFilters">
         <div class="search">
           <app-serach-bar
@@ -72,160 +44,88 @@
 
       <div class="row">
         <div class="col-12 col-md-9">
+          <!-- Free Courses Section -->
           <div class="freeCourses d-flex justify-content-center">
             <h1>المناهح التعليميه المجانيه الخاصه بالموسم</h1>
           </div>
           <div class="mt-3">
             <div class="row mb-3">
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'ادارة الوقت',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_time-management-إدارة-الوقت-scorm12-A9qTLmpG'
-                  }"
-                ></app-course-card>
+              <!-- Dynamic courses from API -->
+              <div
+                class="col-12 col-md-6 col-lg-4 mb-3"
+                *ngFor="let course of course$ | async"
+              >
+                <app-course-card [course]="course"></app-course-card>
               </div>
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'التواصل',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-                  }"
-                ></app-course-card>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'انت كمشرف',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_you-as-a-supervisor-انت-كمشرف-scorm12-Utnyt5eX'
-                  }"
-                ></app-course-card>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'ادارة الوقت',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_time-management-إدارة-الوقت-scorm12-A9qTLmpG'
-                  }"
-                ></app-course-card>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'التواصل',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-                  }"
-                ></app-course-card>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'انت كمشرف',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_you-as-a-supervisor-انت-كمشرف-scorm12-Utnyt5eX'
-                  }"
-                ></app-course-card>
+
+              <!-- No courses message -->
+              <div
+                class="col-12 text-center"
+                *ngIf="(course$ | async)?.length === 0"
+              >
+                <div class="alert alert-info">
+                  <h4>لا توجد دورات متاحة حالياً</h4>
+                  <p>يرجى المحاولة مرة أخرى لاحقاً</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Search Results Section -->
           <div class="d-flex justify-content-center" #searchSection>
             <div *ngIf="searchTerm">
-              <h1>المناهج المتعلقة ببحثك عن ”{{ searchTerm }}”</h1>
+              <h1>المناهج المتعلقة ببحثك عن "{{ searchTerm }}"</h1>
             </div>
           </div>
           <div class="mt-3" *ngIf="searchTerm">
             <div class="row">
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'التواصل',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-                  }"
-                ></app-course-card>
+              <div class="col-12 text-center">
+                <div class="alert alert-info">
+                  <h4>لا توجد نتائج بحث متاحة</h4>
+                  <p>جرب البحث بكلمات مختلفة</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Category Results Section -->
           <div class="d-flex justify-content-center" #categorySection>
             <div *ngIf="selectedCategories.length">
               <h1>
-                المناهج المتعلقة بأختيارك عن ”{{
+                المناهج المتعلقة بأختيارك عن "{{
                   selectedCategories.join(' - ')
-                }}”
+                }}"
               </h1>
             </div>
           </div>
           <div class="mt-3" *ngIf="selectedCategories.length">
             <div class="row">
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'التواصل',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-                  }"
-                ></app-course-card>
+              <div class="col-12 text-center">
+                <div class="alert alert-info">
+                  <h4>لا توجد دورات متاحة لهذه الفئة</h4>
+                  <p>جرب اختيار فئة أخرى</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Top Rated Courses Section -->
           <div class="d-flex justify-content-center">
             <h1>المناهج الاعلي تقيم</h1>
           </div>
           <div class="mt-3">
             <div class="row">
-              <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <app-course-card
-                  [course]="{
-                    title: 'التواصل',
-                    rating: 4.5,
-                    level: 'مبتدئ',
-                    lectures: 12,
-                    img: 'assets/img/homePagecourse.png',
-                    instructor: 'الأستاذ أحمد',
-                    path: '2022_communications-التواصل-scorm12-MU2W_ngE'
-                  }"
-                ></app-course-card>
+              <div class="col-12 text-center">
+                <div class="alert alert-info">
+                  <h4>لا توجد دورات متاحة حالياً</h4>
+                  <p>يرجى المحاولة مرة أخرى لاحقاً</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Sidebar -->
         <div class="col col-md-3 d-none d-md-block d-lg-block">
           <div class="search">
             <app-serach-bar

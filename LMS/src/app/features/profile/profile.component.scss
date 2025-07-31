@@ -1,0 +1,508 @@
+// Loading and Error States
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+// Profile Container
+.profile-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+// Header Banner
+.profile-header {
+  background: linear-gradient(135deg, #f4f1eb 0%, #f8f5f0 100%);
+  padding: 3rem 0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="2" fill="%23ff6b35" opacity="0.1"/><circle cx="75" cy="75" r="2" fill="%23ff6b35" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="%23ff6b35" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+
+    .profile-info {
+      flex: 1;
+      min-width: 300px;
+
+      .user-type {
+        color: #ff6b35;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .user-name {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+
+      .user-title {
+        color: #6c757d;
+        font-size: 1.1rem;
+      }
+    }
+
+    .profile-image-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+
+      .profile-image-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid #ff6b35;
+        box-shadow: 0 8px 32px rgba(255, 107, 53, 0.2);
+
+        .profile-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .image-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+
+          i {
+            color: white;
+            font-size: 1.5rem;
+          }
+        }
+
+        &:hover {
+          .profile-image {
+            transform: scale(1.1);
+          }
+
+          .image-overlay {
+            opacity: 1;
+          }
+        }
+      }
+
+      .change-photo-btn {
+        background: #ff6b35;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #e55a2b;
+          transform: translateY(-2px);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+// Main Content
+.profile-content {
+  padding: 3rem 0;
+
+  .container {
+    max-width: 1200px;
+  }
+}
+
+// Section Styles
+.section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff6b35;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 3px solid #ff6b35;
+  padding-bottom: 0.5rem;
+}
+
+// About Section
+.about-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  .about-content {
+    .about-text {
+      color: #495057;
+      line-height: 1.8;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .edit-btn {
+      border-color: #ff6b35;
+      color: #ff6b35;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #ff6b35;
+        border-color: #ff6b35;
+        color: white;
+      }
+    }
+  }
+
+  .edit-form {
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+      }
+
+      .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: border-color 0.3s ease;
+
+        &:focus {
+          border-color: #ff6b35;
+          box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+// Courses Section
+.courses-section {
+  .courses-grid {
+    .course-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      height: 100%;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .course-image-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+
+        .course-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .favorite-icon {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: rgba(255, 255, 255, 0.9);
+          border-radius: 50%;
+          width: 35px;
+          height: 35px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          i {
+            color: #ff6b35;
+            font-size: 1rem;
+          }
+
+          &:hover {
+            background: #ff6b35;
+            i {
+              color: white;
+            }
+          }
+        }
+
+        .progress-overlay {
+          position: absolute;
+          bottom: 1rem;
+          left: 1rem;
+
+          .progress-circle {
+            position: relative;
+            width: 50px;
+            height: 50px;
+
+            .progress-svg {
+              width: 100%;
+              height: 100%;
+              transform: rotate(-90deg);
+
+              .progress-bg {
+                fill: none;
+                stroke: #e9ecef;
+                stroke-width: 3;
+              }
+
+              .progress-fill {
+                fill: none;
+                stroke-width: 3;
+                stroke-linecap: round;
+                transition: stroke-dasharray 0.5s ease;
+              }
+            }
+
+            .progress-text {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              font-size: 0.8rem;
+              font-weight: bold;
+              color: #2c3e50;
+            }
+          }
+        }
+      }
+
+      .course-content {
+        padding: 1.5rem;
+
+        .course-title {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #2c3e50;
+          margin-bottom: 1rem;
+          line-height: 1.3;
+        }
+
+        .course-details {
+          margin-bottom: 1rem;
+
+          .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+
+            .detail-label {
+              color: #6c757d;
+              font-weight: 500;
+            }
+
+            .detail-value {
+              color: #2c3e50;
+              font-weight: 600;
+            }
+          }
+        }
+
+        .course-progress-info {
+          margin-bottom: 1rem;
+
+          .progress-status {
+            .status-text {
+              font-size: 0.85rem;
+              color: #6c757d;
+              font-style: italic;
+            }
+          }
+        }
+
+        .start-course-btn {
+          width: 100%;
+          background: #ff6b35;
+          border: none;
+          padding: 0.75rem;
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Pagination
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+
+  ::ng-deep .custom-paginator {
+    .p-paginator {
+      .p-paginator-pages {
+        .p-paginator-page {
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          margin: 0 0.25rem;
+          border: 2px solid #e9ecef;
+          background: white;
+          color: #6c757d;
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #ff6b35;
+            color: #ff6b35;
+          }
+
+          &.p-highlight {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            color: white;
+          }
+        }
+      }
+
+      .p-paginator-first,
+      .p-paginator-prev,
+      .p-paginator-next,
+      .p-paginator-last {
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        border: 2px solid #e9ecef;
+        background: white;
+        color: #6c757d;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #ff6b35;
+          color: #ff6b35;
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .profile-header {
+    padding: 2rem 0;
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+
+      .profile-info {
+        .user-name {
+          font-size: 2rem;
+        }
+      }
+    }
+  }
+
+  .profile-content {
+    padding: 2rem 0;
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  .about-section {
+    padding: 1.5rem;
+  }
+
+  .courses-section {
+    .courses-grid {
+      .course-card {
+        .course-content {
+          padding: 1rem;
+
+          .course-title {
+            font-size: 1.1rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-header {
+    .header-content {
+      .profile-image-section {
+        .profile-image-container {
+          width: 120px;
+          height: 120px;
+        }
+      }
+    }
+  }
+
+  .about-section {
+    padding: 1rem;
+  }
+
+  .edit-form {
+    .form-actions {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}

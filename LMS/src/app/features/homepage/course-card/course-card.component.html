@@ -47,10 +47,9 @@
   <ng-template pTemplate="footer">
     <div class="d-flex justify-content-center mt-1">
       <p-button
-        label="بدء التعلم"
+        [label]="getButtonText()"
         styleClass="w-full"
-        [routerLink]="['/course-viewer']"
-        [queryParams]="{ folder: course.path }"
+        [routerLink]="getCourseLink()"
       ></p-button>
     </div>
   </ng-template>

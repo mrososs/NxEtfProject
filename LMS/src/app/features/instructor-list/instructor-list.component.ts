@@ -3,6 +3,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { BannerComponent } from '../homepage/banner/banner.component';
 import { HomePageService } from '../courses/services/home-page.service';
 import { InstructorCardComponent } from './instructor-card/instructor-card.component';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-instructor-list',
@@ -13,5 +14,20 @@ import { InstructorCardComponent } from './instructor-card/instructor-card.compo
 })
 export class InstructorListComponent {
   private _homePageService = inject(HomePageService);
-  instructorsData$ = this._homePageService.getInstructors();
+
+  // Get all instructors from API with pagination
+  instructorsData$ = this._homePageService
+    .getInstructorsFromApi({
+      page: 1,
+      pageSize: 20, // Get more instructors for the list
+      sortBy: 'Name',
+      sortDir: 'asc',
+    })
+    .pipe(
+      catchError((error) => {
+        console.error('Error fetching instructors from API:', error);
+        // Fallback to local data if API fails
+        return this._homePageService.getInstructors();
+      })
+    );
 }

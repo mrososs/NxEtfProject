@@ -1,89 +1,125 @@
-<app-banner
-  [title]="'المدربين'"
-  [back]="'الرئيسية'"
-  [here]="'المدربين'"
-></app-banner>
-<div class="instructor-details container">
-  <div class="row gap-3">
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="photo">
-        <img
-          src="../../../../assets/img/326364fc4b9ae7136d94b13f5777fa1619a37c04.png"
-          alt="instructorImg"
-        />
+<div class="instructor-details-container">
+  <div class="container">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
       </div>
+      <p class="mt-2">جاري تحميل تفاصيل المدرب...</p>
     </div>
-    <div class="col">
-      <h1>المدرب</h1>
-      <h2>{{ instructor?.name }}</h2>
-      <h3>{{ instructor?.technicalSkill }}</h3>
 
-      <div
-        class="row d-flex justify-content-between align-items-center instructor-info"
-      >
-        <div class="col-6 mb-3">
-          <div class="d-flex gap-2">
-            <img src="../../../../assets/svg/card/bookmark.svg" alt="video" />
-            <span>{{ instructor?.technicalSkill }}</span>
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="alert alert-danger mt-3">
+      <h4>خطأ في تحميل تفاصيل المدرب</h4>
+      <p>حدث خطأ في تحميل تفاصيل المدرب. يرجى المحاولة مرة أخرى.</p>
+    </div>
+
+    <!-- Instructor Details -->
+    <div *ngIf="!loading && !error && instructor" class="instructor-details">
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="instructor-header">
+            <h1 class="instructor-name">{{ instructor.name }}</h1>
+            <p class="instructor-title">{{ instructor.title }}</p>
+            <p class="instructor-about">{{ instructor.about }}</p>
+          </div>
+
+          <div class="instructor-stats mt-4">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="stat-item">
+                  <strong>المهارة الرئيسية:</strong> {{ instructor.mainSkill }}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stat-item">
+                  <strong>عدد الدورات:</strong> {{ instructor.numberOfCourses }}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stat-item">
+                  <strong>عدد الطلاب:</strong> {{ instructor.numberOfStudents }}
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="stat-item">
+                  <strong>التقييم:</strong>
+                  <span class="stars">
+                    <i
+                      *ngFor="let star of [1, 2, 3, 4, 5]"
+                      class="fas fa-star"
+                      [class.text-warning]="star <= instructor.starRanking"
+                      [class.text-muted]="star > instructor.starRanking"
+                    >
+                    </i>
+                    {{ instructor.starRanking }}/5
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Channels Section -->
+          <div
+            class="channels-section mt-4"
+            *ngIf="getChannelLinks().length > 0"
+          >
+            <h3>قنوات التواصل</h3>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let channel of getChannelLinks()">
+                <div class="channel-item">
+                  <h5>{{ channel.name }}</h5>
+                  <ul class="list-unstyled">
+                    <li *ngFor="let link of channel.links">
+                      <a
+                        [href]="link"
+                        target="_blank"
+                        class="text-decoration-none"
+                      >
+                        {{ link }}
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-6 mb-3">
-          <div class="d-flex justify-content-center gap-2">
-            <img src="../../../../assets/svg/card/clock.svg" alt="chart" />
-            <span>{{ instructor?.course }} منهج</span>
-          </div>
-        </div>
-        <div class="col-6 mb-3">
-          <div class="d-flex gap-2">
-            <img src="../../../../assets/svg/card/star.svg" alt="star" />
-            <span>({{ instructor?.review }}k){{ instructor?.rating }}</span>
-          </div>
-        </div>
-        <div class="col-6 mb-3">
-          <div class="d-flex justify-content-center align-items-center gap-2">
+
+        <div class="col-lg-4">
+          <div class="instructor-card">
             <img
-              src="../../../../assets/svg/card/profile-2user.svg"
-              alt="student"
+              [src]="instructor.avatar"
+              [alt]="instructor.name"
+              class="instructor-image"
             />
-            <span>{{ instructor?.students }} طالب</span>
-          </div>
-        </div>
-      </div>
-      <hr class="dotted-line" />
-      <div class="description">
-        <h2>نبذة تعريفية</h2>
-        <p>{{ instructor?.description }}</p>
-      </div>
-      <hr class="dotted-line" />
-      <div class="contact">
-        <h2>طرق التواصل</h2>
-        <div class="contact-details">
-          <div class="d-flex align-items-center mb-3  gap-3">
-            <div class="icon">
-              <img
-                src="../../../../assets/svg/contact/linkedin-svgrepo-com (2).svg"
-                alt="linkedIn logo"
-              />
+            <div class="instructor-card-body">
+              <h5>{{ instructor.name }}</h5>
+              <p>{{ instructor.title }}</p>
+              <div class="instructor-stats-small">
+                <span class="badge bg-primary">{{ instructor.mainSkill }}</span>
+                <span class="badge bg-secondary"
+                  >{{ instructor.numberOfCourses }} دورة</span
+                >
+                <span class="badge bg-info"
+                  >{{ instructor.numberOfStudents }} طالب</span
+                >
+              </div>
+              <div class="rating-small mt-2">
+                <span class="stars">
+                  <i
+                    *ngFor="let star of [1, 2, 3, 4, 5]"
+                    class="fas fa-star"
+                    [class.text-warning]="star <= instructor.starRanking"
+                    [class.text-muted]="star > instructor.starRanking"
+                  >
+                  </i>
+                  {{ instructor.starRanking }}/5
+                </span>
+              </div>
             </div>
-            <p>{{ instructor?.contact?.linkedIn }}</p>
-          </div>
-          <div class="d-flex align-items-center mb-3 gap-3">
-            <div class="icon">
-              <img
-                src="../../../../assets/svg/contact/sms.svg"
-                alt="email logo"
-              />
-            </div>
-            <p>{{ instructor?.contact?.gmail }}</p>
-          </div>
-          <div class="d-flex align-items-center mb-3  gap-3">
-            <div class="icon">
-              <img
-                src="../../../../assets/svg/contact/call.svg"
-                alt="phone logo"
-              />
-            </div>
-            <p>{{ instructor?.contact?.phone }}</p>
           </div>
         </div>
       </div>

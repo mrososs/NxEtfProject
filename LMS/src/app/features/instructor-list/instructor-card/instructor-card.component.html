@@ -1,6 +1,10 @@
 <p-card [style]="{ overflow: 'hidden', height: '35rem' }">
   <ng-template pTemplate="header">
-    <img alt="Card" class="w-full" [src]="instructor?.img" />
+    <img
+      alt="Card"
+      class="w-full"
+      [src]="instructor?.avatar || instructor?.img"
+    />
     <div class="plus-button"><span class="pi pi-plus"></span></div>
   </ng-template>
 
@@ -12,19 +16,21 @@
     <div class="col-6 mb-3">
       <div class="d-flex gap-2">
         <img src="../../../../assets/svg/card/bookmark.svg" alt="video" />
-        <span>{{ instructor?.technicalSkill }}</span>
+        <span>{{ instructor?.mainSkill || instructor?.technicalSkill }}</span>
       </div>
     </div>
     <div class="col-6 mb-3">
       <div class="d-flex justify-content-center gap-2">
         <img src="../../../../assets/svg/card/clock.svg" alt="chart" />
-        <span>{{ instructor?.course }} منهج</span>
+        <span
+          >{{ instructor?.numberOfCourses || instructor?.course }} منهج</span
+        >
       </div>
     </div>
     <div class="col-6 mb-3">
       <div class="d-flex gap-2">
         <img src="../../../../assets/svg/card/star.svg" alt="star" />
-        <span>({{ instructor?.review }}k){{ instructor?.rating }}</span>
+        <span>{{ instructor?.starRanking || instructor?.rating }}/5</span>
       </div>
     </div>
     <div class="col-6 mb-3">
@@ -33,7 +39,9 @@
           src="../../../../assets/svg/card/profile-2user.svg"
           alt="student"
         />
-        <span>{{ instructor?.students }} طالب</span>
+        <span
+          >{{ instructor?.numberOfStudents || instructor?.students }} طالب</span
+        >
       </div>
     </div>
   </div>

@@ -3,6 +3,16 @@ export interface Instructor {
   avatar: string;
 }
 
+// API Course interface matching the API response
+export interface ApiCourse {
+  id: number;
+  title: string;
+  description: string;
+  launchUrl: string;
+  uploadedAt: string;
+}
+
+// Extended Course interface for UI display
 export interface Course {
   id: number;
   title: string;
@@ -22,4 +32,9 @@ export interface Course {
   duration?: string; // e.g., "4 أسابيع"
   startDate?: Date | string;
   progress?: number; // For user progress tracking (0-100)
+
+  // API fields
+  description?: string;
+  launchUrl?: string;
+  uploadedAt?: string;
 }

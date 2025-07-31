@@ -3,12 +3,35 @@
     <h1 class="mt-2">المدربين</h1>
     <img src="../../../../assets/svg/3square.svg" alt="category" />
   </div>
-  <div class="checkList">
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-3">
+    <div class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+    <p class="mt-2 small">جاري تحميل المدربين...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="alert alert-warning py-2">
+    <small>لا يمكن تحميل المدربين حالياً</small>
+  </div>
+
+  <!-- Instructor List -->
+  <div class="checkList" *ngIf="!loading">
     <ul>
       <li *ngFor="let category of categories">
         <p-checkbox [(ngModel)]="category.checked" [binary]="true"></p-checkbox>
         <h3>{{ category.label }}</h3>
       </li>
     </ul>
+
+    <!-- No Instructors Message -->
+    <div
+      *ngIf="categories.length === 0 && !loading && !error"
+      class="text-center py-2"
+    >
+      <small class="text-muted">لا توجد مدربين متاحين</small>
+    </div>
   </div>
 </div>

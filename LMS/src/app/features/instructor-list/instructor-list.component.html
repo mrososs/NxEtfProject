@@ -8,12 +8,38 @@
     <h1>مدربين الدورات</h1>
     <p>
       نخبة من الخبراء يقودونك بخطى واثقة نحو التميز، بخبراتهم الواقعية وأسلوبهم
-      <br>العملي الذي يحوّل المعرفة إلى إنجاز
+      <br />العملي الذي يحوّل المعرفة إلى إنجاز
     </p>
   </div>
-  <div class="row">
-    <div class="col-12 col-md-6 col-lg-3 mb-4" *ngFor="let instructor of instructorsData$ | async">
-        <app-instructor-card [instructor]="instructor"></app-instructor-card>
+
+  <ng-container *ngIf="instructorsData$ | async as instructors">
+    <!-- Loading State -->
+    <div *ngIf="instructors === undefined" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+      <p class="mt-2">جاري تحميل المدربين...</p>
     </div>
-  </div>
+
+    <!-- Error State -->
+    <div
+      *ngIf="instructors && instructors.length === 0"
+      class="text-center py-5"
+    >
+      <div class="alert alert-info">
+        <h4>لا توجد مدربين متاحين حالياً</h4>
+        <p>يرجى المحاولة مرة أخرى لاحقاً</p>
+      </div>
+    </div>
+
+    <!-- Instructor List -->
+    <div class="row" *ngIf="instructors && instructors.length > 0">
+      <div
+        class="col-12 col-md-6 col-lg-3 mb-4"
+        *ngFor="let instructor of instructors"
+      >
+        <app-instructor-card [instructor]="instructor"></app-instructor-card>
+      </div>
+    </div>
+  </ng-container>
 </div>

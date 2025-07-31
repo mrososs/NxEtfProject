@@ -60,4 +60,18 @@ export const appRoutes: Route[] = [
         (c) => c.CoursesComponent
       ),
   },
+  {
+    path: 'courses/:id',
+    loadComponent: () =>
+      import('./features/courses/course-details/course-details.component').then(
+        (c) => c.CourseDetailsComponent
+      ),
+  },
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./features/profile/profile.component').then(
+        (c) => c.ProfileComponent
+      ),
+  },
 ];
