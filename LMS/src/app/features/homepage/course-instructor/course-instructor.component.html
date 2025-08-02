@@ -21,7 +21,11 @@
   <div class="checkList" *ngIf="!loading">
     <ul>
       <li *ngFor="let category of categories">
-        <p-checkbox [(ngModel)]="category.checked" [binary]="true"></p-checkbox>
+        <p-checkbox
+          [(ngModel)]="category.checked"
+          [binary]="true"
+          (onChange)="onCheckboxChange()"
+        ></p-checkbox>
         <h3>{{ category.label }}</h3>
       </li>
     </ul>

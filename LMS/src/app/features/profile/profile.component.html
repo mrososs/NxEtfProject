@@ -1,244 +1,157 @@
-<!-- Loading State -->
-<div *ngIf="loading" class="loading-container">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">جاري التحميل...</span>
-  </div>
-  <p class="mt-3">جاري تحميل الملف الشخصي...</p>
-</div>
+<app-banner
+  [title]="'الملف الشخصي'"
+  [back]="'الرئيسية'"
+  [here]="'الملف الشخصي'"
+></app-banner>
 
-<!-- Error State -->
-<div *ngIf="error && !loading" class="error-container">
-  <div class="alert alert-danger">
-    <h4>خطأ في تحميل الملف الشخصي</h4>
-    <p>حدث خطأ في تحميل بيانات الملف الشخصي. يرجى المحاولة مرة أخرى.</p>
-  </div>
-</div>
-
-<!-- Profile Content -->
-<div *ngIf="!loading && !error && profile" class="profile-container">
-  <!-- Header Banner -->
-  <div class="profile-header">
-    <div class="container">
-      <div class="header-content">
-        <div class="profile-info">
-          <div class="user-type">طالب</div>
-          <h1 class="user-name">{{ getFullName() }}</h1>
-          <div class="user-title">العنوان الرئيسي</div>
-        </div>
-        <div class="profile-image-section">
-          <div class="profile-image-container">
-            <img
-              [src]="profile.image || 'assets/img/instructor-avatar.png'"
-              [alt]="getDisplayName()"
-              class="profile-image"
-            />
-            <div class="image-overlay">
-              <i class="pi pi-camera"></i>
-            </div>
+<section class="profile-page py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="profile-card">
+          <div class="card-header">
+            <h2 class="text-center mb-4">
+              {{ isEditMode ? 'تعديل الملف الشخصي' : 'إنشاء ملف شخصي جديد' }}
+            </h2>
           </div>
-          <button
-            class="btn btn-primary change-photo-btn"
-            (click)="fileInput.click()"
-            [disabled]="uploadingImage"
-          >
-            <i class="pi pi-camera me-2"></i>
-            {{ uploadingImage ? 'جاري التحميل...' : 'تغير الصورة' }}
-          </button>
-          <input
-            #fileInput
-            type="file"
-            accept="image/*"
-            style="display: none"
-            (change)="onImageUpload($event)"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Main Content -->
-  <div class="profile-content">
-    <div class="container">
-      <!-- About Me Section -->
-      <div class="about-section">
-        <h2 class="section-title">
-          <i class="pi pi-user me-2"></i>
-          معلومات عني
-        </h2>
-
-        <div class="about-content" *ngIf="!editing">
-          <p class="about-text">{{ profile.description }}</p>
-          <button
-            class="btn btn-outline-primary edit-btn"
-            (click)="startEditing()"
-          >
-            <i class="pi pi-pencil me-2"></i>
-            تعديل المعلومات
-          </button>
-        </div>
-
-        <!-- Edit Form -->
-        <div class="edit-form" *ngIf="editing">
-          <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">الاسم الأول</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="editForm.firstName"
-                  placeholder="الاسم الأول"
-                />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">الاسم الأوسط</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="editForm.middleName"
-                  placeholder="الاسم الأوسط"
-                />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">الاسم الأخير</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="editForm.lastName"
-                  placeholder="الاسم الأخير"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="form-group mt-3">
-            <label class="form-label">نبذة عني</label>
-            <textarea
-              class="form-control"
-              rows="4"
-              [(ngModel)]="editForm.description"
-              placeholder="اكتب نبذة عن نفسك..."
-            ></textarea>
-          </div>
-          <div class="form-actions mt-3">
-            <button class="btn btn-primary me-2" (click)="saveProfile()">
-              <i class="pi pi-check me-2"></i>
-              حفظ التغييرات
-            </button>
-            <button class="btn btn-secondary" (click)="cancelEditing()">
-              <i class="pi pi-times me-2"></i>
-              إلغاء
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Training Courses Section -->
-      <div class="courses-section">
-        <h2 class="section-title">
-          <i class="pi pi-graduation-cap me-2"></i>
-          يتدرب علي
-        </h2>
-
-        <!-- Courses Grid -->
-        <div class="courses-grid">
-          <div class="row">
-            <div
-              class="col-lg-4 col-md-6 mb-4"
-              *ngFor="let course of getPaginatedCourses()"
-            >
-              <div class="course-card">
-                <div class="course-image-container">
-                  <img
-                    [src]="course.image"
-                    [alt]="course.title"
-                    class="course-image"
-                  />
-                  <div class="favorite-icon">
-                    <i class="pi pi-heart"></i>
+          <div class="card-body">
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+              <!-- Profile Image -->
+              <div class="form-group mb-4">
+                <label class="form-label">الصورة الشخصية</label>
+                <div class="image-upload-container">
+                  <div class="current-image" *ngIf="profileImageUrl">
+                    <img
+                      [src]="profileImageUrl"
+                      alt="Profile Image"
+                      class="profile-preview"
+                    />
                   </div>
-                  <div class="progress-overlay">
-                    <div class="progress-circle">
-                      <svg class="progress-svg" viewBox="0 0 36 36">
-                        <path
-                          class="progress-bg"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        <path
-                          class="progress-fill"
-                          [style.stroke]="getProgressColor(course.progress)"
-                          [style.stroke-dasharray]="course.progress + ', 100'"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                      </svg>
-                      <span class="progress-text">{{ course.progress }}%</span>
-                    </div>
+                  <div class="upload-area" *ngIf="!profileImageUrl">
+                    <i
+                      class="pi pi-user"
+                      style="font-size: 3rem; color: #ccc"
+                    ></i>
+                    <p class="upload-text">اضغط لاختيار صورة</p>
                   </div>
-                </div>
-
-                <div class="course-content">
-                  <h3 class="course-title">{{ course.title }}</h3>
-
-                  <div class="course-details">
-                    <div class="detail-item">
-                      <span class="detail-label">المستوى:</span>
-                      <span class="detail-value">{{ course.level }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">المدرب:</span>
-                      <span class="detail-value">{{ course.instructor }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">المحاضرات:</span>
-                      <span class="detail-value"
-                        >{{ course.lectures }} محاضرة</span
-                      >
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">التقييم:</span>
-                      <span class="detail-value">
-                        <i class="pi pi-star-fill text-warning"></i>
-                        {{ course.rating }} ({{ course.reviews }}k)
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="course-progress-info">
-                    <div class="progress-status">
-                      <span class="status-text">{{
-                        getProgressStatus(course.progress)
-                      }}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    class="btn btn-primary start-course-btn"
-                    (click)="startCourse(course.id)"
+                  <p-fileUpload
+                    mode="basic"
+                    [auto]="true"
+                    accept="image/*"
+                    [maxFileSize]="5000000"
+                    chooseLabel="اختيار صورة"
+                    (onSelect)="onFileSelect($event)"
+                    [showCancelButton]="false"
+                    [showUploadButton]="false"
                   >
-                    <i class="pi pi-arrow-left me-2"></i>
-                    البداء بالمنهج
-                  </button>
+                  </p-fileUpload>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Pagination -->
-        <div class="pagination-container" *ngIf="totalRecords > pageSize">
-          <p-paginator
-            [rows]="pageSize"
-            [totalRecords]="totalRecords"
-            [showPageLinks]="true"
-            [showFirstLastIcon]="false"
-            (onPageChange)="onPageChange($event)"
-            styleClass="custom-paginator"
-          ></p-paginator>
+              <!-- First Name -->
+              <div class="form-group mb-3">
+                <label for="firstName" class="form-label">الاسم الأول *</label>
+                <input
+                  id="firstName"
+                  type="text"
+                  pInputText
+                  formControlName="firstName"
+                  class="form-control"
+                  [class.is-invalid]="
+                    profileForm.get('firstName')?.invalid &&
+                    profileForm.get('firstName')?.touched
+                  "
+                  placeholder="أدخل الاسم الأول"
+                />
+                <div
+                  class="invalid-feedback"
+                  *ngIf="
+                    profileForm.get('firstName')?.invalid &&
+                    profileForm.get('firstName')?.touched
+                  "
+                >
+                  {{ getFieldError('firstName') }}
+                </div>
+              </div>
+
+              <!-- Middle Name -->
+              <div class="form-group mb-3">
+                <label for="middleName" class="form-label">الاسم الأوسط</label>
+                <input
+                  id="middleName"
+                  type="text"
+                  pInputText
+                  formControlName="middleName"
+                  class="form-control"
+                  placeholder="أدخل الاسم الأوسط (اختياري)"
+                />
+              </div>
+
+              <!-- Last Name -->
+              <div class="form-group mb-3">
+                <label for="lastName" class="form-label">الاسم الأخير *</label>
+                <input
+                  id="lastName"
+                  type="text"
+                  pInputText
+                  formControlName="lastName"
+                  class="form-control"
+                  [class.is-invalid]="
+                    profileForm.get('lastName')?.invalid &&
+                    profileForm.get('lastName')?.touched
+                  "
+                  placeholder="أدخل الاسم الأخير"
+                />
+                <div
+                  class="invalid-feedback"
+                  *ngIf="
+                    profileForm.get('lastName')?.invalid &&
+                    profileForm.get('lastName')?.touched
+                  "
+                >
+                  {{ getFieldError('lastName') }}
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group mb-4">
+                <label for="description" class="form-label">الوصف</label>
+                <textarea
+                  id="description"
+                  pInputTextarea
+                  formControlName="description"
+                  class="form-control"
+                  rows="4"
+                  placeholder="أدخل وصفاً مختصراً عن نفسك (اختياري)"
+                >
+                </textarea>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="form-group text-center">
+                <button
+                  type="submit"
+                  pButton
+                  [disabled]="isLoading || profileForm.invalid"
+                  [loading]="isLoading"
+                  class="btn btn-primary btn-lg px-5"
+                >
+                  <i
+                    class="pi"
+                    [class.pi-user-plus]="!isEditMode"
+                    [class.pi-user-edit]="isEditMode"
+                  ></i>
+                  {{ isEditMode ? 'تحديث الملف الشخصي' : 'إنشاء الملف الشخصي' }}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>

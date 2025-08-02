@@ -74,4 +74,11 @@ export const appRoutes: Route[] = [
         (c) => c.ProfileComponent
       ),
   },
+  {
+    path: 'error-500',
+    loadComponent: () =>
+      import('./shared/components/error-500/error-500.component').then(
+        (c) => c.Error500Component
+      ),
+  },
 ];

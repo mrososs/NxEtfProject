@@ -20,8 +20,8 @@ export class InstructorListComponent {
     .getInstructorsFromApi({
       page: 1,
       pageSize: 20, // Get more instructors for the list
-      sortBy: 'Name',
-      sortDir: 'asc',
+      sortBy: 'Id', // Use 'Id' as shown in Swagger documentation
+      sortDir: 'desc',
     })
     .pipe(
       catchError((error) => {

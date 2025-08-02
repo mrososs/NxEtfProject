@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -14,6 +14,8 @@ import { catchError, of } from 'rxjs';
   styleUrl: './course-instructor.component.scss',
 })
 export class CourseInstructorComponent implements OnInit {
+  @Output() selectedInstructorsChange = new EventEmitter<string[]>();
+
   private _homePageService = inject(HomePageService);
 
   checked = false;
@@ -29,9 +31,14 @@ export class CourseInstructorComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
-    // Get first 3 top-rated instructors from API
+    // Get first 3 top-rated instructors from API with proper error handling
     this._homePageService
-      .getTopInstructors()
+      .getInstructorsFromApi({
+        page: 1,
+        pageSize: 3,
+        sortBy: 'Id',
+        sortDir: 'desc',
+      })
       .pipe(
         catchError((error) => {
           console.error('Error fetching top instructors from API:', error);
@@ -62,5 +69,13 @@ export class CourseInstructorComponent implements OnInit {
           ];
         },
       });
+  }
+
+  onCheckboxChange() {
+    const selectedValues = this.categories
+      .filter((cat) => cat.checked)
+      .map((cat) => cat.value);
+
+    this.selectedInstructorsChange.emit(selectedValues);
   }
 }

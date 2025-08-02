@@ -6,7 +6,7 @@ export interface ApiInstructor {
   mainSkill: string;
   numberOfCourses: number;
   numberOfStudents: number;
-  starRanking: number;
+  starRanking?: number; // Made optional to handle missing property
   about: string;
   channels: {
     [key: string]: string[];

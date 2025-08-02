@@ -8,3 +8,11 @@
 
   <!-- <app-footer></app-footer> -->
 </div>
+
+<!-- Profile Required Dialog -->
+<app-profile-required-dialog
+  [visible]="showProfileDialog"
+  (createProfile)="onCreateProfile()"
+  (cancelDialog)="onCancelProfile()"
+>
+</app-profile-required-dialog>

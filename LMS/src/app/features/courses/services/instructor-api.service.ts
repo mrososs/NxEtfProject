@@ -7,6 +7,7 @@ import {
   Instructor,
   InstructorQueryParams,
 } from '../model/instructor.model';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -35,9 +36,72 @@ export class InstructorApiService {
     if (params.mainSkill)
       httpParams = httpParams.set('mainSkill', params.mainSkill);
 
-    return this._http.get<ApiInstructorResponse>('Trainer', {
-      params: httpParams,
-    });
+    const headers = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+
+    console.log('Instructors API request params:', httpParams.toString());
+
+    return this._http
+      .get<any>('Trainer', {
+        params: httpParams,
+        headers,
+      })
+      .pipe(
+        map((response: any) => {
+          // Log the response structure for debugging
+          console.log('Instructors API response structure:', response);
+          console.log('Query parameters used:', httpParams.toString());
+
+          // Handle different API response structures
+          let apiResponse: ApiInstructorResponse;
+
+          if (response && Array.isArray(response)) {
+            // Direct array response
+            apiResponse = {
+              data: response,
+              count: response.length,
+              pageNumber: 1,
+              pageSize: response.length,
+              totalPages: 1,
+            };
+          } else if (response && Array.isArray(response.data)) {
+            // Standard paginated response
+            apiResponse = {
+              data: response.data,
+              count: response.count || response.data.length,
+              pageNumber: response.pageNumber || 1,
+              pageSize: response.pageSize || response.data.length,
+              totalPages: response.totalPages || 1,
+            };
+          } else if (response && Array.isArray(response.instructors)) {
+            // Response with instructors property
+            apiResponse = {
+              data: response.instructors,
+              count: response.count || response.instructors.length,
+              pageNumber: response.pageNumber || 1,
+              pageSize: response.pageSize || response.instructors.length,
+              totalPages: response.totalPages || 1,
+            };
+          } else {
+            // Fallback to empty response
+            console.warn(
+              'Unknown API response structure for instructors:',
+              response
+            );
+            apiResponse = {
+              data: [],
+              count: 0,
+              pageNumber: 1,
+              pageSize: 10,
+              totalPages: 0,
+            };
+          }
+
+          return apiResponse;
+        })
+      );
   }
 
   /**
@@ -64,12 +128,12 @@ export class InstructorApiService {
       mainSkill: apiInstructor.mainSkill,
       numberOfCourses: apiInstructor.numberOfCourses,
       numberOfStudents: apiInstructor.numberOfStudents,
-      starRanking: apiInstructor.starRanking,
+      starRanking: apiInstructor.starRanking || 0, // Default to 0 if missing
       about: apiInstructor.about,
       channels: apiInstructor.channels,
       // UI-specific defaults
       avatar: 'assets/img/instructor-avatar.png',
-      isFeatured: apiInstructor.starRanking >= 4.5,
+      isFeatured: (apiInstructor.starRanking || 0) >= 4.5,
     };
   }
 

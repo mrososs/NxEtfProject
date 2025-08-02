@@ -3,6 +3,26 @@ export interface Instructor {
   avatar: string;
 }
 
+// Course filter interface for advanced filtering
+export interface CourseFilter {
+  search?: string; // Text search for title, description, etc.
+  category?: string[]; // Array of category values
+  level?: string[]; // Array of level values (beginner, mid, advanced)
+  instructor?: string[]; // Array of instructor IDs or names
+  price?: {
+    min?: number;
+    max?: number;
+  };
+  rating?: number; // Minimum rating filter
+  duration?: {
+    min?: number; // in hours
+    max?: number;
+  };
+  language?: string; // Course language
+  isFree?: boolean; // Free courses only
+  isFeatured?: boolean; // Featured courses only
+}
+
 // API Course interface matching the API response
 export interface ApiCourse {
   id: number;

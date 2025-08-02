@@ -3,9 +3,12 @@
     type="text"
     pInputText
     [(ngModel)]="initialSearchTerm"
-    (ngModelChange)="searchTermChange.emit(initialSearchTerm)"
+    (ngModelChange)="onSearchChange($event)"
     placeholder="ابحث عن منهج معين"
   />
-      <img src="../../../../assets/svg/search-normal.svg" alt="searcIcon" class="d-none d-lg-block">
-
+  <img
+    src="../../../../assets/svg/search-normal.svg"
+    alt="searcIcon"
+    class="d-none d-lg-block"
+  />
 </div>

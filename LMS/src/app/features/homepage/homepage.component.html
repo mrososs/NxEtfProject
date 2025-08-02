@@ -35,10 +35,28 @@
           ></app-course-category>
         </div>
         <div class="level mt-3">
-          <app-course-level></app-course-level>
+          <app-course-level
+            (selectedLevelsChange)="onLevelChange($event)"
+          ></app-course-level>
         </div>
         <div class="instructor mt-3">
-          <app-course-instructor></app-course-instructor>
+          <app-course-instructor
+            (selectedInstructorsChange)="onInstructorChange($event)"
+          ></app-course-instructor>
+        </div>
+        <div class="clear-filters mt-3 text-center">
+          <button
+            class="btn btn-outline-secondary"
+            (click)="clearAllFilters()"
+            [disabled]="
+              !searchTerm &&
+              selectedCategories.length === 0 &&
+              selectedLevels.length === 0 &&
+              selectedInstructors.length === 0
+            "
+          >
+            مسح جميع الفلاتر
+          </button>
         </div>
       </div>
 
@@ -50,10 +68,10 @@
           </div>
           <div class="mt-3">
             <div class="row mb-3">
-              <!-- Dynamic courses from API -->
+              <!-- All courses from API (main display) -->
               <div
                 class="col-12 col-md-6 col-lg-4 mb-3"
-                *ngFor="let course of course$ | async"
+                *ngFor="let course of allCourses$ | async"
               >
                 <app-course-card [course]="course"></app-course-card>
               </div>
@@ -61,7 +79,7 @@
               <!-- No courses message -->
               <div
                 class="col-12 text-center"
-                *ngIf="(course$ | async)?.length === 0"
+                *ngIf="(allCourses$ | async)?.length === 0"
               >
                 <div class="alert alert-info">
                   <h4>لا توجد دورات متاحة حالياً</h4>
@@ -79,7 +97,19 @@
           </div>
           <div class="mt-3" *ngIf="searchTerm">
             <div class="row">
-              <div class="col-12 text-center">
+              <!-- Search results -->
+              <div
+                class="col-12 col-md-6 col-lg-4 mb-3"
+                *ngFor="let course of filteredCourses$ | async"
+              >
+                <app-course-card [course]="course"></app-course-card>
+              </div>
+
+              <!-- No search results message -->
+              <div
+                class="col-12 text-center"
+                *ngIf="(filteredCourses$ | async)?.length === 0 && searchTerm"
+              >
                 <div class="alert alert-info">
                   <h4>لا توجد نتائج بحث متاحة</h4>
                   <p>جرب البحث بكلمات مختلفة</p>
@@ -100,7 +130,22 @@
           </div>
           <div class="mt-3" *ngIf="selectedCategories.length">
             <div class="row">
-              <div class="col-12 text-center">
+              <!-- Category filtered results -->
+              <div
+                class="col-12 col-md-6 col-lg-4 mb-3"
+                *ngFor="let course of filteredCourses$ | async"
+              >
+                <app-course-card [course]="course"></app-course-card>
+              </div>
+
+              <!-- No category results message -->
+              <div
+                class="col-12 text-center"
+                *ngIf="
+                  (filteredCourses$ | async)?.length === 0 &&
+                  selectedCategories.length > 0
+                "
+              >
                 <div class="alert alert-info">
                   <h4>لا توجد دورات متاحة لهذه الفئة</h4>
                   <p>جرب اختيار فئة أخرى</p>
@@ -115,7 +160,19 @@
           </div>
           <div class="mt-3">
             <div class="row">
-              <div class="col-12 text-center">
+              <!-- Top rated courses (using all courses for now) -->
+              <div
+                class="col-12 col-md-6 col-lg-4 mb-3"
+                *ngFor="let course of allCourses$ | async"
+              >
+                <app-course-card [course]="course"></app-course-card>
+              </div>
+
+              <!-- No top rated courses message -->
+              <div
+                class="col-12 text-center"
+                *ngIf="(allCourses$ | async)?.length === 0"
+              >
                 <div class="alert alert-info">
                   <h4>لا توجد دورات متاحة حالياً</h4>
                   <p>يرجى المحاولة مرة أخرى لاحقاً</p>
@@ -139,10 +196,28 @@
             ></app-course-category>
           </div>
           <div class="level mt-3">
-            <app-course-level></app-course-level>
+            <app-course-level
+              (selectedLevelsChange)="onLevelChange($event)"
+            ></app-course-level>
           </div>
           <div class="instructor mt-3">
-            <app-course-instructor></app-course-instructor>
+            <app-course-instructor
+              (selectedInstructorsChange)="onInstructorChange($event)"
+            ></app-course-instructor>
+          </div>
+          <div class="clear-filters mt-3 text-center">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              (click)="clearAllFilters()"
+              [disabled]="
+                !searchTerm &&
+                selectedCategories.length === 0 &&
+                selectedLevels.length === 0 &&
+                selectedInstructors.length === 0
+              "
+            >
+              مسح الفلاتر
+            </button>
           </div>
         </div>
       </div>

@@ -62,7 +62,13 @@
               "maximumError": "8kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "buildOptimizer": true
         },
         "development": {
           "buildOptimizer": false,
@@ -85,6 +91,7 @@
         "development": {
           "buildTarget": "LMS:build:development"
         }
+
       },
       "defaultConfiguration": "development"
     },

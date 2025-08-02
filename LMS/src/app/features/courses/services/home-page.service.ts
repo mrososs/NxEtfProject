@@ -1,8 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, switchMap } from 'rxjs';
+import {
+  map,
+  Observable,
+  switchMap,
+  BehaviorSubject,
+  combineLatest,
+  shareReplay,
+  startWith,
+  distinctUntilChanged,
+} from 'rxjs';
 import { types } from '../model/types.model';
-import { Course, ApiCourse } from '../model/course.model';
+import { Course, ApiCourse, CourseFilter } from '../model/course.model';
 import {
   Instructor,
   ApiInstructor,
@@ -20,21 +29,159 @@ export class HomePageService {
   private _courseApiService = inject(CourseApiService);
   private _instructorApiService = inject(InstructorApiService);
 
+  // BehaviorSubject to track current filters
+  private _currentFilters = new BehaviorSubject<CourseFilter>({});
+  public currentFilters$ = this._currentFilters.asObservable();
+
+  // Separate observables for different course types
+  private _allCourses$ = this._courseApiService.getAllCourses('ar').pipe(
+    map((response: any) => {
+      console.log('All courses API response structure:', response);
+      let apiCourses: ApiCourse[];
+      if (Array.isArray(response)) {
+        apiCourses = response;
+      } else if (response && Array.isArray(response.data)) {
+        apiCourses = response.data;
+      } else if (response && Array.isArray(response.courses)) {
+        apiCourses = response.courses;
+      } else {
+        console.warn(
+          'Unknown API response structure for all courses:',
+          response
+        );
+        apiCourses = [];
+      }
+      return apiCourses.map((apiCourse) =>
+        this._courseApiService.transformApiCourseToUiCourse(apiCourse)
+      );
+    }),
+    shareReplay(1) // Cache the result and share it
+  );
+
+  private _filteredCourses$ = this.currentFilters$.pipe(
+    startWith({}),
+    distinctUntilChanged(
+      (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)
+    ),
+    switchMap((filters) => this.getFilteredCoursesFromApi('ar', filters)),
+    shareReplay(1) // Cache the result and share it
+  );
+
   getTypes(): Observable<types[]> {
     return this._http.get<types[]>('../../../../assets/data/types.data.json');
   }
 
+  // Get all courses (cached)
+  getAllCourses(): Observable<Course[]> {
+    return this._allCourses$;
+  }
+
+  // Get filtered courses (cached)
+  getFilteredCourses(): Observable<Course[]> {
+    return this._filteredCourses$;
+  }
+
   // Get courses from API only
   getCoursesFromApi(lang = 'ar'): Observable<Course[]> {
-    return this._courseApiService
-      .getAllCourses(lang)
-      .pipe(
-        map((apiCourses: ApiCourse[]) =>
-          apiCourses.map((apiCourse) =>
-            this._courseApiService.transformApiCourseToUiCourse(apiCourse)
-          )
-        )
-      );
+    return this._courseApiService.getAllCourses(lang).pipe(
+      map((response: any) => {
+        // Log the response structure for debugging
+        console.log('Courses API response structure:', response);
+
+        // Handle different API response structures
+        let apiCourses: ApiCourse[];
+
+        if (Array.isArray(response)) {
+          // Direct array response
+          apiCourses = response;
+        } else if (response && Array.isArray(response.data)) {
+          // Response with data property
+          apiCourses = response.data;
+        } else if (response && Array.isArray(response.courses)) {
+          // Response with courses property
+          apiCourses = response.courses;
+        } else {
+          // Fallback to empty array if structure is unknown
+          console.warn('Unknown API response structure for courses:', response);
+          apiCourses = [];
+        }
+
+        return apiCourses.map((apiCourse) =>
+          this._courseApiService.transformApiCourseToUiCourse(apiCourse)
+        );
+      })
+    );
+  }
+
+  // Get filtered courses from API
+  getFilteredCoursesFromApi(
+    lang = 'ar',
+    filter?: CourseFilter
+  ): Observable<Course[]> {
+    return this._courseApiService.getAllCourses(lang, filter).pipe(
+      map((response: any) => {
+        console.log('Filtered courses API response structure:', response);
+
+        // Handle different API response structures
+        let apiCourses: ApiCourse[];
+
+        if (Array.isArray(response)) {
+          apiCourses = response;
+        } else if (response && Array.isArray(response.data)) {
+          apiCourses = response.data;
+        } else if (response && Array.isArray(response.courses)) {
+          apiCourses = response.courses;
+        } else {
+          console.warn(
+            'Unknown API response structure for filtered courses:',
+            response
+          );
+          apiCourses = [];
+        }
+
+        return apiCourses.map((apiCourse) =>
+          this._courseApiService.transformApiCourseToUiCourse(apiCourse)
+        );
+      })
+    );
+  }
+
+  // Update current filters
+  updateFilters(filters: Partial<CourseFilter>): void {
+    const currentFilters = this._currentFilters.value;
+    const newFilters = { ...currentFilters, ...filters };
+    console.log('Updating filters:', { currentFilters, newFilters });
+    this._currentFilters.next(newFilters);
+  }
+
+  // Search courses by text
+  searchCourses(searchTerm: string, lang = 'ar'): Observable<Course[]> {
+    const filter: CourseFilter = { search: searchTerm };
+    return this.getFilteredCoursesFromApi(lang, filter);
+  }
+
+  // Filter courses by category
+  filterCoursesByCategory(
+    categories: string[],
+    lang = 'ar'
+  ): Observable<Course[]> {
+    const filter: CourseFilter = { category: categories };
+    return this.getFilteredCoursesFromApi(lang, filter);
+  }
+
+  // Filter courses by level
+  filterCoursesByLevel(levels: string[], lang = 'ar'): Observable<Course[]> {
+    const filter: CourseFilter = { level: levels };
+    return this.getFilteredCoursesFromApi(lang, filter);
+  }
+
+  // Filter courses by instructor
+  filterCoursesByInstructor(
+    instructors: string[],
+    lang = 'ar'
+  ): Observable<Course[]> {
+    const filter: CourseFilter = { instructor: instructors };
+    return this.getFilteredCoursesFromApi(lang, filter);
   }
 
   // Get a single course by ID from API
@@ -52,15 +199,18 @@ export class HomePageService {
   getInstructorsFromApi(
     params: InstructorQueryParams = {}
   ): Observable<Instructor[]> {
-    return this._instructorApiService
-      .getAllInstructors(params)
-      .pipe(
-        map((apiResponse: ApiInstructorResponse) =>
-          this._instructorApiService.transformApiInstructorResponseToUiInstructors(
+    return this._instructorApiService.getAllInstructors(params).pipe(
+      map((apiResponse: ApiInstructorResponse) => {
+        try {
+          return this._instructorApiService.transformApiInstructorResponseToUiInstructors(
             apiResponse
-          )
-        )
-      );
+          );
+        } catch (error) {
+          console.error('Error transforming instructor data:', error);
+          return [];
+        }
+      })
+    );
   }
 
   // Get first 3 top-rated instructors for course-instructor component
@@ -68,7 +218,7 @@ export class HomePageService {
     return this.getInstructorsFromApi({
       page: 1,
       pageSize: 3,
-      sortBy: 'StarRanking',
+      sortBy: 'Id', // Use 'Id' as shown in Swagger documentation
       sortDir: 'desc',
     });
   }
@@ -93,6 +243,38 @@ export class HomePageService {
     );
   }
 
+  // Debug method to test API endpoints
+  debugApiEndpoints(): void {
+    console.log('=== API Debugging ===');
+
+    // Test courses API
+    this._courseApiService.getAllCourses('ar').subscribe({
+      next: (courses) => {
+        console.log('✅ Courses API working:', courses);
+      },
+      error: (error) => {
+        console.error('❌ Courses API error:', error);
+      },
+    });
+
+    // Test instructors API
+    this._instructorApiService
+      .getAllInstructors({
+        page: 1,
+        pageSize: 3,
+        sortBy: 'Id',
+        sortDir: 'desc',
+      })
+      .subscribe({
+        next: (instructors) => {
+          console.log('✅ Instructors API working:', instructors);
+        },
+        error: (error) => {
+          console.error('❌ Instructors API error:', error);
+        },
+      });
+  }
+
   // Get courses from local JSON file (kept for backward compatibility)
   getCourses(): Observable<Course[]> {
     return this._http
@@ -103,7 +285,7 @@ export class HomePageService {
   }
 
   // Get courses from both API and local data (combined) - kept for backward compatibility
-  getAllCourses(lang = 'ar'): Observable<Course[]> {
+  getAllCoursesCombined(lang = 'ar'): Observable<Course[]> {
     return this.getCoursesFromApi(lang).pipe(
       switchMap((apiCourses) =>
         this.getCourses().pipe(
