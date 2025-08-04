@@ -1,10 +1,12 @@
 import { Route } from '@angular/router';
+import { ErrorPageGuard } from './core/guards/error-page.guard';
 
 export const appRoutes: Route[] = [
   {
     path: '',
     redirectTo: 'courses',
     pathMatch: 'full',
+    // Remove canActivate from redirect route - it's not allowed
   },
   {
     path: 'instructor',
@@ -12,6 +14,7 @@ export const appRoutes: Route[] = [
       import('./features/instructor-list/instructor-list.component').then(
         (m) => m.InstructorListComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'course-viewer',
@@ -19,6 +22,7 @@ export const appRoutes: Route[] = [
       import('./features/course-viewer/course-viewer.component').then(
         (m) => m.CourseViewerComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'instructorDetails/:id',
@@ -26,6 +30,7 @@ export const appRoutes: Route[] = [
       import(
         './features/instructor-list/instructor-details/instructor-details.component'
       ).then((c) => c.InstructorDetailsComponent),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'homepage',
@@ -33,11 +38,13 @@ export const appRoutes: Route[] = [
       import('./features/homepage/homepage.component').then(
         (c) => c.HomepageComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'blogs',
     loadComponent: () =>
       import('./features/blogs/blogs.component').then((c) => c.BlogsComponent),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'blogsDetails/:id',
@@ -45,6 +52,7 @@ export const appRoutes: Route[] = [
       import('./features/blogs/blog-details/blog-details.component').then(
         (c) => c.BlogDetailsComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'favorites',
@@ -52,6 +60,7 @@ export const appRoutes: Route[] = [
       import('./features/favorites/favorites.component').then(
         (c) => c.FavoritesComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'courses',
@@ -59,6 +68,7 @@ export const appRoutes: Route[] = [
       import('./features/courses/courses.component').then(
         (c) => c.CoursesComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'courses/:id',
@@ -66,6 +76,7 @@ export const appRoutes: Route[] = [
       import('./features/courses/course-details/course-details.component').then(
         (c) => c.CourseDetailsComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'profile',
@@ -73,6 +84,7 @@ export const appRoutes: Route[] = [
       import('./features/profile/profile.component').then(
         (c) => c.ProfileComponent
       ),
+    canActivate: [ErrorPageGuard],
   },
   {
     path: 'error-500',
@@ -80,5 +92,6 @@ export const appRoutes: Route[] = [
       import('./shared/components/error-500/error-500.component').then(
         (c) => c.Error500Component
       ),
+    // No guard for error-500 page
   },
 ];

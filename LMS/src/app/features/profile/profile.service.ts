@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { ErrorStateService } from '../../shared/services/error-state.service';
 
 export interface UserProfile {
   id?: number;
@@ -20,50 +21,60 @@ export interface UserProfile {
 })
 export class ProfileService {
   private http = inject(HttpClient);
-  private readonly PROFILE_ENDPOINT = '/me';
+  private readonly PROFILE_ENDPOINT = 'http://etfapi.itechpro-eg.com/me';
+  private hasRedirectedToError = false;
+
+  constructor(private errorStateService: ErrorStateService) {}
 
   /**
    * Get user profile from API
    */
   getUserProfile(): Observable<UserProfile | null> {
+    // Skip API call if we're on error page
+    if (this.errorStateService.shouldSkipApiCalls()) {
+      return of(null);
+    }
+
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
 
-    return this.http.get<any>(`${this.PROFILE_ENDPOINT}`, { headers }).pipe(
-      map((response) => {
-        return this.transformApiResponseToProfile(response);
-      }),
-      catchError((error) => {
-        // Check for "No Profile Created" error
-        if (
-          error.status === 404 ||
-          (error.error &&
-            error.error.message &&
-            error.error.message.includes(
-              'No Profile Created For This User Please Contact Your Administrator'
-            ))
-        ) {
-          this.redirectToProfilePage();
-          return of(null);
-        }
+    return this.http
+      .get<UserProfile>(`${this.PROFILE_ENDPOINT}`, { headers })
+      .pipe(
+        map((response) => {
+          return response as UserProfile;
+        }),
+        catchError((error) => {
+          // Check for "No Profile Created" error
+          if (
+            error.status === 404 ||
+            (error.error &&
+              error.error.message &&
+              error.error.message.includes(
+                'No Profile Created For This User Please Contact Your Administrator'
+              ))
+          ) {
+            this.redirectToProfilePage();
+            return of(null);
+          }
 
-        // Check for 500 error or other authentication errors
-        if (
-          error.status === 500 ||
-          error.status === 401 ||
-          error.status === 403
-        ) {
-          this.showAuthErrorPage();
+          // Check for 500 error or other authentication errors
+          if (
+            error.status === 500 ||
+            error.status === 401 ||
+            error.status === 403
+          ) {
+            this.showAuthErrorPage();
+            return throwError(() => error);
+          }
+
+          // For any other error, redirect to main site
+          // this.redirectToMainSite();
           return throwError(() => error);
-        }
-
-        // For any other error, redirect to main site
-        this.redirectToMainSite();
-        return throwError(() => error);
-      })
-    );
+        })
+      );
   }
 
   /**
@@ -140,8 +151,6 @@ export class ProfileService {
       })
     );
   }
-
-
 
   /**
    * Get user ID from localStorage or cookie
@@ -229,6 +238,11 @@ export class ProfileService {
    * Check authentication on app startup
    */
   checkAuthenticationOnStartup(): Observable<boolean> {
+    // Skip authentication check if we're on error page
+    if (this.errorStateService.shouldSkipApiCalls()) {
+      return of(false);
+    }
+
     return this.getUserProfile().pipe(
       map((profile) => {
         return true;
@@ -284,6 +298,16 @@ export class ProfileService {
    * Show authentication error page
    */
   private showAuthErrorPage(): void {
+    // Prevent infinite redirects
+    if (
+      this.hasRedirectedToError ||
+      this.errorStateService.getCurrentErrorState()
+    ) {
+      return;
+    }
+
+    this.hasRedirectedToError = true;
+    this.errorStateService.setErrorState(true);
     // Navigate to the error-500 page
     window.location.href = '/error-500';
   }

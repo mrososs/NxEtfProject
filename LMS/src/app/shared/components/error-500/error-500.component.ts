@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ErrorStateService } from '../../services/error-state.service';
 
 @Component({
   selector: 'app-error-500',
@@ -105,6 +106,30 @@ import { CommonModule } from '@angular/common';
     `,
   ],
 })
-export class Error500Component {
-  constructor() {}
+export class Error500Component implements OnInit {
+  constructor(private errorStateService: ErrorStateService) {}
+
+  ngOnInit(): void {
+    // Set error state to prevent further API calls
+    this.errorStateService.setErrorState(true);
+    console.log('Error 500 page loaded - preventing further API calls');
+  }
+
+  // Prevent browser back/forward navigation
+  @HostListener('window:popstate', ['$event'])
+  onPopState(event: any): void {
+    console.log('Navigation attempt blocked from error page');
+    // Prevent going back from error page
+    window.history.pushState(null, '', '/error-500');
+  }
+
+  // Prevent keyboard navigation
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Prevent F5 refresh and Ctrl+R
+    if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+      event.preventDefault();
+      console.log('Page refresh blocked from error page');
+    }
+  }
 }

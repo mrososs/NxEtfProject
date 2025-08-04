@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { ProfileService } from './features/profile/profile.service';
 import { ProfileRequiredService } from './shared/services/profile-required.service';
 import { ProfileRequiredDialogComponent } from './shared/components/profile-required-dialog/profile-required-dialog.component';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
+import { ErrorStateService } from './shared/services/error-state.service';
 
 @Component({
   selector: 'app-root',
@@ -20,22 +21,36 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
 })
 export class AppComponent implements OnInit {
   showProfileDialog = false;
+  private hasCheckedAuth = false;
+  showNavbar = true;
 
   constructor(
     private profileService: ProfileService,
-    private profileRequiredService: ProfileRequiredService
-  ) {}
+    private profileRequiredService: ProfileRequiredService,
+    private router: Router,
+    private errorStateService: ErrorStateService
+  ) {
+    // Check if we're on error page to hide navbar
+    this.checkIfOnErrorPage();
+  }
 
   ngOnInit(): void {
+    // Skip authentication check if we're on error page or already checked
+    if (this.errorStateService.shouldSkipApiCalls() || this.hasCheckedAuth) {
+      return;
+    }
+
     // Check authentication on app startup
     this.profileService.checkAuthenticationOnStartup().subscribe({
       next: (isAuthenticated) => {
+        this.hasCheckedAuth = true;
         if (isAuthenticated) {
           this.checkUserProfile();
         }
         // If not authenticated, redirect is handled by ProfileService
       },
       error: (error) => {
+        this.hasCheckedAuth = true;
         // Error handling is done by ProfileService
       },
     });
@@ -44,6 +59,19 @@ export class AppComponent implements OnInit {
     this.profileRequiredService.showDialog$.subscribe((show) => {
       this.showProfileDialog = show;
     });
+
+    // Subscribe to error state changes
+    this.errorStateService.isOnErrorPage$.subscribe((isOnErrorPage) => {
+      this.showNavbar = !isOnErrorPage;
+    });
+  }
+
+  private checkIfOnErrorPage(): void {
+    const isOnErrorPage = window.location.pathname === '/error-500';
+    this.showNavbar = !isOnErrorPage;
+    if (isOnErrorPage) {
+      this.errorStateService.setErrorState(true);
+    }
   }
 
   private checkUserProfile(): void {

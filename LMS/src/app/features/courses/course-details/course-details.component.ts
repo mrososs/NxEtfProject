@@ -46,6 +46,20 @@ interface FAQ {
   isExpanded: boolean;
 }
 
+interface CourseUnit {
+  id: number;
+  title: string;
+  duration: string;
+  isExpanded: boolean;
+  lessons: CourseLesson[];
+}
+
+interface CourseLesson {
+  id: number;
+  title: string;
+  duration: string;
+}
+
 @Component({
   selector: 'app-course-details',
   standalone: true,
@@ -105,42 +119,78 @@ export class CourseDetailsComponent implements OnInit {
     {
       id: 1,
       text: 'فهم أساسيات الارشاد السياحي وأهميته',
-      icon: 'fas fa-check-circle',
+      icon: 'pi pi-check-circle',
     },
     {
       id: 2,
       text: 'تعلم مهارات التواصل مع السياح',
-      icon: 'fas fa-check-circle',
+      icon: 'pi pi-check-circle',
     },
     {
       id: 3,
       text: 'اكتساب المعرفة بالمعالم السياحية',
-      icon: 'fas fa-check-circle',
+      icon: 'pi pi-check-circle',
     },
     {
       id: 4,
       text: 'تطوير مهارات التخطيط للجولات السياحية',
-      icon: 'fas fa-check-circle',
+      icon: 'pi pi-check-circle',
     },
     {
       id: 5,
       text: 'فهم الثقافات المختلفة وكيفية التعامل معها',
-      icon: 'fas fa-check-circle',
+      icon: 'pi pi-check-circle',
     },
   ];
 
   courseRequirements: CourseRequirement[] = [
-    { id: 1, text: 'لا توجد متطلبات مسبقة', icon: 'fas fa-info-circle' },
-    { id: 2, text: 'الرغبة في التعلم والتطوير', icon: 'fas fa-heart' },
-    { id: 3, text: 'إمكانية الوصول للإنترنت', icon: 'fas fa-wifi' },
-    { id: 4, text: 'الوقت الكافي للدراسة', icon: 'fas fa-clock' },
+    { id: 1, text: 'لا توجد متطلبات مسبقة', icon: 'pi pi-info-circle' },
+    { id: 2, text: 'الرغبة في التعلم والتطوير', icon: 'pi pi-heart' },
+    { id: 3, text: 'إمكانية الوصول للإنترنت', icon: 'pi pi-wifi' },
+    { id: 4, text: 'الوقت الكافي للدراسة', icon: 'pi pi-clock' },
   ];
 
   courseBenefits: CourseBenefit[] = [
-    { id: 1, text: 'شهادة إتمام الدورة', icon: 'fas fa-certificate' },
-    { id: 2, text: 'الوصول الدائم للمحتوى', icon: 'fas fa-infinity' },
-    { id: 3, text: 'دعم فني متواصل', icon: 'fas fa-headset' },
-    { id: 4, text: 'مجتمع تعليمي نشط', icon: 'fas fa-users' },
+    { id: 1, text: 'شهادة إتمام الدورة', icon: 'pi pi-certificate' },
+    { id: 2, text: 'الوصول الدائم للمحتوى', icon: 'pi pi-infinity' },
+    { id: 3, text: 'دعم فني متواصل', icon: 'pi pi-headset' },
+    { id: 4, text: 'مجتمع تعليمي نشط', icon: 'pi pi-users' },
+  ];
+
+  courseUnits: CourseUnit[] = [
+    {
+      id: 1,
+      title: 'مقدمة في الارشاد السياحي',
+      duration: '20 دقيقة',
+      isExpanded: false,
+      lessons: [
+        { id: 1, title: 'ما هو الارشاد السياحي؟', duration: '5 دقائق' },
+        { id: 2, title: 'أهمية الارشاد السياحي', duration: '8 دقائق' },
+        { id: 3, title: 'مهارات المرشد السياحي', duration: '7 دقائق' },
+      ],
+    },
+    {
+      id: 2,
+      title: 'التواصل مع السياح',
+      duration: '30 دقيقة',
+      isExpanded: false,
+      lessons: [
+        { id: 4, title: 'أساسيات التواصل', duration: '10 دقائق' },
+        { id: 5, title: 'التعامل مع الثقافات المختلفة', duration: '12 دقائق' },
+        { id: 6, title: 'حل المشاكل والمواقف الصعبة', duration: '8 دقائق' },
+      ],
+    },
+    {
+      id: 3,
+      title: 'المعالم السياحية',
+      duration: '45 دقيقة',
+      isExpanded: false,
+      lessons: [
+        { id: 7, title: 'أنواع المعالم السياحية', duration: '15 دقيقة' },
+        { id: 8, title: 'كيفية تقديم المعلومات', duration: '20 دقيقة' },
+        { id: 9, title: 'التفاعل مع الزوار', duration: '10 دقائق' },
+      ],
+    },
   ];
 
   faqs: FAQ[] = [
@@ -318,6 +368,13 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   /**
+   * Toggle course unit expansion
+   */
+  toggleUnit(index: number): void {
+    this.courseUnits[index].isExpanded = !this.courseUnits[index].isExpanded;
+  }
+
+  /**
    * Submit a new review
    */
   submitReview(): void {
@@ -351,5 +408,12 @@ export class CourseDetailsComponent implements OnInit {
    */
   getTotalReviews(): number {
     return this.reviews.length;
+  }
+
+  /**
+   * Reload course details
+   */
+  loadCourse(): void {
+    this.loadCourseDetails();
   }
 }

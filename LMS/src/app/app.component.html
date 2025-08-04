@@ -1,6 +1,6 @@
 <div class="page-container">
   <!-- <etf-navbar></etf-navbar> -->
-  <app-navbar></app-navbar>
+  <app-navbar *ngIf="showNavbar"></app-navbar>
 
   <main class="content">
     <router-outlet></router-outlet>

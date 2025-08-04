@@ -1,61 +1,68 @@
-<!-- Header Banner -->
-<div class="header-banner">
-  <div class="container">
-    <div class="banner-content">
-      <h1 class="banner-title">تفاصيل الدورة</h1>
-      <p class="banner-subtitle" *ngIf="course">{{ course.title }}</p>
+<!-- Main Content -->
+<div class="course-details-page">
+  <!-- Hero Section with Course Image -->
+  <div class="hero-section">
+    <div class="hero-image-container">
+      <img
+        [src]="course?.img || 'assets/img/default-course.jpg'"
+        [alt]="course?.title"
+        class="hero-image"
+      />
+      <div class="hero-overlay">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="hero-title">{{ course?.title || 'تفاصيل الدورة' }}</h1>
+            <p class="hero-subtitle">{{ course?.description }}</p>
+            <button
+              class="btn btn-primary btn-lg launch-btn"
+              (click)="launchCourse()"
+              [disabled]="!canLaunchCourse()"
+            >
+              <i class="pi pi-play me-2"></i>
+              {{ course?.buttonText || 'البدء بالدورة' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Main Content -->
-<div class="course-details-container">
-  <div class="container">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">جاري التحميل...</span>
-      </div>
-      <p class="mt-2">جاري تحميل تفاصيل الدورة...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error && !loading" class="alert alert-danger mt-3">
-      <h4>خطأ في تحميل الدورة</h4>
-      <p>حدث خطأ في تحميل تفاصيل الدورة. يرجى المحاولة مرة أخرى.</p>
-    </div>
-
-    <!-- Course Content -->
-    <div *ngIf="!loading && !error && course" class="course-content">
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <div class="container">
       <div class="row">
-        <!-- Main Content Area -->
+        <!-- Left Column - Main Content -->
         <div class="col-lg-8">
-          <!-- Course Overview -->
-          <div class="course-overview">
-            <div class="course-image-container">
-              <img
-                [src]="course.img"
-                [alt]="course.title"
-                class="course-main-image"
-              />
-              <div class="course-overlay">
-                <button
-                  class="btn btn-primary btn-lg play-button"
-                  (click)="launchCourse()"
-                  [disabled]="!canLaunchCourse()"
-                >
-                  <i class="fas fa-play me-2"></i>
-                  {{ course.buttonText || 'البدء بالدورة' }}
-                </button>
-              </div>
+          <!-- Loading State -->
+          <div *ngIf="loading" class="loading-section">
+            <div class="spinner-container">
+              <div class="spinner"></div>
+              <p>جاري تحميل تفاصيل الدورة...</p>
             </div>
+          </div>
 
-            <div class="course-header">
-              <h1 class="course-title">{{ course.title }}</h1>
-              <p class="course-description">{{ course.description }}</p>
+          <!-- Error State -->
+          <div *ngIf="error && !loading" class="error-section">
+            <div class="error-card">
+              <i class="pi pi-exclamation-triangle error-icon"></i>
+              <h3>خطأ في تحميل الدورة</h3>
+              <p>حدث خطأ في تحميل تفاصيل الدورة. يرجى المحاولة مرة أخرى.</p>
+              <button class="btn btn-primary" (click)="loadCourse()">
+                <i class="pi pi-refresh me-2"></i>
+                إعادة المحاولة
+              </button>
+            </div>
+          </div>
 
-              <!-- Course Progress Section -->
-              <div class="course-progress-section" *ngIf="courseProgress">
+          <!-- Course Content -->
+          <div *ngIf="!loading && !error && course" class="course-content">
+            <!-- Course Progress Section -->
+            <div class="progress-section" *ngIf="courseProgress">
+              <div class="progress-card">
+                <h3 class="section-title">
+                  <i class="pi pi-chart-line me-2"></i>
+                  تقدمك في الدورة
+                </h3>
                 <div class="progress-info">
                   <div class="progress-status">
                     <span class="status-label">حالة التقدم:</span>
@@ -81,208 +88,236 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- What You Will Learn Section -->
-          <div class="learning-section">
-            <h2 class="section-title">
-              <i class="fas fa-graduation-cap me-2"></i>
-              ماذا سوف تتعلم في هذة الدورة ؟
-            </h2>
-            <div class="learning-objectives">
-              <div
-                class="objective-item"
-                *ngFor="let objective of learningObjectives"
-              >
-                <i [class]="objective.icon" class="objective-icon"></i>
-                <span>{{ objective.text }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Why Choose This Course Section -->
-          <div class="why-choose-section">
-            <h2 class="section-title">
-              <i class="fas fa-star me-2"></i>
-              لماذا تختار هذة الدورة
-            </h2>
-            <div class="benefits-list">
-              <div class="benefit-item" *ngFor="let benefit of courseBenefits">
-                <i [class]="benefit.icon" class="benefit-icon"></i>
-                <span>{{ benefit.text }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Reviews Section -->
-          <div class="reviews-section">
-            <div class="reviews-header">
-              <h2 class="section-title">
-                <i class="fas fa-comments me-2"></i>
-                التقييمات
-              </h2>
-              <div class="rating-summary">
-                <div class="average-rating">
-                  <span class="rating-number">{{ getAverageRating() }}</span>
-                  <div class="stars">
-                    <i
-                      *ngFor="let star of [1, 2, 3, 4, 5]"
-                      class="fas fa-star"
-                      [class.text-warning]="star <= getAverageRating()"
-                      [class.text-muted]="star > getAverageRating()"
-                    >
-                    </i>
-                  </div>
-                  <span class="total-reviews"
-                    >({{ getTotalReviews() }} تقييم)</span
+            <!-- What You Will Learn Section -->
+            <div class="learning-section">
+              <div class="section-card">
+                <h2 class="section-title">
+                  <i class="pi pi-graduation-cap me-2"></i>
+                  ماذا سوف تتعلم في هذه الدورة؟
+                </h2>
+                <div class="learning-objectives">
+                  <div
+                    class="objective-item"
+                    *ngFor="let objective of learningObjectives"
                   >
+                    <div class="objective-icon">
+                      <i [class]="objective.icon"></i>
+                    </div>
+                    <span class="objective-text">{{ objective.text }}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Reviews List -->
-            <div class="reviews-list">
-              <div class="review-card" *ngFor="let review of reviews">
-                <div class="review-header">
-                  <img
-                    [src]="review.avatar"
-                    [alt]="review.name"
-                    class="reviewer-avatar"
-                  />
-                  <div class="reviewer-info">
-                    <h6 class="reviewer-name">{{ review.name }}</h6>
-                    <div class="review-rating">
-                      <i
-                        *ngFor="let star of [1, 2, 3, 4, 5]"
-                        class="fas fa-star"
-                        [class.text-warning]="star <= review.rating"
-                        [class.text-muted]="star > review.rating"
+            <!-- Course Content Section -->
+            <div class="content-section">
+              <div class="section-card">
+                <h2 class="section-title">
+                  <i class="pi pi-list me-2"></i>
+                  المحتوى الدراسي
+                </h2>
+                <div class="content-list">
+                  <div
+                    class="content-item"
+                    *ngFor="let unit of courseUnits; let i = index"
+                  >
+                    <div class="unit-header" (click)="toggleUnit(i)">
+                      <div class="unit-info">
+                        <span class="unit-number">الوحدة {{ i + 1 }}</span>
+                        <span class="unit-title">{{ unit.title }}</span>
+                      </div>
+                      <div class="unit-meta">
+                        <span class="unit-duration">{{ unit.duration }}</span>
+                        <i
+                          class="pi pi-chevron-down"
+                          [class.rotated]="unit.isExpanded"
+                        ></i>
+                      </div>
+                    </div>
+                    <div
+                      class="unit-content"
+                      [class.expanded]="unit.isExpanded"
+                    >
+                      <div
+                        class="lesson-item"
+                        *ngFor="let lesson of unit.lessons"
                       >
-                      </i>
+                        <i class="pi pi-play-circle lesson-icon"></i>
+                        <span class="lesson-title">{{ lesson.title }}</span>
+                        <span class="lesson-duration">{{
+                          lesson.duration
+                        }}</span>
+                      </div>
                     </div>
                   </div>
-                  <span class="review-date">{{
-                    review.date | date : 'dd/MM/yyyy'
-                  }}</span>
-                </div>
-                <p class="review-text">{{ review.text }}</p>
-                <div class="review-actions">
-                  <button class="btn btn-sm btn-outline-primary me-2">
-                    <i class="fas fa-thumbs-up me-1"></i>
-                    مفيد ({{ review.helpful }})
-                  </button>
-                  <button class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-thumbs-down me-1"></i>
-                    غير مفيد ({{ review.notHelpful }})
-                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Write Review Section -->
-            <div class="write-review-section">
-              <h3 class="section-subtitle">
-                <i class="fas fa-edit me-2"></i>
-                اكتب مراجعة
-              </h3>
-              <div class="review-form">
-                <div class="rating-input mb-3">
-                  <label class="form-label">التقييم:</label>
-                  <div class="star-rating">
-                    <i
-                      *ngFor="let star of [1, 2, 3, 4, 5]"
-                      class="fas fa-star star-input"
-                      [class.text-warning]="star <= newReview.rating"
-                      [class.text-muted]="star > newReview.rating"
-                      (click)="newReview.rating = star"
-                    >
-                    </i>
+            <!-- Reviews Section -->
+            <div class="reviews-section">
+              <div class="section-card">
+                <div class="reviews-header">
+                  <h2 class="section-title">
+                    <i class="pi pi-comments me-2"></i>
+                    التقييمات
+                  </h2>
+                  <div class="rating-summary">
+                    <div class="average-rating">
+                      <span class="rating-number">{{
+                        getAverageRating()
+                      }}</span>
+                      <div class="stars">
+                        <i
+                          *ngFor="let star of [1, 2, 3, 4, 5]"
+                          class="pi pi-star"
+                          [class.text-warning]="star <= getAverageRating()"
+                          [class.text-muted]="star > getAverageRating()"
+                        ></i>
+                      </div>
+                      <span class="total-reviews"
+                        >({{ getTotalReviews() }} تقييم)</span
+                      >
+                    </div>
                   </div>
                 </div>
-                <div class="mb-3">
-                  <label class="form-label">مراجعتك:</label>
-                  <textarea
-                    class="form-control"
-                    rows="4"
-                    placeholder="اكتب مراجعتك هنا..."
-                    [(ngModel)]="newReview.text"
-                  >
-                  </textarea>
+
+                <!-- Reviews List -->
+                <div class="reviews-list">
+                  <div class="review-card" *ngFor="let review of reviews">
+                    <div class="review-header">
+                      <div class="reviewer-info">
+                        <img
+                          [src]="review.avatar"
+                          [alt]="review.name"
+                          class="reviewer-avatar"
+                        />
+                        <div class="reviewer-details">
+                          <h6 class="reviewer-name">{{ review.name }}</h6>
+                          <div class="review-rating">
+                            <i
+                              *ngFor="let star of [1, 2, 3, 4, 5]"
+                              class="pi pi-star"
+                              [class.text-warning]="star <= review.rating"
+                              [class.text-muted]="star > review.rating"
+                            ></i>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="review-date">{{
+                        review.date | date : 'dd/MM/yyyy'
+                      }}</span>
+                    </div>
+                    <p class="review-text">{{ review.text }}</p>
+                    <div class="review-actions">
+                      <button class="btn btn-sm btn-outline-primary me-2">
+                        <i class="pi pi-thumbs-up me-1"></i>
+                        مفيد ({{ review.helpful }})
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary">
+                        <i class="pi pi-thumbs-down me-1"></i>
+                        غير مفيد ({{ review.notHelpful }})
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <button class="btn btn-primary" (click)="submitReview()">
-                  <i class="fas fa-paper-plane me-2"></i>
-                  إرسال المراجعة
-                </button>
+
+                <!-- Write Review Section -->
+                <div class="write-review-section">
+                  <h3 class="section-subtitle">
+                    <i class="pi pi-pencil me-2"></i>
+                    اكتب مراجعة
+                  </h3>
+                  <div class="review-form">
+                    <div class="rating-input mb-3">
+                      <label class="form-label">التقييم:</label>
+                      <div class="star-rating">
+                        <i
+                          *ngFor="let star of [1, 2, 3, 4, 5]"
+                          class="pi pi-star star-input"
+                          [class.text-warning]="star <= newReview.rating"
+                          [class.text-muted]="star > newReview.rating"
+                          (click)="newReview.rating = star"
+                        ></i>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">مراجعتك:</label>
+                      <textarea
+                        class="form-control"
+                        rows="4"
+                        placeholder="اكتب مراجعتك هنا..."
+                        [(ngModel)]="newReview.text"
+                      ></textarea>
+                    </div>
+                    <button class="btn btn-primary" (click)="submitReview()">
+                      <i class="pi pi-send me-2"></i>
+                      إرسال المراجعة
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Right Column - Sidebar -->
         <div class="col-lg-4">
           <div class="course-sidebar">
             <!-- Course Details Card -->
             <div class="sidebar-card course-details-card">
               <h3 class="card-title">
-                <i class="fas fa-info-circle me-2"></i>
-                الطور الدراسي
+                <i class="pi pi-info-circle me-2"></i>
+                تفاصيل الدورة
               </h3>
               <div class="course-stats">
                 <div class="stat-item">
-                  <i class="fas fa-layer-group stat-icon"></i>
+                  <i class="pi pi-layer-group stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">المستوى</span>
-                    <span class="stat-value">{{ course.level }}</span>
+                    <span class="stat-value">{{ course?.level }}</span>
                   </div>
                 </div>
                 <div class="stat-item">
-                  <i class="fas fa-book stat-icon"></i>
+                  <i class="pi pi-book stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">عدد المحاضرات</span>
-                    <span class="stat-value">{{ course.lectures }} محاضرة</span>
+                    <span class="stat-value"
+                      >{{ course?.lectures }} محاضرة</span
+                    >
                   </div>
                 </div>
                 <div class="stat-item">
-                  <i class="fas fa-star stat-icon"></i>
+                  <i class="pi pi-star stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">التقييم</span>
-                    <span class="stat-value">{{ course.rating }}/5</span>
+                    <span class="stat-value">{{ course?.rating }}/5</span>
                   </div>
                 </div>
                 <div class="stat-item">
-                  <i class="fas fa-user stat-icon"></i>
+                  <i class="pi pi-user stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">المدرب</span>
                     <span class="stat-value">{{
-                      course.instructor?.name
+                      course?.instructor?.name
                     }}</span>
                   </div>
                 </div>
                 <div class="stat-item">
-                  <i class="fas fa-calendar stat-icon"></i>
+                  <i class="pi pi-calendar stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">تاريخ الإضافة</span>
                     <span class="stat-value">{{
-                      course.uploadedAt | date : 'dd/MM/yyyy'
+                      course?.uploadedAt | date : 'dd/MM/yyyy'
                     }}</span>
                   </div>
                 </div>
                 <div class="stat-item">
-                  <i class="fas fa-comments stat-icon"></i>
+                  <i class="pi pi-comments stat-icon"></i>
                   <div class="stat-content">
                     <span class="stat-label">التقييمات</span>
-                    <span class="stat-value">{{ course.reviews }}</span>
-                  </div>
-                </div>
-
-                <!-- Progress Tracking Info -->
-                <div class="stat-item" *ngIf="courseProgress">
-                  <i class="fas fa-chart-line stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">التقدم</span>
-                    <span class="stat-value"
-                      >{{ getCompletionPercentage() }}%</span
-                    >
+                    <span class="stat-value">{{ course?.reviews }}</span>
                   </div>
                 </div>
               </div>
@@ -291,16 +326,18 @@
             <!-- Course Requirements Card -->
             <div class="sidebar-card">
               <h3 class="card-title">
-                <i class="fas fa-list-check me-2"></i>
-                المتطلبات الأساسية للدورة
+                <i class="pi pi-list-check me-2"></i>
+                المتطلبات الأساسية
               </h3>
               <div class="requirements-list">
                 <div
                   class="requirement-item"
                   *ngFor="let requirement of courseRequirements"
                 >
-                  <i [class]="requirement.icon" class="requirement-icon"></i>
-                  <span>{{ requirement.text }}</span>
+                  <div class="requirement-icon">
+                    <i [class]="requirement.icon"></i>
+                  </div>
+                  <span class="requirement-text">{{ requirement.text }}</span>
                 </div>
               </div>
             </div>
@@ -308,16 +345,18 @@
             <!-- What You Will Get Card -->
             <div class="sidebar-card">
               <h3 class="card-title">
-                <i class="fas fa-gift me-2"></i>
-                ماذا ستحصل عليه من الدورة
+                <i class="pi pi-gift me-2"></i>
+                ماذا ستحصل عليه
               </h3>
               <div class="benefits-list">
                 <div
                   class="benefit-item"
                   *ngFor="let benefit of courseBenefits"
                 >
-                  <i [class]="benefit.icon" class="benefit-icon"></i>
-                  <span>{{ benefit.text }}</span>
+                  <div class="benefit-icon">
+                    <i [class]="benefit.icon"></i>
+                  </div>
+                  <span class="benefit-text">{{ benefit.text }}</span>
                 </div>
               </div>
             </div>
@@ -325,15 +364,15 @@
             <!-- FAQ Card -->
             <div class="sidebar-card">
               <h3 class="card-title">
-                <i class="fas fa-question-circle me-2"></i>
-                الاسئلة الاكثر تكرار
+                <i class="pi pi-question-circle me-2"></i>
+                الأسئلة الشائعة
               </h3>
               <div class="faq-list">
                 <div class="faq-item" *ngFor="let faq of faqs">
                   <div class="faq-question" (click)="toggleFAQ(faq)">
-                    <span>{{ faq.question }}</span>
+                    <span class="faq-text">{{ faq.question }}</span>
                     <i
-                      class="fas fa-chevron-down"
+                      class="pi pi-chevron-down"
                       [class.rotated]="faq.isExpanded"
                     ></i>
                   </div>
