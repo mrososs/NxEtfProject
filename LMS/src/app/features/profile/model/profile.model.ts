@@ -4,15 +4,22 @@ export interface User {
   userId: string;
 }
 
-export interface Profile {
+export interface Course {
   id: number;
-  image: string;
+  title: string;
+  description: string;
+  launchUrl: string;
+  uploadedAt: string;
+  reviews: any[];
+}
+
+export interface Profile {
   imageLink: string;
   firstName: string;
   middleName: string;
   lastName: string;
   description: string;
-  user: User;
+  courses: Course[];
 }
 
 export interface ProfileResponse {

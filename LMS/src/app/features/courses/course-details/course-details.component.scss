@@ -37,8 +37,8 @@
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.3) 100%
+    rgba(247, 148, 30, 0.8) 0%,
+    rgba(247, 148, 30, 0.4) 100%
   );
   display: flex;
   align-items: center;
@@ -77,12 +77,15 @@
     padding: 1rem 2rem;
     font-size: 1.1rem;
     border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    background: linear-gradient(135deg, #f7941e 0%, #f7941e80 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(247, 148, 30, 0.3);
     transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+      box-shadow: 0 6px 20px rgba(247, 148, 30, 0.4);
+      background: linear-gradient(135deg, #e6851a 0%, #f7941e80 100%);
     }
 
     i {
@@ -189,7 +192,7 @@
     align-items: center;
 
     i {
-      color: #007bff;
+      color: #f7941e;
       margin-left: 0.5rem;
       font-size: 1.3rem;
     }
@@ -199,18 +202,18 @@
 // Progress Section
 .progress-section {
   .progress-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #f7941e4d 0%, #f7941e80 100%);
+    color: #333;
     border-radius: 15px;
     padding: 2rem;
     margin-bottom: 2rem;
 
     .section-title {
-      color: white;
+      color: #333;
       margin-bottom: 1.5rem;
 
       i {
-        color: white;
+        color: #f7941e;
       }
     }
   }
@@ -224,6 +227,7 @@
 
       .status-label {
         font-weight: 500;
+        color: #333;
       }
 
       .status-value {
@@ -238,8 +242,8 @@
         }
 
         &.status-in-progress {
-          background: #ffc107;
-          color: #212529;
+          background: #f7941e;
+          color: white;
         }
 
         &.status-not-started {
@@ -257,7 +261,7 @@
       .progress-bar {
         flex: 1;
         height: 10px;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(247, 148, 30, 0.3);
         border-radius: 5px;
         overflow: hidden;
 
@@ -271,7 +275,7 @@
           }
 
           &.progress-in-progress {
-            background: #ffc107;
+            background: #f7941e;
           }
 
           &.progress-not-started {
@@ -284,6 +288,7 @@
         font-weight: bold;
         font-size: 1.1rem;
         min-width: 50px;
+        color: #333;
       }
     }
   }
@@ -300,20 +305,20 @@
       align-items: flex-start;
       gap: 1rem;
       padding: 1rem;
-      background: #f8f9fa;
+      background: rgba(247, 148, 30, 0.1);
       border-radius: 10px;
-      border-left: 4px solid #007bff;
+      border-left: 4px solid #f7941e;
       transition: all 0.3s ease;
 
       &:hover {
-        background: #e9ecef;
+        background: rgba(247, 148, 30, 0.2);
         transform: translateX(5px);
       }
 
       .objective-icon {
         width: 40px;
         height: 40px;
-        background: #007bff;
+        background: linear-gradient(135deg, #f7941e 0%, #f7941e80 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -349,12 +354,19 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem 1.5rem;
-        background: #f8f9fa;
+        background: rgba(247, 148, 30, 0.1);
         cursor: pointer;
         transition: all 0.3s ease;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
 
         &:hover {
-          background: #e9ecef;
+          background: rgba(247, 148, 30, 0.2);
+        }
+
+        &:focus {
+          outline: 2px solid #f7941e;
+          outline-offset: 2px;
         }
 
         .unit-info {
@@ -387,7 +399,7 @@
           i {
             transition: transform 0.3s ease;
             font-size: 1rem;
-
+            color: #f7941e;
             &.rotated {
               transform: rotate(180deg);
             }
@@ -413,11 +425,11 @@
           transition: background 0.3s ease;
 
           &:hover {
-            background: #f8f9fa;
+            background: rgba(247, 148, 30, 0.05);
           }
 
           .lesson-icon {
-            color: #007bff;
+            color: #f7941e;
             font-size: 1.2rem;
           }
 
@@ -461,7 +473,7 @@
       .rating-number {
         font-size: 2rem;
         font-weight: bold;
-        color: #ffc107;
+        color: #f7941e;
       }
 
       .stars {
@@ -470,6 +482,7 @@
 
         i {
           font-size: 1.2rem;
+          color: #f7941e;
         }
       }
 
@@ -521,6 +534,7 @@
 
               i {
                 font-size: 0.9rem;
+                color: #f7941e;
               }
             }
           }
@@ -569,7 +583,7 @@
       align-items: center;
 
       i {
-        color: #007bff;
+        color: #f7941e;
         margin-left: 0.5rem;
         font-size: 1.1rem;
       }
@@ -579,14 +593,27 @@
       .star-rating {
         display: flex;
         gap: 0.5rem;
+        align-items: center;
 
-        .star-input {
-          font-size: 1.5rem;
+        .star-button {
+          background: none;
+          border: none;
           cursor: pointer;
-          transition: color 0.3s ease;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: all 0.2s ease;
 
           &:hover {
-            color: #ffc107;
+            background: rgba(247, 148, 30, 0.1);
+          }
+
+          &:focus {
+            outline: 2px solid #f7941e;
+            outline-offset: 2px;
+          }
+
+          .star-input {
+            font-size: 1.5rem;
           }
         }
       }
@@ -621,7 +648,7 @@
       align-items: center;
 
       i {
-        color: #007bff;
+        color: #f7941e;
         margin-left: 0.5rem;
         font-size: 1.1rem;
       }
@@ -643,12 +670,12 @@
       .stat-icon {
         width: 40px;
         height: 40px;
-        background: #f8f9fa;
+        background: rgba(247, 148, 30, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #007bff;
+        color: #f7941e;
         flex-shrink: 0;
         font-size: 1.1rem;
       }
@@ -689,12 +716,12 @@
       .benefit-icon {
         width: 30px;
         height: 30px;
-        background: #e3f2fd;
+        background: rgba(247, 148, 30, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #007bff;
+        color: #f7941e;
         flex-shrink: 0;
         font-size: 0.9rem;
       }
@@ -720,12 +747,19 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 0;
+        padding: 1rem;
         cursor: pointer;
-        transition: color 0.3s ease;
+        transition: all 0.3s ease;
+        border-radius: 8px;
 
         &:hover {
-          color: #007bff;
+          color: #f7941e;
+          background: rgba(247, 148, 30, 0.05);
+        }
+
+        &:focus {
+          outline: 2px solid #f7941e;
+          outline-offset: 2px;
         }
 
         .faq-text {
@@ -736,7 +770,7 @@
 
         i {
           transition: transform 0.3s ease;
-          color: #6c757d;
+          color: #f7941e;
           font-size: 0.9rem;
 
           &.rotated {
@@ -811,7 +845,7 @@
 
 // Utility Classes
 .text-warning {
-  color: #ffc107 !important;
+  color: #f7941e !important;
 }
 
 .text-muted {
@@ -819,22 +853,22 @@
 }
 
 .btn-primary {
-  background: #007bff;
-  border-color: #007bff;
+  background: linear-gradient(135deg, #f7941e 0%, #f7941e80 100%);
+  border-color: #f7941e;
 
   &:hover {
-    background: #0056b3;
-    border-color: #0056b3;
+    background: linear-gradient(135deg, #e6851a 0%, #f7941e80 100%);
+    border-color: #e6851a;
   }
 }
 
 .btn-outline-primary {
-  color: #007bff;
-  border-color: #007bff;
+  color: #f7941e;
+  border-color: #f7941e;
 
   &:hover {
-    background: #007bff;
-    border-color: #007bff;
+    background: linear-gradient(135deg, #f7941e 0%, #f7941e80 100%);
+    border-color: #f7941e;
   }
 }
 
@@ -961,4 +995,13 @@
 .pi-thumbs-up,
 .pi-thumbs-down {
   font-size: 0.9rem;
+}
+
+.why-choose-content,
+.suitable-for-content {
+  p {
+    margin: 0;
+    line-height: 1.6;
+    color: #666;
+  }
 }

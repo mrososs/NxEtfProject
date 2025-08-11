@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { ErrorStateService } from '../../shared/services/error-state.service';
 
 export interface UserProfile {
@@ -11,7 +11,9 @@ export interface UserProfile {
   lastName: string;
   description?: string;
   imageUrl?: string;
+  imageLink?: string;
   userId?: number;
+  courses?: any[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,80 +23,110 @@ export interface UserProfile {
 })
 export class ProfileService {
   private http = inject(HttpClient);
-  private readonly PROFILE_ENDPOINT = 'http://etfapi.itechpro-eg.com/me';
+  private readonly PROFILE_ENDPOINT =
+    'http://etfapi.itechpro-eg.com/api/profile/me';
   private hasRedirectedToError = false;
+
+  // Cache for profile data
+  private profileCache$: Observable<UserProfile | null> | null = null;
+  private refreshProfileSubject = new BehaviorSubject<void>(undefined);
 
   constructor(private errorStateService: ErrorStateService) {}
 
   /**
-   * Get user profile from API
+   * Get user profile from API with caching
+   * Uses shareReplay to cache the response and avoid multiple API calls
    */
-  getUserProfile(): Observable<UserProfile | null> {
+  getProfile(): Observable<UserProfile | null> {
     // Skip API call if we're on error page
     if (this.errorStateService.shouldSkipApiCalls()) {
       return of(null);
     }
 
+    // If cache exists, return cached response
+    if (this.profileCache$) {
+      return this.profileCache$;
+    }
+
+    // Create new cache with shareReplay
+    this.profileCache$ = this.refreshProfileSubject.pipe(
+      switchMap(() => this.fetchProfileFromAPI()),
+      shareReplay(1) // Cache the last emitted value and share it with all subscribers
+    );
+
+    return this.profileCache$;
+  }
+
+  /**
+   * Fetch profile from API (private method for actual HTTP call)
+   */
+  private fetchProfileFromAPI(): Observable<UserProfile | null> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
 
     return this.http
-      .get<UserProfile>(`${this.PROFILE_ENDPOINT}`, { headers })
+      .get<UserProfile>(`${this.PROFILE_ENDPOINT}`, {
+        headers,
+      })
       .pipe(
         map((response) => {
-          return response as UserProfile;
+          const profile = response as UserProfile;
+
+          // Save user's name to localStorage for homepage display
+          if (profile.firstName && profile.lastName) {
+            const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+            localStorage.setItem('userFullName', fullName);
+            localStorage.setItem('userFirstName', profile.firstName);
+            localStorage.setItem('userLastName', profile.lastName);
+            console.log('User name saved to localStorage:', fullName);
+          }
+
+          return profile;
         }),
         catchError((error) => {
-          // Check for "No Profile Created" error
-          if (
-            error.status === 404 ||
-            (error.error &&
-              error.error.message &&
-              error.error.message.includes(
-                'No Profile Created For This User Please Contact Your Administrator'
-              ))
-          ) {
+          // Handle 302 redirect - user needs to create profile
+          if (error.status === 302) {
+            console.log(
+              'Profile not found - redirecting to profile creation page'
+            );
             this.redirectToProfilePage();
             return of(null);
           }
 
-          // Check for 500 error or other authentication errors
+          // Handle 404 - no profile created
+          if (error.status === 404) {
+            console.log(
+              'No profile created - redirecting to profile creation page'
+            );
+            this.redirectToProfilePage();
+            return of(null);
+          }
+
+          // Handle authentication errors (401, 403, 500)
           if (
-            error.status === 500 ||
             error.status === 401 ||
-            error.status === 403
+            error.status === 403 ||
+            error.status === 500
           ) {
+            console.log('Authentication error - redirecting to error page');
             this.showAuthErrorPage();
             return throwError(() => error);
           }
 
           // For any other error, redirect to main site
-          // this.redirectToMainSite();
+          console.log('Unknown error - redirecting to main site');
+          this.redirectToMainSite();
           return throwError(() => error);
         })
       );
   }
 
   /**
-   * Create or Update user profile (same endpoint)
+   * Create or Update user profile
    */
-  createProfile(formData: FormData): Observable<any> {
-    return this.saveProfile(formData);
-  }
-
-  /**
-   * Update existing user profile (same endpoint)
-   */
-  updateProfile(formData: FormData): Observable<any> {
-    return this.saveProfile(formData);
-  }
-
-  /**
-   * Save profile (create or update) - uses POST /me for both operations
-   */
-  private saveProfile(formData: FormData): Observable<any> {
+  postProfile(formData: FormData): Observable<any> {
     const headers = new HttpHeaders({
       Accept: 'application/json',
       // Don't set Content-Type for FormData, let browser set it with boundary
@@ -106,19 +138,22 @@ export class ProfileService {
       })
       .pipe(
         map((response) => {
+          // Clear cache after successful profile update
+          this.clearProfileCache();
           return response;
         }),
         catchError((error) => {
-          // Check for authentication errors
+          // Handle authentication errors
           if (
-            error.status === 500 ||
             error.status === 401 ||
-            error.status === 403
+            error.status === 403 ||
+            error.status === 500
           ) {
             this.showAuthErrorPage();
             return throwError(() => error);
           }
 
+          // For other errors, redirect to main site
           this.redirectToMainSite();
           return throwError(() => error);
         })
@@ -126,116 +161,25 @@ export class ProfileService {
   }
 
   /**
-   * Check if user has a profile
+   * Clear profile cache to force fresh API call
    */
-  hasProfile(): Observable<boolean> {
-    return this.getUserProfile().pipe(
-      map((profile) => {
-        return profile !== null;
-      }),
-      catchError((error) => {
-        // Check for "No Profile Created" error
-        if (
-          error.status === 404 ||
-          (error.error &&
-            error.error.message &&
-            error.error.message.includes(
-              'No Profile Created For This User Please Contact Your Administrator'
-            ))
-        ) {
-          return of(false);
-        }
-
-        // For other errors, return false
-        return of(false);
-      })
-    );
+  clearProfileCache(): void {
+    this.profileCache$ = null;
+    this.refreshProfileSubject.next();
+    console.log('Profile cache cleared');
   }
 
   /**
-   * Get user ID from localStorage or cookie
+   * Refresh profile data (clears cache and fetches fresh data)
    */
-  getUserId(): string | null {
-    return (
-      localStorage.getItem('userId') ||
-      localStorage.getItem('user_id') ||
-      this.getCookieValue('userId') ||
-      this.getCookieValue('user_id')
-    );
-  }
-
-  /**
-   * Get cookie value by name
-   */
-  private getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === name) {
-        return cookieValue;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Transform API response to UserProfile interface
-   */
-  private transformApiResponseToProfile(response: any): UserProfile {
-    return {
-      id: response.id,
-      firstName: response.firstName || response.first_name,
-      middleName: response.middleName || response.middle_name,
-      lastName: response.lastName || response.last_name,
-      description: response.description,
-      imageUrl: response.imageUrl || response.image_url || response.image,
-      userId: response.userId || response.user_id,
-      createdAt: response.createdAt || response.created_at,
-      updatedAt: response.updatedAt || response.updated_at,
-    };
-  }
-
-  /**
-   * Check if user is authenticated by calling the API
-   */
-  isAuthenticated(): Observable<boolean> {
-    return this.getUserProfile().pipe(
-      map((profile) => {
-        return true;
-      }),
-      catchError((error) => {
-        // Check for "No Profile Created" error - user is authenticated but no profile
-        if (
-          error.status === 404 ||
-          (error.error &&
-            error.error.message &&
-            error.error.message.includes(
-              'No Profile Created For This User Please Contact Your Administrator'
-            ))
-        ) {
-          this.redirectToProfilePage();
-          return of(false);
-        }
-
-        // Check for authentication errors (401, 403, 500)
-        if (
-          error.status === 500 ||
-          error.status === 401 ||
-          error.status === 403
-        ) {
-          this.showAuthErrorPage();
-          return of(false);
-        }
-
-        // For other errors, redirect to main site
-        this.redirectToMainSite();
-        return of(false);
-      })
-    );
+  refreshProfile(): Observable<UserProfile | null> {
+    this.clearProfileCache();
+    return this.getProfile();
   }
 
   /**
    * Check authentication on app startup
+   * This is the main method called when application starts
    */
   checkAuthenticationOnStartup(): Observable<boolean> {
     // Skip authentication check if we're on error page
@@ -243,48 +187,30 @@ export class ProfileService {
       return of(false);
     }
 
-    return this.getUserProfile().pipe(
+    return this.getProfile().pipe(
       map((profile) => {
-        return true;
+        // If profile exists, user is authenticated
+        return profile !== null;
       }),
       catchError((error) => {
-        // Check for 401 Not Authorized error
-        if (error.status === 401) {
-          this.showAuthErrorPage();
-          return of(false);
-        }
-
-        // Check for "No Profile Created" error
-        if (
-          error.status === 404 ||
-          (error.error &&
-            error.error.message &&
-            error.error.message.includes(
-              'No Profile Created For This User Please Contact Your Administrator'
-            ))
-        ) {
-          this.redirectToProfilePage();
-          return of(false);
-        }
-
-        // Check for other authentication errors
-        if (error.status === 500 || error.status === 403) {
-          this.showAuthErrorPage();
-          return of(false);
-        }
-
-        // For other errors, redirect to main site
-        this.redirectToMainSite();
+        // All error handling is done in getProfile method
         return of(false);
       })
     );
   }
 
   /**
-   * Redirect to main site
+   * Check if user has a profile
    */
-  private redirectToMainSite(): void {
-    window.location.href = 'http://etf.itechpro-eg.com/';
+  hasProfile(): Observable<boolean> {
+    return this.getProfile().pipe(
+      map((profile) => {
+        return profile !== null;
+      }),
+      catchError((error) => {
+        return of(false);
+      })
+    );
   }
 
   /**
@@ -292,6 +218,13 @@ export class ProfileService {
    */
   private redirectToProfilePage(): void {
     window.location.href = '/profile';
+  }
+
+  /**
+   * Redirect to main site
+   */
+  private redirectToMainSite(): void {
+    window.location.href = 'http://etf.itechpro-eg.com/';
   }
 
   /**
@@ -308,28 +241,34 @@ export class ProfileService {
 
     this.hasRedirectedToError = true;
     this.errorStateService.setErrorState(true);
+
     // Navigate to the error-500 page
     window.location.href = '/error-500';
   }
 
   /**
-   * Clear authentication data
+   * Clear authentication data on logout
    */
   logout(): void {
+    // Clear profile cache
+    this.clearProfileCache();
+
+    // Clear localStorage authentication data
     localStorage.removeItem('authToken');
     localStorage.removeItem('token');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('userFullName');
+    localStorage.removeItem('userFirstName');
+    localStorage.removeItem('userLastName');
 
-    // Clear cookies
-    document.cookie =
-      'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie =
-      'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie =
-      'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // Clear cookies with proper expiration and path
+    const cookieOptions = '; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    document.cookie = `authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
   }
 }

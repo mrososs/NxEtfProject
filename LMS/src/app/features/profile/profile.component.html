@@ -17,38 +17,6 @@
 
           <div class="card-body">
             <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-              <!-- Profile Image -->
-              <div class="form-group mb-4">
-                <label class="form-label">الصورة الشخصية</label>
-                <div class="image-upload-container">
-                  <div class="current-image" *ngIf="profileImageUrl">
-                    <img
-                      [src]="profileImageUrl"
-                      alt="Profile Image"
-                      class="profile-preview"
-                    />
-                  </div>
-                  <div class="upload-area" *ngIf="!profileImageUrl">
-                    <i
-                      class="pi pi-user"
-                      style="font-size: 3rem; color: #ccc"
-                    ></i>
-                    <p class="upload-text">اضغط لاختيار صورة</p>
-                  </div>
-                  <p-fileUpload
-                    mode="basic"
-                    [auto]="true"
-                    accept="image/*"
-                    [maxFileSize]="5000000"
-                    chooseLabel="اختيار صورة"
-                    (onSelect)="onFileSelect($event)"
-                    [showCancelButton]="false"
-                    [showUploadButton]="false"
-                  >
-                  </p-fileUpload>
-                </div>
-              </div>
-
               <!-- First Name -->
               <div class="form-group mb-3">
                 <label for="firstName" class="form-label">الاسم الأول *</label>
@@ -146,6 +114,50 @@
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- User Courses Section -->
+<section class="user-courses py-5" *ngIf="userCourses.length > 0">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        <div class="courses-card">
+          <div class="card-header">
+            <h2 class="text-center mb-4">دوراتي</h2>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div
+                class="col-12 col-md-6 col-lg-4 mb-3"
+                *ngFor="let course of userCourses"
+              >
+                <div class="course-item">
+                  <div class="course-content">
+                    <h5 class="course-title">{{ course.title }}</h5>
+                    <p class="course-description">{{ course.description }}</p>
+                    <div class="course-meta">
+                      <small class="text-muted">
+                        تاريخ الرفع:
+                        {{ course.uploadedAt | date : 'shortDate' }}
+                      </small>
+                    </div>
+                    <div class="course-actions mt-2">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="launchCourse(course.launchUrl)"
+                      >
+                        بدء الدورة
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

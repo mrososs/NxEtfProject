@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(
       withInterceptorsFromDi(),
-      withInterceptors([apiInterceptor])
+      withInterceptors([apiInterceptor, authInterceptor])
     ),
     provideTranslateService({
       loader: {

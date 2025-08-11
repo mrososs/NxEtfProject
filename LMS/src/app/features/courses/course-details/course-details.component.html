@@ -12,7 +12,7 @@
         <div class="container">
           <div class="hero-content">
             <h1 class="hero-title">{{ course?.title || 'تفاصيل الدورة' }}</h1>
-            <p class="hero-subtitle">{{ course?.description }}</p>
+            <p class="hero-subtitle">{{ getCourseIntro() }}</p>
             <button
               class="btn btn-primary btn-lg launch-btn"
               (click)="launchCourse()"
@@ -122,7 +122,15 @@
                     class="content-item"
                     *ngFor="let unit of courseUnits; let i = index"
                   >
-                    <div class="unit-header" (click)="toggleUnit(i)">
+                    <button
+                      class="unit-header"
+                      (click)="toggleUnit(i)"
+                      (keydown.enter)="toggleUnit(i)"
+                      (keydown.space)="toggleUnit(i)"
+                      [attr.aria-expanded]="unit.isExpanded"
+                      [attr.aria-controls]="'unit-content-' + i"
+                      tabindex="0"
+                    >
                       <div class="unit-info">
                         <span class="unit-number">الوحدة {{ i + 1 }}</span>
                         <span class="unit-title">{{ unit.title }}</span>
@@ -134,10 +142,11 @@
                           [class.rotated]="unit.isExpanded"
                         ></i>
                       </div>
-                    </div>
+                    </button>
                     <div
                       class="unit-content"
                       [class.expanded]="unit.isExpanded"
+                      [id]="'unit-content-' + i"
                     >
                       <div
                         class="lesson-item"
@@ -231,20 +240,38 @@
                   </h3>
                   <div class="review-form">
                     <div class="rating-input mb-3">
-                      <label class="form-label">التقييم:</label>
-                      <div class="star-rating">
-                        <i
+                      <label for="star-rating" class="form-label"
+                        >التقييم:</label
+                      >
+                      <div
+                        class="star-rating"
+                        id="star-rating"
+                        role="radiogroup"
+                        aria-label="تقييم الدورة"
+                      >
+                        <button
                           *ngFor="let star of [1, 2, 3, 4, 5]"
-                          class="pi pi-star star-input"
+                          type="button"
+                          class="star-button"
                           [class.text-warning]="star <= newReview.rating"
                           [class.text-muted]="star > newReview.rating"
                           (click)="newReview.rating = star"
-                        ></i>
+                          (keydown.enter)="newReview.rating = star"
+                          (keydown.space)="newReview.rating = star"
+                          [attr.aria-label]="'تقييم ' + star + ' نجوم'"
+                          [attr.aria-checked]="star <= newReview.rating"
+                          tabindex="0"
+                        >
+                          <i class="pi pi-star star-input"></i>
+                        </button>
                       </div>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label">مراجعتك:</label>
+                      <label for="review-text" class="form-label"
+                        >مراجعتك:</label
+                      >
                       <textarea
+                        id="review-text"
                         class="form-control"
                         rows="4"
                         placeholder="اكتب مراجعتك هنا..."
@@ -361,6 +388,28 @@
               </div>
             </div>
 
+            <!-- Why Choose This Course Card -->
+            <div class="sidebar-card" *ngIf="getWhyChooseText()">
+              <h3 class="card-title">
+                <i class="pi pi-heart me-2"></i>
+                لماذا تختار هذه الدورة؟
+              </h3>
+              <div class="why-choose-content">
+                <p>{{ getWhyChooseText() }}</p>
+              </div>
+            </div>
+
+            <!-- Suitable For Card -->
+            <div class="sidebar-card" *ngIf="getSuitableForText()">
+              <h3 class="card-title">
+                <i class="pi pi-users me-2"></i>
+                مناسبة لـ
+              </h3>
+              <div class="suitable-for-content">
+                <p>{{ getSuitableForText() }}</p>
+              </div>
+            </div>
+
             <!-- FAQ Card -->
             <div class="sidebar-card">
               <h3 class="card-title">
@@ -369,14 +418,26 @@
               </h3>
               <div class="faq-list">
                 <div class="faq-item" *ngFor="let faq of faqs">
-                  <div class="faq-question" (click)="toggleFAQ(faq)">
+                  <button
+                    class="faq-question"
+                    (click)="toggleFAQ(faq)"
+                    (keydown.enter)="toggleFAQ(faq)"
+                    (keydown.space)="toggleFAQ(faq)"
+                    [attr.aria-expanded]="faq.isExpanded"
+                    [attr.aria-controls]="'faq-answer-' + faq.id"
+                    tabindex="0"
+                  >
                     <span class="faq-text">{{ faq.question }}</span>
                     <i
                       class="pi pi-chevron-down"
                       [class.rotated]="faq.isExpanded"
                     ></i>
-                  </div>
-                  <div class="faq-answer" [class.expanded]="faq.isExpanded">
+                  </button>
+                  <div
+                    class="faq-answer"
+                    [class.expanded]="faq.isExpanded"
+                    [id]="'faq-answer-' + faq.id"
+                  >
                     {{ faq.answer }}
                   </div>
                 </div>

@@ -23,6 +23,7 @@ import { CourseInstructorComponent } from './course-instructor/course-instructor
 import { HomePageService } from '../courses/services/home-page.service';
 import { Course, CourseFilter } from '../courses/model/course.model';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
+import { ProfileService } from '../profile/profile.service';
 
 @Component({
   selector: 'app-homepage',
@@ -42,6 +43,12 @@ import { ProfileRequiredService } from '../../shared/services/profile-required.s
 export class HomepageComponent implements OnInit, AfterViewInit {
   private homepageService = inject(HomePageService);
   private profileRequiredService = inject(ProfileRequiredService);
+  private profileService = inject(ProfileService);
+
+  // User name properties
+  userFullName: string = '';
+  userFirstName: string = '';
+  userLastName: string = '';
 
   // All courses (main display)
   allCourses$ = this.homepageService.getAllCourses().pipe(
@@ -78,6 +85,73 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // Initialize with empty filters
     this.homepageService.updateFilters({});
+
+    // Load user name from localStorage
+    this.loadUserName();
+  }
+
+  /**
+   * Load user name from localStorage
+   */
+  private loadUserName(): void {
+    this.userFullName = localStorage.getItem('userFullName') || '';
+    this.userFirstName = localStorage.getItem('userFirstName') || '';
+    this.userLastName = localStorage.getItem('userLastName') || '';
+
+    // If no name in localStorage, try to get from profile service
+    if (!this.userFullName) {
+      this.loadUserNameFromProfile();
+    }
+  }
+
+  /**
+   * Load user name from profile service if not in localStorage
+   */
+  private loadUserNameFromProfile(): void {
+    // Use the cached profile service to get user name
+    this.profileService.getProfile().subscribe({
+      next: (profile) => {
+        if (profile && profile.firstName && profile.lastName) {
+          const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+          this.userFullName = fullName;
+          this.userFirstName = profile.firstName;
+          this.userLastName = profile.lastName;
+          console.log('User name loaded from profile service:', fullName);
+        }
+      },
+      error: (error) => {
+        console.log('No user name found in localStorage or profile service');
+      },
+    });
+  }
+
+  /**
+   * Refresh user name from localStorage
+   * This method can be called when profile is updated
+   */
+  public refreshUserName(): void {
+    this.loadUserName();
+  }
+
+  /**
+   * Refresh user name from profile service
+   * This method can be called when profile is updated
+   */
+  public refreshUserNameFromProfile(): void {
+    this.profileService.refreshProfile().subscribe({
+      next: (profile) => {
+        if (profile && profile.firstName && profile.lastName) {
+          const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+          this.userFullName = fullName;
+          this.userFirstName = profile.firstName;
+          this.userLastName = profile.lastName;
+          console.log('User name refreshed from profile service:', fullName);
+        }
+      },
+      error: (error) => {
+        console.error('Error refreshing user name:', error);
+      },
+    });
   }
 
   ngAfterViewInit() {

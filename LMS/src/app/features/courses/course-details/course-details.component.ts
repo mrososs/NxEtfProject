@@ -4,7 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { HomePageService } from '../services/home-page.service';
+import {
+  HomePageService,
+  CourseDetails,
+  ReviewRequest,
+  ReviewResponse,
+} from '../services/home-page.service';
 import { CourseTrackerService } from '../services/course-tracker.service';
 import { ScormCommunicationService } from '../services/scorm-communication.service';
 import { Course } from '../model/course.model';
@@ -74,6 +79,7 @@ export class CourseDetailsComponent implements OnInit {
   private _scormCommunicationService = inject(ScormCommunicationService);
 
   course!: Course;
+  courseDetails!: CourseDetails;
   loading = true;
   error = false;
   courseId!: number;
@@ -231,12 +237,13 @@ export class CourseDetailsComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
+    // Load course basic info
     this._homePageService.getCourseByIdFromApi(this.courseId, 'ar').subscribe({
       next: (course: Course) => {
         this.course = course;
-        this.loading = false;
-        // Initialize tracking when course is loaded
-        this.initializeCourseTracking();
+
+        // Load course details from new API
+        this.loadCourseDetailsFromApi();
       },
       error: (err) => {
         console.error('Error fetching course details:', err);
@@ -244,6 +251,60 @@ export class CourseDetailsComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  private loadCourseDetailsFromApi(): void {
+    this._homePageService.getCourseDetails(this.courseId).subscribe({
+      next: (details: CourseDetails) => {
+        this.courseDetails = details;
+
+        // Update learning objectives from API response
+        this.updateLearningObjectives();
+
+        // Update FAQs from API response
+        this.updateFAQs();
+
+        this.loading = false;
+
+        // Initialize tracking when course is loaded
+        this.initializeCourseTracking();
+      },
+      error: (err) => {
+        console.error('Error fetching course details from API:', err);
+        // Continue with mock data if API fails
+        this.loading = false;
+        this.initializeCourseTracking();
+      },
+    });
+  }
+
+  private updateLearningObjectives(): void {
+    if (this.courseDetails?.whatYouWillLearnAr) {
+      // Parse the learning objectives from the API response
+      const objectives = this.courseDetails.whatYouWillLearnAr
+        .split('\n')
+        .filter((obj) => obj.trim())
+        .map((obj, index) => ({
+          id: index + 1,
+          text: obj.trim(),
+          icon: 'pi pi-check-circle',
+        }));
+
+      if (objectives.length > 0) {
+        this.learningObjectives = objectives;
+      }
+    }
+  }
+
+  private updateFAQs(): void {
+    if (this.courseDetails?.faq && this.courseDetails.faq.length > 0) {
+      this.faqs = this.courseDetails.faq.map((faq) => ({
+        id: faq.id,
+        question: faq.question,
+        answer: faq.body,
+        isExpanded: false,
+      }));
+    }
   }
 
   private loadCourseProgress(): void {
@@ -379,18 +440,39 @@ export class CourseDetailsComponent implements OnInit {
    */
   submitReview(): void {
     if (this.newReview.rating > 0 && this.newReview.text.trim()) {
-      const review: Review = {
-        id: this.reviews.length + 1,
-        name: 'مستخدم جديد',
-        avatar: 'assets/img/instructor-avatar.png',
-        rating: this.newReview.rating,
-        text: this.newReview.text,
-        date: new Date().toISOString().split('T')[0],
-        helpful: 0,
-        notHelpful: 0,
+      const reviewData: ReviewRequest = {
+        courseId: this.courseId,
+        comment: this.newReview.text.trim(),
+        reviewRating: this.newReview.rating,
       };
-      this.reviews.unshift(review);
-      this.newReview = { rating: 0, text: '' };
+
+      // Post review to API
+      this._homePageService.postCourseReview(reviewData).subscribe({
+        next: (response: ReviewResponse) => {
+          if (response.success) {
+            // Add review to local list
+            const review: Review = {
+              id: this.reviews.length + 1,
+              name: 'مستخدم جديد',
+              avatar: 'assets/img/instructor-avatar.png',
+              rating: this.newReview.rating,
+              text: this.newReview.text,
+              date: new Date().toISOString().split('T')[0],
+              helpful: 0,
+              notHelpful: 0,
+            };
+            this.reviews.unshift(review);
+            this.newReview = { rating: 0, text: '' };
+
+            console.log('Review posted successfully:', response.message);
+          } else {
+            console.error('Failed to post review:', response.message);
+          }
+        },
+        error: (error) => {
+          console.error('Error posting review:', error);
+        },
+      });
     }
   }
 
@@ -415,5 +497,26 @@ export class CourseDetailsComponent implements OnInit {
    */
   loadCourse(): void {
     this.loadCourseDetails();
+  }
+
+  /**
+   * Get course intro text (Arabic)
+   */
+  getCourseIntro(): string {
+    return this.courseDetails?.introAr || this.course?.description || '';
+  }
+
+  /**
+   * Get why choose this course text (Arabic)
+   */
+  getWhyChooseText(): string {
+    return this.courseDetails?.whyChooseAr || '';
+  }
+
+  /**
+   * Get suitable for text (Arabic)
+   */
+  getSuitableForText(): string {
+    return this.courseDetails?.suitableForAr || '';
   }
 }

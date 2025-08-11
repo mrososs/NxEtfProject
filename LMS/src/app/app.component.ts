@@ -40,6 +40,9 @@ export class AppComponent implements OnInit {
       return;
     }
 
+    // Handle token from URL parameters first
+    this.handleTokenFromUrl();
+
     // Check authentication on app startup
     this.profileService.checkAuthenticationOnStartup().subscribe({
       next: (isAuthenticated) => {
@@ -66,6 +69,38 @@ export class AppComponent implements OnInit {
     });
   }
 
+  /**
+   * Handle token from URL parameters when application starts
+   * This is called when user comes from external app with token in URL
+   */
+  private handleTokenFromUrl(): void {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+
+    if (tokenFromUrl) {
+      console.log(
+        'Token found in URL parameters from external app, saving to localStorage'
+      );
+
+      // Save token to localStorage
+      localStorage.setItem('authToken', tokenFromUrl);
+      localStorage.setItem('token', tokenFromUrl);
+      localStorage.setItem('accessToken', tokenFromUrl);
+      localStorage.setItem('auth_token', tokenFromUrl); // Match the key used by external app
+
+      // Clean up URL by removing token parameter
+      // This prevents the token from being visible in browser history
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('token');
+
+      // Replace current URL without token parameters
+      window.history.replaceState({}, document.title, newUrl.toString());
+
+      console.log('Token saved and URL cleaned up');
+    }
+  }
+
   private checkIfOnErrorPage(): void {
     const isOnErrorPage = window.location.pathname === '/error-500';
     this.showNavbar = !isOnErrorPage;
@@ -75,7 +110,7 @@ export class AppComponent implements OnInit {
   }
 
   private checkUserProfile(): void {
-    this.profileService.getUserProfile().subscribe({
+    this.profileService.getProfile().subscribe({
       next: (profile) => {
         // Profile check completed
       },

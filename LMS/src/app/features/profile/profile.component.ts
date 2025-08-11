@@ -10,7 +10,6 @@ import { Router } from '@angular/router';
 import { ProfileService } from './profile.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { FileUploadModule } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { BannerComponent } from '../../shared/components/banner/banner.component';
@@ -23,7 +22,6 @@ import { BannerComponent } from '../../shared/components/banner/banner.component
     ReactiveFormsModule,
     InputTextModule,
     ButtonModule,
-    FileUploadModule,
     ToastModule,
     BannerComponent,
   ],
@@ -35,8 +33,7 @@ export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   isEditMode = false;
   isLoading = false;
-  profileImage: File | null = null;
-  profileImageUrl: string | null = null;
+  userCourses: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -58,7 +55,7 @@ export class ProfileComponent implements OnInit {
 
   loadUserProfile(): void {
     this.isLoading = true;
-    this.profileService.getUserProfile().subscribe({
+    this.profileService.getProfile().subscribe({
       next: (profile) => {
         if (profile) {
           this.isEditMode = true;
@@ -68,30 +65,29 @@ export class ProfileComponent implements OnInit {
             lastName: profile.lastName || '',
             description: profile.description || '',
           });
-          this.profileImageUrl = profile.imageUrl || null;
+
+          // Handle courses data
+          if (profile.courses && Array.isArray(profile.courses)) {
+            this.userCourses = profile.courses;
+            console.log('User courses loaded:', this.userCourses);
+          }
+        } else {
+          // No profile exists, stay in create mode
+          this.isEditMode = false;
+          this.profileForm.reset();
+          this.userCourses = [];
         }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading profile:', error);
         this.isLoading = false;
-        // Redirect will be handled by ProfileService
-        // If no profile exists, stay in create mode
+        // If error occurs, stay in create mode
+        this.isEditMode = false;
+        this.profileForm.reset();
+        this.userCourses = [];
       },
     });
-  }
-
-  onFileSelect(event: any): void {
-    const file = event.files[0];
-    if (file) {
-      this.profileImage = file;
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.profileImageUrl = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
   }
 
   onSubmit(): void {
@@ -99,7 +95,7 @@ export class ProfileComponent implements OnInit {
       this.isLoading = true;
       const formData = new FormData();
 
-      // Add form fields
+      // Add form fields only (no image)
       formData.append('FirstName', this.profileForm.get('firstName')?.value);
       formData.append('MiddleName', this.profileForm.get('middleName')?.value);
       formData.append('LastName', this.profileForm.get('lastName')?.value);
@@ -108,17 +104,25 @@ export class ProfileComponent implements OnInit {
         this.profileForm.get('description')?.value
       );
 
-      // Add image if selected
-      if (this.profileImage) {
-        formData.append('Image', this.profileImage);
-      }
+      // Note: Image upload removed as per requirements
 
-      const operation = this.isEditMode
-        ? this.profileService.updateProfile(formData)
-        : this.profileService.createProfile(formData);
-
-      operation.subscribe({
+      // Use the simplified postProfile method
+      this.profileService.postProfile(formData).subscribe({
         next: (response) => {
+          // Save user name to localStorage for homepage display
+          const firstName = this.profileForm.get('firstName')?.value;
+          const lastName = this.profileForm.get('lastName')?.value;
+          if (firstName && lastName) {
+            const fullName = `${firstName} ${lastName}`.trim();
+            localStorage.setItem('userFullName', fullName);
+            localStorage.setItem('userFirstName', firstName);
+            localStorage.setItem('userLastName', lastName);
+            console.log(
+              'User name saved to localStorage after profile update:',
+              fullName
+            );
+          }
+
           this.messageService.add({
             severity: 'success',
             summary: 'نجح',
@@ -126,6 +130,9 @@ export class ProfileComponent implements OnInit {
               ? 'تم تحديث الملف الشخصي بنجاح'
               : 'تم إنشاء الملف الشخصي بنجاح',
           });
+
+          // Refresh profile data to get updated information
+          this.refreshProfileData();
 
           // Refresh the page after successful operation
           setTimeout(() => {
@@ -148,6 +155,34 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Refresh profile data from cache
+   */
+  private refreshProfileData(): void {
+    this.profileService.refreshProfile().subscribe({
+      next: (profile) => {
+        if (profile) {
+          // Update form with fresh data
+          this.profileForm.patchValue({
+            firstName: profile.firstName || '',
+            middleName: profile.middleName || '',
+            lastName: profile.lastName || '',
+            description: profile.description || '',
+          });
+
+          // Update courses data
+          if (profile.courses && Array.isArray(profile.courses)) {
+            this.userCourses = profile.courses;
+            console.log('User courses refreshed:', this.userCourses);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error refreshing profile:', error);
+      },
+    });
+  }
+
   private markFormGroupTouched(): void {
     Object.keys(this.profileForm.controls).forEach((key) => {
       const control = this.profileForm.get(key);
@@ -166,5 +201,21 @@ export class ProfileComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  /**
+   * Launch a course using the provided URL
+   */
+  launchCourse(launchUrl: string): void {
+    if (launchUrl) {
+      // Open course in new tab/window
+      window.open(launchUrl, '_blank');
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'تنبيه',
+        detail: 'رابط الدورة غير متاح',
+      });
+    }
   }
 }

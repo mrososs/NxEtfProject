@@ -9,6 +9,8 @@ import {
   shareReplay,
   startWith,
   distinctUntilChanged,
+  catchError,
+  throwError,
 } from 'rxjs';
 import { types } from '../model/types.model';
 import { Course, ApiCourse, CourseFilter } from '../model/course.model';
@@ -20,6 +22,42 @@ import {
 } from '../model/instructor.model';
 import { CourseApiService } from './course-api.service';
 import { InstructorApiService } from './instructor-api.service';
+import { HttpHeaders } from '@angular/common/http';
+
+export interface CourseDetails {
+  id: number;
+  intro: string;
+  introAr: string;
+  whatYouWillLearn: string;
+  whatYouWillLearnAr: string;
+  whyChoose: string;
+  whyChooseAr: string;
+  suitableFor: string;
+  suitableForAr: string;
+  faq: CourseFAQ[];
+  courseId: number;
+  course: string;
+}
+
+export interface CourseFAQ {
+  id: number;
+  question: string;
+  body: string;
+  courseDetailsId: number;
+  courseDetails: string;
+}
+
+export interface ReviewRequest {
+  courseId: number;
+  comment: string;
+  reviewRating: number;
+}
+
+export interface ReviewResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -193,6 +231,41 @@ export class HomePageService {
           this._courseApiService.transformApiCourseToUiCourse(apiCourse)
         )
       );
+  }
+
+  /**
+   * Get course details from API
+   * @param courseId The course ID
+   * @returns Observable of course details
+   */
+  getCourseDetails(courseId: number): Observable<CourseDetails> {
+    const url = `http://etfapi.itechpro-eg.com/api/Course/${courseId}/details`;
+    return this._http.get<CourseDetails>(url).pipe(
+      catchError((error) => {
+        console.error('Error fetching course details:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Post a review for a course
+   * @param reviewData The review data to post
+   * @returns Observable of review response
+   */
+  postCourseReview(reviewData: ReviewRequest): Observable<ReviewResponse> {
+    const url = 'http://etfapi.itechpro-eg.com/api/Course/review';
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    });
+
+    return this._http.post<ReviewResponse>(url, reviewData, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error posting review:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get instructors from API with pagination and filtering

@@ -6,7 +6,6 @@ export const appRoutes: Route[] = [
     path: '',
     redirectTo: 'courses',
     pathMatch: 'full',
-    // Remove canActivate from redirect route - it's not allowed
   },
   {
     path: 'instructor',
