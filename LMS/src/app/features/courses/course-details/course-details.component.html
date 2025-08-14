@@ -13,14 +13,28 @@
           <div class="hero-content">
             <h1 class="hero-title">{{ course?.title || 'تفاصيل الدورة' }}</h1>
             <p class="hero-subtitle">{{ getCourseIntro() }}</p>
-            <button
-              class="btn btn-primary btn-lg launch-btn"
-              (click)="launchCourse()"
-              [disabled]="!canLaunchCourse()"
-            >
-              <i class="pi pi-play me-2"></i>
-              {{ course?.buttonText || 'البدء بالدورة' }}
-            </button>
+            <div class="launch-buttons">
+              <button
+                class="btn btn-primary btn-lg launch-btn me-3"
+                (click)="startCourse()"
+                [disabled]="!canLaunchCourse() || enrollmentLoading"
+              >
+                <i class="pi pi-play me-2" *ngIf="!enrollmentLoading"></i>
+                <i
+                  class="pi pi-spinner pi-spin me-2"
+                  *ngIf="enrollmentLoading"
+                ></i>
+                {{ isEnrolled ? 'ابدأ الدورة' : 'سجل في الدورة' }}
+              </button>
+              <button
+                class="btn btn-outline-primary btn-lg launch-btn"
+                (click)="launchCourse()"
+                [disabled]="!canLaunchCourse() || !isEnrolled"
+              >
+                <i class="pi pi-external-link me-2"></i>
+                فتح في نافذة جديدة
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -110,16 +124,16 @@
               </div>
             </div>
 
-            <!-- Course Content Section -->
-            <div class="content-section">
+            <!-- Course Curriculum Section -->
+            <div class="curriculum-section">
               <div class="section-card">
                 <h2 class="section-title">
-                  <i class="pi pi-list me-2"></i>
-                  المحتوى الدراسي
+                  <i class="pi pi-book me-2"></i>
+                  منهج الدورة
                 </h2>
-                <div class="content-list">
+                <div class="curriculum-list">
                   <div
-                    class="content-item"
+                    class="curriculum-unit"
                     *ngFor="let unit of courseUnits; let i = index"
                   >
                     <button
@@ -128,35 +142,33 @@
                       (keydown.enter)="toggleUnit(i)"
                       (keydown.space)="toggleUnit(i)"
                       [attr.aria-expanded]="unit.isExpanded"
-                      [attr.aria-controls]="'unit-content-' + i"
+                      [attr.aria-controls]="'unit-content-' + unit.id"
                       tabindex="0"
                     >
                       <div class="unit-info">
-                        <span class="unit-number">الوحدة {{ i + 1 }}</span>
-                        <span class="unit-title">{{ unit.title }}</span>
-                      </div>
-                      <div class="unit-meta">
+                        <h3 class="unit-title">{{ unit.title }}</h3>
                         <span class="unit-duration">{{ unit.duration }}</span>
-                        <i
-                          class="pi pi-chevron-down"
-                          [class.rotated]="unit.isExpanded"
-                        ></i>
                       </div>
+                      <i
+                        class="pi pi-chevron-down"
+                        [class.rotated]="unit.isExpanded"
+                      ></i>
                     </button>
                     <div
                       class="unit-content"
                       [class.expanded]="unit.isExpanded"
-                      [id]="'unit-content-' + i"
+                      [id]="'unit-content-' + unit.id"
                     >
                       <div
                         class="lesson-item"
                         *ngFor="let lesson of unit.lessons"
                       >
-                        <i class="pi pi-play-circle lesson-icon"></i>
-                        <span class="lesson-title">{{ lesson.title }}</span>
-                        <span class="lesson-duration">{{
-                          lesson.duration
-                        }}</span>
+                        <div class="lesson-info">
+                          <span class="lesson-title">{{ lesson.title }}</span>
+                          <span class="lesson-duration">{{
+                            lesson.duration
+                          }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -169,32 +181,75 @@
               <div class="section-card">
                 <div class="reviews-header">
                   <h2 class="section-title">
-                    <i class="pi pi-comments me-2"></i>
-                    التقييمات
+                    <i class="pi pi-star me-2"></i>
+                    تقييمات الطلاب
                   </h2>
-                  <div class="rating-summary">
+                  <div class="reviews-summary">
                     <div class="average-rating">
                       <span class="rating-number">{{
                         getAverageRating()
                       }}</span>
-                      <div class="stars">
+                      <div class="rating-stars">
                         <i
+                          class="pi pi-star-fill"
                           *ngFor="let star of [1, 2, 3, 4, 5]"
-                          class="pi pi-star"
-                          [class.text-warning]="star <= getAverageRating()"
-                          [class.text-muted]="star > getAverageRating()"
+                          [class.filled]="star <= getAverageRating()"
                         ></i>
                       </div>
-                      <span class="total-reviews"
-                        >({{ getTotalReviews() }} تقييم)</span
+                    </div>
+                    <span class="total-reviews"
+                      >{{ getTotalReviews() }} تقييم</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Add Review Form -->
+                <div class="add-review-form">
+                  <h3>أضف تقييمك</h3>
+                  <div class="rating-input">
+                    <label for="star-rating">التقييم:</label>
+                    <div class="star-rating" id="star-rating">
+                      <button
+                        type="button"
+                        class="star-btn"
+                        *ngFor="let star of [1, 2, 3, 4, 5]"
+                        (click)="newReview.rating = star"
+                        (keydown.enter)="newReview.rating = star"
+                        (keydown.space)="newReview.rating = star"
+                        [class.active]="star <= newReview.rating"
+                        [attr.aria-label]="'تقييم ' + star + ' نجوم'"
+                        [attr.aria-checked]="star <= newReview.rating"
+                        role="radio"
+                        tabindex="0"
                       >
+                        <i class="pi pi-star-fill"></i>
+                      </button>
                     </div>
                   </div>
+                  <div class="review-text-input">
+                    <label for="review-text">التعليق:</label>
+                    <textarea
+                      id="review-text"
+                      [(ngModel)]="newReview.text"
+                      placeholder="اكتب تعليقك هنا..."
+                      rows="4"
+                    ></textarea>
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    (click)="submitReview()"
+                    [disabled]="
+                      newReview.rating === 0 || !newReview.text.trim()
+                    "
+                  >
+                    <i class="pi pi-send me-2"></i>
+                    إرسال التقييم
+                  </button>
                 </div>
 
                 <!-- Reviews List -->
                 <div class="reviews-list">
-                  <div class="review-card" *ngFor="let review of reviews">
+                  <div class="review-item" *ngFor="let review of reviews">
                     <div class="review-header">
                       <div class="reviewer-info">
                         <img
@@ -203,85 +258,29 @@
                           class="reviewer-avatar"
                         />
                         <div class="reviewer-details">
-                          <h6 class="reviewer-name">{{ review.name }}</h6>
+                          <h4 class="reviewer-name">{{ review.name }}</h4>
                           <div class="review-rating">
                             <i
+                              class="pi pi-star-fill"
                               *ngFor="let star of [1, 2, 3, 4, 5]"
-                              class="pi pi-star"
-                              [class.text-warning]="star <= review.rating"
-                              [class.text-muted]="star > review.rating"
+                              [class.filled]="star <= review.rating"
                             ></i>
                           </div>
                         </div>
                       </div>
-                      <span class="review-date">{{
-                        review.date | date : 'dd/MM/yyyy'
-                      }}</span>
+                      <span class="review-date">{{ review.date }}</span>
                     </div>
                     <p class="review-text">{{ review.text }}</p>
                     <div class="review-actions">
-                      <button class="btn btn-sm btn-outline-primary me-2">
+                      <button class="action-btn">
                         <i class="pi pi-thumbs-up me-1"></i>
                         مفيد ({{ review.helpful }})
                       </button>
-                      <button class="btn btn-sm btn-outline-secondary">
+                      <button class="action-btn">
                         <i class="pi pi-thumbs-down me-1"></i>
                         غير مفيد ({{ review.notHelpful }})
                       </button>
                     </div>
-                  </div>
-                </div>
-
-                <!-- Write Review Section -->
-                <div class="write-review-section">
-                  <h3 class="section-subtitle">
-                    <i class="pi pi-pencil me-2"></i>
-                    اكتب مراجعة
-                  </h3>
-                  <div class="review-form">
-                    <div class="rating-input mb-3">
-                      <label for="star-rating" class="form-label"
-                        >التقييم:</label
-                      >
-                      <div
-                        class="star-rating"
-                        id="star-rating"
-                        role="radiogroup"
-                        aria-label="تقييم الدورة"
-                      >
-                        <button
-                          *ngFor="let star of [1, 2, 3, 4, 5]"
-                          type="button"
-                          class="star-button"
-                          [class.text-warning]="star <= newReview.rating"
-                          [class.text-muted]="star > newReview.rating"
-                          (click)="newReview.rating = star"
-                          (keydown.enter)="newReview.rating = star"
-                          (keydown.space)="newReview.rating = star"
-                          [attr.aria-label]="'تقييم ' + star + ' نجوم'"
-                          [attr.aria-checked]="star <= newReview.rating"
-                          tabindex="0"
-                        >
-                          <i class="pi pi-star star-input"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label for="review-text" class="form-label"
-                        >مراجعتك:</label
-                      >
-                      <textarea
-                        id="review-text"
-                        class="form-control"
-                        rows="4"
-                        placeholder="اكتب مراجعتك هنا..."
-                        [(ngModel)]="newReview.text"
-                      ></textarea>
-                    </div>
-                    <button class="btn btn-primary" (click)="submitReview()">
-                      <i class="pi pi-send me-2"></i>
-                      إرسال المراجعة
-                    </button>
                   </div>
                 </div>
               </div>
@@ -291,60 +290,25 @@
 
         <!-- Right Column - Sidebar -->
         <div class="col-lg-4">
-          <div class="course-sidebar">
-            <!-- Course Details Card -->
-            <div class="sidebar-card course-details-card">
-              <h3 class="card-title">
-                <i class="pi pi-info-circle me-2"></i>
-                تفاصيل الدورة
-              </h3>
-              <div class="course-stats">
-                <div class="stat-item">
-                  <i class="pi pi-layer-group stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">المستوى</span>
-                    <span class="stat-value">{{ course?.level }}</span>
+          <div class="sidebar">
+            <!-- Course Info Card -->
+            <div class="sidebar-card">
+              <div class="course-info">
+                <div class="course-stats">
+                  <div class="stat-item">
+                    <i class="pi pi-users"></i>
+                    <span class="stat-value">1,234</span>
+                    <span class="stat-label">طالب مسجل</span>
                   </div>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-book stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">عدد المحاضرات</span>
-                    <span class="stat-value"
-                      >{{ course?.lectures }} محاضرة</span
-                    >
+                  <div class="stat-item">
+                    <i class="pi pi-clock"></i>
+                    <span class="stat-value">2.5 ساعة</span>
+                    <span class="stat-label">مدة الدورة</span>
                   </div>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-star stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">التقييم</span>
-                    <span class="stat-value">{{ course?.rating }}/5</span>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-user stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">المدرب</span>
-                    <span class="stat-value">{{
-                      course?.instructor?.name
-                    }}</span>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-calendar stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">تاريخ الإضافة</span>
-                    <span class="stat-value">{{
-                      course?.uploadedAt | date : 'dd/MM/yyyy'
-                    }}</span>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-comments stat-icon"></i>
-                  <div class="stat-content">
-                    <span class="stat-label">التقييمات</span>
-                    <span class="stat-value">{{ course?.reviews }}</span>
+                  <div class="stat-item">
+                    <i class="pi pi-video"></i>
+                    <span class="stat-value">15 درس</span>
+                    <span class="stat-label">عدد الدروس</span>
                   </div>
                 </div>
               </div>
@@ -449,3 +413,50 @@
     </div>
   </div>
 </div>
+
+<!-- Iframe Modal -->
+<div
+  class="iframe-modal"
+  *ngIf="showIframe"
+  (click)="closeIframe()"
+  (keydown.escape)="closeIframe()"
+  tabindex="0"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="iframe-title"
+>
+  <div
+    class="iframe-container"
+    (click)="$event.stopPropagation()"
+    (keydown.escape)="closeIframe()"
+    tabindex="0"
+  >
+    <div class="iframe-header">
+      <h3 id="iframe-title">
+        {{ courseApiData?.title || 'الدورة التدريبية' }}
+      </h3>
+      <button
+        class="close-btn"
+        (click)="closeIframe()"
+        (keydown.enter)="closeIframe()"
+        (keydown.space)="closeIframe()"
+        aria-label="إغلاق النافذة"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <div class="iframe-content">
+      <iframe
+        *ngIf="iframeUrl"
+        [src]="iframeUrl"
+        frameborder="0"
+        allowfullscreen
+        class="course-iframe"
+        title="محتوى الدورة التدريبية"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>

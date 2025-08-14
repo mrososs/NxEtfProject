@@ -1,8 +1,7 @@
-<section class="types" >
+<section class="types">
   <div class="container">
-    <div
-      class="d-flex flex-column p-5 justify-content-center align-items-center"
-    >
+    <!-- Hero Section -->
+    <div class="hero-section">
       <h1>استكشف الفئات المختلفة المجانية للطلاب</h1>
       <p>
         سواء كنت في بداية مسارك الأكاديمي أو تسعى لتطوير مهاراتك في مجال تخصصك،
@@ -10,21 +9,24 @@
         متعددة تشمل البرمجة، التصميم، اللغات، وإدارة الأعمال
       </p>
     </div>
-    <div
-      class="types-cards row gap-3 d-flex justify-content-center align-items-center"
-    >
-      <div class="col-12 col-md-3 col-lg-3 card" *ngFor="let type of types()">
-        <div class="d-flex justify-content-end">
-          <img class="type-img" [src]="type.img" alt="type" />
-        </div>
-        <h1>{{ type.name }}</h1>
-        <p>{{ type.description }}</p>
-        <p>
-          {{ type.examples }}
-        </p>
-        <div class="d-flex gap-3">
-          <a>عرض الفئة</a>
-          <img [src]="type.arrow" alt="arrow" />
+
+    <!-- Types Cards Section -->
+    <div class="types-cards row g-4">
+      <div
+        class="col-12 col-md-6 col-lg-4"
+        *ngFor="let type of types(); trackBy: trackByType"
+      >
+        <div class="card" (click)="onTypeClick(type)">
+          <div class="d-flex justify-content-end">
+            <img class="type-img" [src]="type.img" alt="type" />
+          </div>
+          <h1>{{ type.name }}</h1>
+          <p>{{ type.description }}</p>
+          <p>{{ type.examples }}</p>
+          <div class="d-flex gap-3">
+            <a>عرض الفئة</a>
+            <img [src]="type.arrow" alt="arrow" />
+          </div>
         </div>
       </div>
     </div>

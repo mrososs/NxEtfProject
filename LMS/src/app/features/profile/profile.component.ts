@@ -8,6 +8,10 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProfileService } from './profile.service';
+import {
+  EnrollmentService,
+  Enrollment,
+} from '../courses/services/enrollment.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -34,10 +38,13 @@ export class ProfileComponent implements OnInit {
   isEditMode = false;
   isLoading = false;
   userCourses: any[] = [];
+  enrolledCourses: Enrollment[] = [];
+  enrollmentLoading = false;
 
   constructor(
     private fb: FormBuilder,
     private profileService: ProfileService,
+    private enrollmentService: EnrollmentService,
     private router: Router,
     private messageService: MessageService
   ) {
@@ -51,8 +58,26 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserProfile();
+    this.loadEnrolledCourses();
   }
 
+  /**
+   * Check if we're currently preventing API calls due to recent redirect
+   */
+  isInRedirectPreventionMode(): boolean {
+    return this.profileService.isInRedirectPreventionMode();
+  }
+
+  /**
+   * Check if we're currently preventing API calls due to 500 error
+   */
+  isIn500ErrorMode(): boolean {
+    return this.profileService.isIn500ErrorMode();
+  }
+
+  /**
+   * Load user profile with redirect prevention handling
+   */
   loadUserProfile(): void {
     this.isLoading = true;
     this.profileService.getProfile().subscribe({
@@ -72,20 +97,53 @@ export class ProfileComponent implements OnInit {
             console.log('User courses loaded:', this.userCourses);
           }
         } else {
-          // No profile exists, stay in create mode
+          // No profile exists, 500 error occurred, or API call was skipped to prevent infinite loop
           this.isEditMode = false;
           this.profileForm.reset();
           this.userCourses = [];
+
+          // Show appropriate message based on the situation
+          if (this.isIn500ErrorMode()) {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'تنبيه',
+              detail:
+                'حدث خطأ في الخادم. يرجى إدخال بيانات الملف الشخصي للمتابعة',
+            });
+          } else {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'معلومات',
+              detail: 'يرجى إدخال بيانات الملف الشخصي للمتابعة',
+            });
+          }
         }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading profile:', error);
         this.isLoading = false;
-        // If error occurs, stay in create mode
+
+        // For any error, stay in create mode and show appropriate message
         this.isEditMode = false;
         this.profileForm.reset();
         this.userCourses = [];
+
+        // Show different messages based on error type
+        if (error.status === 500) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'تنبيه',
+            detail:
+              'حدث خطأ في الخادم. يرجى إدخال بيانات الملف الشخصي للمتابعة',
+          });
+        } else {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'معلومات',
+            detail: 'يرجى إدخال بيانات الملف الشخصي للمتابعة',
+          });
+        }
       },
     });
   }
@@ -95,13 +153,22 @@ export class ProfileComponent implements OnInit {
       this.isLoading = true;
       const formData = new FormData();
 
-      // Add form fields only (no image)
-      formData.append('FirstName', this.profileForm.get('firstName')?.value);
-      formData.append('MiddleName', this.profileForm.get('middleName')?.value);
-      formData.append('LastName', this.profileForm.get('lastName')?.value);
+      // Add form fields as FormData (not JSON)
+      formData.append(
+        'FirstName',
+        this.profileForm.get('firstName')?.value || ''
+      );
+      formData.append(
+        'MiddleName',
+        this.profileForm.get('middleName')?.value || ''
+      );
+      formData.append(
+        'LastName',
+        this.profileForm.get('lastName')?.value || ''
+      );
       formData.append(
         'Description',
-        this.profileForm.get('description')?.value
+        this.profileForm.get('description')?.value || ''
       );
 
       // Note: Image upload removed as per requirements
@@ -131,6 +198,9 @@ export class ProfileComponent implements OnInit {
               : 'تم إنشاء الملف الشخصي بنجاح',
           });
 
+          // Reset redirect flags to allow normal API calls again
+          this.profileService.resetRedirectFlags();
+
           // Refresh profile data to get updated information
           this.refreshProfileData();
 
@@ -141,13 +211,31 @@ export class ProfileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Profile operation failed:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'خطأ',
-            detail: 'حدث خطأ أثناء حفظ الملف الشخصي',
-          });
           this.isLoading = false;
-          // Redirect will be handled by ProfileService
+
+          // Handle different error types with specific messages
+          if (error.status === 500) {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'تنبيه',
+              detail:
+                'حدث خطأ في الخادم. يرجى المحاولة مرة أخرى أو التأكد من صحة البيانات',
+            });
+          } else if (error.status === 401 || error.status === 403) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'خطأ في المصادقة',
+              detail: 'يرجى إعادة تسجيل الدخول',
+            });
+          } else {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'خطأ',
+              detail: 'حدث خطأ أثناء حفظ الملف الشخصي',
+            });
+          }
+
+          // Redirect will be handled by ProfileService for auth errors
         },
       });
     } else {
@@ -201,6 +289,62 @@ export class ProfileComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  /**
+   * Load enrolled courses
+   */
+  loadEnrolledCourses(): void {
+    this.enrollmentLoading = true;
+    this.enrollmentService.getEnrolledCourses().subscribe({
+      next: (enrollments) => {
+        this.enrolledCourses = enrollments;
+        this.enrollmentLoading = false;
+        console.log('Enrolled courses loaded:', enrollments);
+      },
+      error: (error) => {
+        console.error('Error loading enrolled courses:', error);
+        this.enrollmentLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'حدث خطأ في تحميل الدورات المسجلة',
+        });
+      },
+    });
+  }
+
+  /**
+   * Delete enrollment from a course
+   */
+  deleteEnrollment(enrollmentId: number): void {
+    this.enrollmentService.unenrollFromCourse(enrollmentId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'نجح',
+            detail: 'تم حذف التسجيل من الدورة بنجاح',
+          });
+          // Refresh enrolled courses
+          this.loadEnrolledCourses();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: response.message || 'حدث خطأ في حذف التسجيل',
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting enrollment:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'حدث خطأ في حذف التسجيل من الدورة',
+        });
+      },
+    });
   }
 
   /**

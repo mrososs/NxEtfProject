@@ -22,6 +22,10 @@ import {
 import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
 import { HomePageService } from '../courses/services/home-page.service';
 import { Course, CourseFilter } from '../courses/model/course.model';
+import {
+  EnrollmentService,
+  Enrollment,
+} from '../courses/services/enrollment.service';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
 import { ProfileService } from '../profile/profile.service';
 
@@ -42,6 +46,7 @@ import { ProfileService } from '../profile/profile.service';
 })
 export class HomepageComponent implements OnInit, AfterViewInit {
   private homepageService = inject(HomePageService);
+  private enrollmentService = inject(EnrollmentService);
   private profileRequiredService = inject(ProfileRequiredService);
   private profileService = inject(ProfileService);
 
@@ -49,6 +54,10 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   userFullName: string = '';
   userFirstName: string = '';
   userLastName: string = '';
+
+  // Enrolled courses
+  enrolledCourses: Enrollment[] = [];
+  enrollmentLoading = false;
 
   // All courses (main display)
   allCourses$ = this.homepageService.getAllCourses().pipe(
@@ -88,6 +97,9 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
     // Load user name from localStorage
     this.loadUserName();
+
+    // Load enrolled courses
+    this.loadEnrolledCourses();
   }
 
   /**
@@ -108,6 +120,12 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    * Load user name from profile service if not in localStorage
    */
   private loadUserNameFromProfile(): void {
+    // Skip profile call if we're in 500 error mode
+    if (this.profileService.isIn500ErrorMode()) {
+      console.log('Skipping profile call due to 500 error mode');
+      return;
+    }
+
     // Use the cached profile service to get user name
     this.profileService.getProfile().subscribe({
       next: (profile) => {
@@ -297,5 +315,42 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     this.selectedLevels = [];
     this.selectedInstructors = [];
     this.homepageService.updateFilters({});
+  }
+
+  /**
+   * Load enrolled courses
+   */
+  private loadEnrolledCourses(): void {
+    this.enrollmentLoading = true;
+    this.enrollmentService.getEnrolledCourses().subscribe({
+      next: (enrollments) => {
+        this.enrolledCourses = enrollments;
+        this.enrollmentLoading = false;
+        console.log('Enrolled courses loaded in homepage:', enrollments);
+      },
+      error: (error) => {
+        console.error('Error loading enrolled courses in homepage:', error);
+        this.enrollmentLoading = false;
+      },
+    });
+  }
+
+  /**
+   * Check if user is enrolled in a specific course
+   */
+  isEnrolledInCourse(courseId: number): boolean {
+    return this.enrollmentService.isEnrolledInCourse(courseId);
+  }
+
+  /**
+   * Launch a course using the provided URL
+   */
+  launchCourse(launchUrl: string): void {
+    if (launchUrl) {
+      // Open course in new tab/window
+      window.open(launchUrl, '_blank');
+    } else {
+      console.warn('No launch URL available for this course');
+    }
   }
 }

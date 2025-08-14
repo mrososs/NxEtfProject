@@ -27,6 +27,26 @@
   padding: 2rem;
 }
 
+// Warning alert for redirect prevention mode
+.alert-warning {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 193, 7, 0.2) 100%
+  );
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  color: #856404;
+
+  i {
+    color: #ffc107;
+  }
+
+  strong {
+    color: #856404;
+  }
+}
+
 .form-label {
   font-weight: 600;
   color: #333;
@@ -249,6 +269,57 @@
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(247, 148, 30, 0.3);
         background: linear-gradient(135deg, #e6851a 0%, #f7941e80 100%);
+      }
+    }
+  }
+}
+
+// Enrolled Courses Section Styles
+.enrolled-courses {
+  background-color: #f8f9fa;
+}
+
+.enrolled-course {
+  position: relative;
+  border: 2px solid #f7941e !important;
+  background: linear-gradient(
+    135deg,
+    rgba(247, 148, 30, 0.05) 0%,
+    rgba(247, 148, 30, 0.02) 100%
+  ) !important;
+
+  .enrollment-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #f7941e 0%, #e6851a 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(247, 148, 30, 0.3);
+    z-index: 1;
+
+    i {
+      margin-left: 0.25rem;
+    }
+  }
+
+  .course-actions {
+    .btn-danger {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
       }
     }
   }

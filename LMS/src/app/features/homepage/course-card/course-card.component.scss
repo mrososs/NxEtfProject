@@ -1,0 +1,224 @@
+// Enhanced Course Card Styles
+:host {
+  display: block;
+  height: 100%;
+}
+
+::ng-deep .p-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  overflow: hidden;
+  background: white;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .p-card-header {
+    padding: 0;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(247, 148, 30, 0.1) 0%,
+        rgba(230, 133, 26, 0.1) 100%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+  }
+
+  &:hover .p-card-header {
+    img {
+      transform: scale(1.05);
+    }
+
+    &::after {
+      opacity: 1;
+    }
+  }
+
+  .p-card-body {
+    padding: 1.5rem;
+  }
+
+  .p-card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    min-height: 3rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .course-meta {
+    margin-bottom: 1.5rem;
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: #6c757d;
+
+      img {
+        width: 16px;
+        height: 16px;
+        opacity: 0.7;
+      }
+
+      .instructor-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .img-profile {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+      }
+
+      .rating {
+        color: #f7941e;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .dotted-line {
+    border: none;
+    border-top: 2px dashed #e9ecef;
+    margin: 1rem 0;
+  }
+
+  .p-card-footer {
+    padding: 0 1.5rem 1.5rem;
+
+    .p-button {
+      background: linear-gradient(135deg, #f7941e 0%, #e6851a 100%);
+      border: none;
+      border-radius: 50px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(247, 148, 30, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(247, 148, 30, 0.4);
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(247, 148, 30, 0.2);
+      }
+    }
+  }
+}
+
+// Course Level Badge
+.course-level-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(247, 148, 30, 0.9);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  ::ng-deep .p-card {
+    .p-card-header {
+      img {
+        height: 180px;
+      }
+    }
+
+    .p-card-body {
+      padding: 1rem;
+    }
+
+    .p-card-title {
+      font-size: 1.1rem;
+      min-height: 2.5rem;
+    }
+
+    .course-meta {
+      .meta-item {
+        font-size: 0.85rem;
+
+        img {
+          width: 14px;
+          height: 14px;
+        }
+
+        .img-profile {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
+    .p-card-footer {
+      padding: 0 1rem 1rem;
+
+      .p-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  ::ng-deep .p-card {
+    .p-card-header {
+      img {
+        height: 160px;
+      }
+    }
+
+    .p-card-title {
+      font-size: 1rem;
+      min-height: 2rem;
+    }
+
+    .course-meta {
+      .meta-item {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}

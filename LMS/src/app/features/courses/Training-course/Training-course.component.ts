@@ -24,7 +24,8 @@ export class TrainingCourseComponent implements OnInit {
     // Get courses from API only
     this._homePageService.getCoursesFromApi('ar').subscribe({
       next: (res: Course[]) => {
-        this.coursesData = res;
+        // Take only the first 3 courses
+        this.coursesData = res.slice(0, 3);
         this.loading = false;
       },
       error: (err) => {

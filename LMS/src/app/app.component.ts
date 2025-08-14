@@ -110,6 +110,12 @@ export class AppComponent implements OnInit {
   }
 
   private checkUserProfile(): void {
+    // Skip profile check if we're in 500 error mode
+    if (this.profileService.isIn500ErrorMode()) {
+      console.log('Skipping profile check due to 500 error mode');
+      return;
+    }
+
     this.profileService.getProfile().subscribe({
       next: (profile) => {
         // Profile check completed

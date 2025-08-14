@@ -10,6 +10,77 @@
       <p>هل تريد متابعة منهجك</p>
     </div>
 
+    <!-- Enrolled Courses Section -->
+    <div
+      class="enrolled-courses-section mb-5"
+      *ngIf="enrolledCourses.length > 0 || enrollmentLoading"
+    >
+      <div class="row">
+        <div class="col-12">
+          <div class="enrolled-courses-header">
+            <h2 class="text-center mb-4">
+              <i class="pi pi-book me-2"></i>
+              دوراتي المسجلة
+            </h2>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="enrollmentLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <p class="mt-2">جاري تحميل الدورات المسجلة...</p>
+          </div>
+
+          <!-- Enrolled Courses -->
+          <div
+            class="row"
+            *ngIf="!enrollmentLoading && enrolledCourses.length > 0"
+          >
+            <div
+              class="col-12 col-md-6 col-lg-4 mb-3"
+              *ngFor="let enrollment of enrolledCourses"
+            >
+              <div class="enrolled-course-card">
+                <div class="enrollment-badge">
+                  <i class="pi pi-check-circle"></i>
+                  مسجل
+                </div>
+                <div class="course-content">
+                  <h5 class="course-title">
+                    {{ enrollment.course?.title || 'دورة تدريبية' }}
+                  </h5>
+                  <p class="course-description">
+                    {{ enrollment.course?.description || 'وصف الدورة' }}
+                  </p>
+                  <div class="course-meta">
+                    <small class="text-muted">
+                      تاريخ التسجيل:
+                      {{ enrollment.enrollmentDate | date : 'shortDate' }}
+                    </small>
+                    <br />
+                    <small class="text-muted">
+                      المستوى: {{ enrollment.course?.level || 'غير محدد' }}
+                    </small>
+                  </div>
+                  <div class="course-actions mt-2">
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="launchCourse(enrollment.course?.launchUrl || '')"
+                      [disabled]="!enrollment.course?.launchUrl"
+                    >
+                      <i class="pi pi-play me-1"></i>
+                      متابعة الدورة
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="homePage__Courses">
       <div class="container d-block d-md-none mt-3 mb-3">
         <div class="text-center">

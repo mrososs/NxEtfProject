@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 import {
   HomePageService,
   CourseDetails,
@@ -12,8 +14,11 @@ import {
 } from '../services/home-page.service';
 import { CourseTrackerService } from '../services/course-tracker.service';
 import { ScormCommunicationService } from '../services/scorm-communication.service';
+import { EnrollmentService, Enrollment } from '../services/enrollment.service';
 import { Course } from '../model/course.model';
 import { CourseProgress } from '../model/course-tracker.model';
+import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 interface Review {
   id: number;
@@ -65,10 +70,20 @@ interface CourseLesson {
   duration: string;
 }
 
+interface CourseApiResponse {
+  id: number;
+  title: string;
+  description: string;
+  launchUrl: string;
+  uploadedAt: string;
+  reviews: any[];
+}
+
 @Component({
   selector: 'app-course-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule],
+  imports: [CommonModule, FormsModule, CardModule, ButtonModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
 })
@@ -77,6 +92,10 @@ export class CourseDetailsComponent implements OnInit {
   private _homePageService = inject(HomePageService);
   private _courseTrackerService = inject(CourseTrackerService);
   private _scormCommunicationService = inject(ScormCommunicationService);
+  private _enrollmentService = inject(EnrollmentService);
+  private _messageService = inject(MessageService);
+  private _http = inject(HttpClient);
+  private _sanitizer = inject(DomSanitizer);
 
   course!: Course;
   courseDetails!: CourseDetails;
@@ -86,6 +105,15 @@ export class CourseDetailsComponent implements OnInit {
   courseProgress!: CourseProgress;
   trackingInitialized = false;
   courseWindow: Window | null = null;
+
+  // Course API Response
+  courseApiData: CourseApiResponse | null = null;
+  showIframe = false;
+  iframeUrl: SafeResourceUrl | null = null;
+
+  // Enrollment properties
+  isEnrolled = false;
+  enrollmentLoading = false;
 
   // Mock data for the comprehensive design
   reviews: Review[] = [
@@ -230,6 +258,8 @@ export class CourseDetailsComponent implements OnInit {
       this.courseId = +params['id'];
       this.loadCourseDetails();
       this.loadCourseProgress();
+      this.loadCourseFromApi();
+      this.checkEnrollmentStatus();
     });
   }
 
@@ -249,6 +279,21 @@ export class CourseDetailsComponent implements OnInit {
         console.error('Error fetching course details:', err);
         this.error = true;
         this.loading = false;
+      },
+    });
+  }
+
+  private loadCourseFromApi(): void {
+    // Call the specific API endpoint
+    const apiUrl = `http://etfapi.itechpro-eg.com/api/Course/${this.courseId}`;
+
+    this._http.get<CourseApiResponse>(apiUrl).subscribe({
+      next: (data: CourseApiResponse) => {
+        this.courseApiData = data;
+        console.log('Course API Data:', data);
+      },
+      error: (err) => {
+        console.error('Error fetching course from API:', err);
       },
     });
   }
@@ -332,19 +377,35 @@ export class CourseDetailsComponent implements OnInit {
     }
   }
 
+  // Launch course in iframe
+  launchCourseInIframe(): void {
+    if (this.courseApiData?.launchUrl) {
+      this.iframeUrl = this._sanitizer.bypassSecurityTrustResourceUrl(
+        this.courseApiData.launchUrl
+      );
+      this.showIframe = true;
+      console.log('Launching course in iframe:', this.courseApiData.launchUrl);
+    } else {
+      console.error('No launch URL available for this course');
+    }
+  }
+
+  // Close iframe
+  closeIframe(): void {
+    this.showIframe = false;
+    this.iframeUrl = null;
+  }
+
+  // Launch course in new window (fallback)
   launchCourse(): void {
-    if (this.course?.launchUrl) {
+    if (this.courseApiData?.launchUrl) {
       // Initialize tracking before launching
       this.initializeCourseTracking();
 
-      // Construct the full URL to the SCORM course
-      const baseUrl = window.location.origin;
-      const scormUrl = `${baseUrl}${this.course.launchUrl}`;
-
-      console.log('Launching SCORM course:', scormUrl);
+      console.log('Launching SCORM course:', this.courseApiData.launchUrl);
 
       // Open the SCORM course in a new tab
-      this.courseWindow = window.open(scormUrl, '_blank');
+      this.courseWindow = window.open(this.courseApiData.launchUrl, '_blank');
 
       if (this.courseWindow) {
         // Initialize SCORM communication
@@ -368,9 +429,8 @@ export class CourseDetailsComponent implements OnInit {
    * @returns The complete URL to the SCORM course index.html
    */
   getScormCourseUrl(): string {
-    if (this.course?.launchUrl) {
-      const baseUrl = window.location.origin;
-      return `${baseUrl}${this.course.launchUrl}`;
+    if (this.courseApiData?.launchUrl) {
+      return this.courseApiData.launchUrl;
     }
     return '';
   }
@@ -380,7 +440,7 @@ export class CourseDetailsComponent implements OnInit {
    * @returns True if the course can be launched
    */
   canLaunchCourse(): boolean {
-    return !!this.course?.launchUrl;
+    return !!this.courseApiData?.launchUrl;
   }
 
   /**
@@ -518,5 +578,134 @@ export class CourseDetailsComponent implements OnInit {
    */
   getSuitableForText(): string {
     return this.courseDetails?.suitableForAr || '';
+  }
+
+  /**
+   * Check if user is enrolled in this course
+   */
+  private checkEnrollmentStatus(): void {
+    this.isEnrolled = this._enrollmentService.isEnrolledInCourse(this.courseId);
+  }
+
+  /**
+   * Update enrollment status manually
+   */
+  private updateEnrollmentStatus(): void {
+    // Force refresh and check status
+    this._enrollmentService.refreshEnrolledCourses();
+    setTimeout(() => {
+      this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
+        this.courseId
+      );
+      console.log('Updated enrollment status:', this.isEnrolled);
+    }, 500);
+  }
+
+  /**
+   * Enroll in the course
+   */
+  enrollInCourse(): void {
+    if (this.isEnrolled) {
+      this._messageService.add({
+        severity: 'info',
+        summary: 'معلومات',
+        detail: 'أنت مسجل بالفعل في هذه الدورة',
+      });
+      return;
+    }
+
+    this.enrollmentLoading = true;
+    this._enrollmentService.enrollInCourse(this.courseId).subscribe({
+      next: (response) => {
+        this.enrollmentLoading = false;
+        console.log('Enrollment response in component:', response);
+
+        if (response.success) {
+          // Update enrollment status immediately
+          this.isEnrolled = true;
+
+          // Force refresh enrollment status and update UI
+          this.updateEnrollmentStatus();
+
+          this._messageService.add({
+            severity: 'success',
+            summary: 'نجح التسجيل',
+            detail: 'تم تسجيلك في الدورة بنجاح! يمكنك الآن بدء الدورة',
+          });
+
+          // Automatically launch course after successful enrollment
+          setTimeout(() => {
+            this.checkAndLaunchCourse();
+          }, 1500);
+        } else {
+          this._messageService.add({
+            severity: 'error',
+            summary: 'خطأ في التسجيل',
+            detail: response.message || 'حدث خطأ أثناء التسجيل في الدورة',
+          });
+        }
+      },
+      error: (error) => {
+        this.enrollmentLoading = false;
+        console.error('Error enrolling in course:', error);
+
+        // Check if it's actually a success (HTTP 200 but caught as error)
+        if (error.status === 200 || error.statusText === 'OK') {
+          this.isEnrolled = true;
+          this.updateEnrollmentStatus();
+
+          this._messageService.add({
+            severity: 'success',
+            summary: 'نجح التسجيل',
+            detail: 'تم تسجيلك في الدورة بنجاح! يمكنك الآن بدء الدورة',
+          });
+
+          setTimeout(() => {
+            this.checkAndLaunchCourse();
+          }, 1500);
+        } else {
+          this._messageService.add({
+            severity: 'error',
+            summary: 'خطأ في التسجيل',
+            detail: 'حدث خطأ أثناء التسجيل في الدورة',
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Start course (enroll first if not enrolled)
+   */
+  startCourse(): void {
+    if (!this.isEnrolled) {
+      this.enrollInCourse();
+    } else {
+      // Check if user has progress and resume from checkpoint
+      this.checkAndLaunchCourse();
+    }
+  }
+
+  /**
+   * Check course progress and launch accordingly
+   */
+  private checkAndLaunchCourse(): void {
+    if (this.courseProgress && this.courseProgress.status !== 'not_started') {
+      // User has progress, resume from checkpoint
+      this._messageService.add({
+        severity: 'info',
+        summary: 'استئناف الدورة',
+        detail: 'سيتم استئناف الدورة من آخر نقطة توقف',
+      });
+      this.launchCourseInIframe();
+    } else {
+      // No progress, start from beginning
+      this._messageService.add({
+        severity: 'info',
+        summary: 'بدء الدورة',
+        detail: 'سيتم بدء الدورة من البداية',
+      });
+      this.launchCourseInIframe();
+    }
   }
 }

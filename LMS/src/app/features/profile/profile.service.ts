@@ -26,6 +26,8 @@ export class ProfileService {
   private readonly PROFILE_ENDPOINT =
     'http://etfapi.itechpro-eg.com/api/profile/me';
   private hasRedirectedToError = false;
+  private hasRedirectedToProfile = false; // Track if we've redirected to profile page
+  private redirectToProfileTimestamp = 0; // Track when we redirected to profile
 
   // Cache for profile data
   private profileCache$: Observable<UserProfile | null> | null = null;
@@ -43,6 +45,22 @@ export class ProfileService {
       return of(null);
     }
 
+    // Check if we have a session storage flag indicating 500 error occurred
+    const has500Error = sessionStorage.getItem('profile_500_error');
+    if (has500Error === 'true') {
+      console.log(
+        'Skipping getProfile API call due to previous 500 error - waiting for user to create profile'
+      );
+      return of(null);
+    }
+
+    // Prevent infinite loop: if we recently redirected to profile page due to 500 error,
+    // don't call the API again for a short period
+    if (this.hasRedirectedToProfile && this.isRecentlyRedirected()) {
+      console.log('Skipping getProfile API call to prevent infinite loop');
+      return of(null);
+    }
+
     // If cache exists, return cached response
     if (this.profileCache$) {
       return this.profileCache$;
@@ -55,6 +73,54 @@ export class ProfileService {
     );
 
     return this.profileCache$;
+  }
+
+  /**
+   * Check if we recently redirected to profile page (within last 30 seconds)
+   */
+  private isRecentlyRedirected(): boolean {
+    const now = Date.now();
+    const timeSinceRedirect = now - this.redirectToProfileTimestamp;
+    return timeSinceRedirect < 30000; // 30 seconds
+  }
+
+  /**
+   * Reset redirect flags when user successfully creates/updates profile
+   */
+  resetRedirectFlags(): void {
+    this.hasRedirectedToProfile = false;
+    this.redirectToProfileTimestamp = 0;
+    this.clear500ErrorFlag();
+    console.log('Redirect flags reset - API calls will work normally again');
+  }
+
+  /**
+   * Clear 500 error flag from session storage
+   */
+  private clear500ErrorFlag(): void {
+    sessionStorage.removeItem('profile_500_error');
+    console.log('500 error flag cleared - API calls will work normally again');
+  }
+
+  /**
+   * Manually clear 500 error flag (for testing/debugging)
+   */
+  public clear500ErrorFlagManually(): void {
+    this.clear500ErrorFlag();
+  }
+
+  /**
+   * Check if we're currently preventing API calls due to recent redirect
+   */
+  isInRedirectPreventionMode(): boolean {
+    return this.hasRedirectedToProfile && this.isRecentlyRedirected();
+  }
+
+  /**
+   * Check if we're currently preventing API calls due to 500 error
+   */
+  isIn500ErrorMode(): boolean {
+    return sessionStorage.getItem('profile_500_error') === 'true';
   }
 
   /**
@@ -104,12 +170,19 @@ export class ProfileService {
             return of(null);
           }
 
-          // Handle authentication errors (401, 403, 500)
-          if (
-            error.status === 401 ||
-            error.status === 403 ||
-            error.status === 500
-          ) {
+          // Handle 500 - server error, redirect to profile page to add values first
+          if (error.status === 500) {
+            console.log(
+              'Server error (500) - redirecting to profile page to add values first'
+            );
+            this.setRedirectToProfileFlag();
+            this.set500ErrorFlag();
+            this.redirectToProfilePage();
+            return of(null);
+          }
+
+          // Handle authentication errors (401, 403)
+          if (error.status === 401 || error.status === 403) {
             console.log('Authentication error - redirecting to error page');
             this.showAuthErrorPage();
             return throwError(() => error);
@@ -127,6 +200,7 @@ export class ProfileService {
    * Create or Update user profile
    */
   postProfile(formData: FormData): Observable<any> {
+    // Ensure we're sending FormData, not JSON
     const headers = new HttpHeaders({
       Accept: 'application/json',
       // Don't set Content-Type for FormData, let browser set it with boundary
@@ -140,20 +214,37 @@ export class ProfileService {
         map((response) => {
           // Clear cache after successful profile update
           this.clearProfileCache();
+
+          // Reset redirect flags on successful profile creation/update
+          this.resetRedirectFlags();
+
           return response;
         }),
         catchError((error) => {
-          // Handle authentication errors
-          if (
-            error.status === 401 ||
-            error.status === 403 ||
-            error.status === 500
-          ) {
+          // Handle 500 - server error, redirect to profile page to add values first
+          if (error.status === 500) {
+            console.log(
+              'Server error (500) during profile update - redirecting to profile page to add values first'
+            );
+            this.setRedirectToProfileFlag();
+            this.set500ErrorFlag();
+            this.redirectToProfilePage();
+            return throwError(() => error);
+          }
+
+          // Handle authentication errors (401, 403)
+          if (error.status === 401 || error.status === 403) {
+            console.log(
+              'Authentication error during profile update - redirecting to error page'
+            );
             this.showAuthErrorPage();
             return throwError(() => error);
           }
 
           // For other errors, redirect to main site
+          console.log(
+            'Unknown error during profile update - redirecting to main site'
+          );
           this.redirectToMainSite();
           return throwError(() => error);
         })
@@ -270,5 +361,22 @@ export class ProfileService {
     document.cookie = `accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     document.cookie = `userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     document.cookie = `user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+
+  /**
+   * Set redirect to profile flag to prevent infinite loops
+   */
+  private setRedirectToProfileFlag(): void {
+    this.hasRedirectedToProfile = true;
+    this.redirectToProfileTimestamp = Date.now();
+    console.log('Redirect to profile flag set - preventing infinite API calls');
+  }
+
+  /**
+   * Set session storage flag to prevent API calls during 500 errors
+   */
+  private set500ErrorFlag(): void {
+    sessionStorage.setItem('profile_500_error', 'true');
+    console.log('500 error flag set - preventing API calls during 500 errors');
   }
 }

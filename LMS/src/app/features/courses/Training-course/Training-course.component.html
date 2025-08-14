@@ -1,60 +1,107 @@
 <section class="training-courses">
   <div class="container">
-    <div class="d-flex justify-content-between gap-5 align-items-center">
-      <div class="d-flex flex-column">
-        <h2>
-          سواء كنت في بداية مسارك الأكاديمي أو تسعى لتطوير مهاراتك في مجال
-          تخصصك، ستجد لدينا كل ما تحتاج إليه !.
-        </h2>
-        <a
-          >عرض المناهج
-          <img
-            src="../../../../assets/svg/arrow-left-color-left.svg"
-            alt="arrow"
-        /></a>
-      </div>
-      <h1>استكشف أكثر من 4,000 دورة تدريبية مجانية عبر الإنترنت للطلاب</h1>
-    </div>
-
-    <!-- Loading State -->
-    <div *ngIf="loading" class="mt-3 text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">جاري التحميل...</span>
-      </div>
-      <p class="mt-2">جاري تحميل الدورات التدريبية...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error && !loading" class="mt-3 alert alert-danger">
-      <h4>خطأ في تحميل الدورات التدريبية</h4>
-      <p>حدث خطأ في تحميل الدورات التدريبية. يرجى المحاولة مرة أخرى.</p>
-    </div>
-
-    <!-- Courses Display -->
-    <div
-      *ngIf="!loading && !error && coursesData && coursesData.length > 0"
-      class="mt-3"
-    >
-      <div class="row">
-        <div
-          *ngFor="let course of coursesData"
-          class="col-12 col-md-6 col-lg-4 mb-4"
-        >
-          <div class="mb-4 p-8 flex items-center justify-center">
-            <app-course-card [course]="course"></app-course-card>
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <div class="hero-content">
+            <h1 class="hero-title">
+              استكشف أكثر من 4,000 دورة تدريبية مجانية عبر الإنترنت للطلاب
+            </h1>
+            <p class="hero-description">
+              سواء كنت في بداية مسارك الأكاديمي أو تسعى لتطوير مهاراتك في مجال
+              تخصصك، ستجد لدينا كل ما تحتاج إليه!
+            </p>
+            <a href="/courses" class="btn btn-primary btn-lg explore-btn">
+              عرض المناهج
+              <img
+                src="../../../../assets/svg/arrow-left-color-left.svg"
+                alt="arrow"
+                class="ms-2"
+              />
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hero-image">
+            <div class="floating-card card-1">
+              <i class="pi pi-graduation-cap"></i>
+              <span>دورات مجانية</span>
+            </div>
+            <div class="floating-card card-2">
+              <i class="pi pi-certificate"></i>
+              <span>شهادات معتمدة</span>
+            </div>
+            <div class="floating-card card-3">
+              <i class="pi pi-users"></i>
+              <span>خبراء متخصصون</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- No Courses State -->
-    <div
-      *ngIf="!loading && !error && (!coursesData || coursesData.length === 0)"
-      class="mt-3 text-center"
-    >
-      <div class="alert alert-info">
-        <h4>لا توجد دورات تدريبية متاحة حالياً</h4>
-        <p>يرجى المحاولة مرة أخرى لاحقاً</p>
+    <!-- Featured Courses Section -->
+    <div class="featured-courses-section">
+      <div class="section-header text-center">
+        <h2 class="section-title">الدورات المميزة</h2>
+        <p class="section-subtitle">
+          اكتشف أفضل الدورات التدريبية المختارة خصيصاً لك
+        </p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="mt-3 text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <p class="mt-2">جاري تحميل الدورات التدريبية...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !loading" class="mt-3 alert alert-danger">
+        <h4>خطأ في تحميل الدورات التدريبية</h4>
+        <p>حدث خطأ في تحميل الدورات التدريبية. يرجى المحاولة مرة أخرى.</p>
+      </div>
+
+      <!-- Courses Display -->
+      <div
+        *ngIf="!loading && !error && coursesData && coursesData.length > 0"
+        class="courses-grid"
+      >
+        <div class="row g-4">
+          <div
+            *ngFor="let course of coursesData"
+            class="col-12 col-md-6 col-lg-4"
+          >
+            <div class="course-card-wrapper">
+              <app-course-card [course]="course"></app-course-card>
+            </div>
+          </div>
+        </div>
+
+        <!-- View All Courses Button -->
+        <div class="text-center mt-5">
+          <a
+            href="/courses"
+            class="btn btn-outline-primary btn-lg view-all-btn"
+          >
+            عرض جميع الدورات
+            <i class="pi pi-arrow-left ms-2"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- No Courses State -->
+      <div
+        *ngIf="!loading && !error && (!coursesData || coursesData.length === 0)"
+        class="no-courses-state"
+      >
+        <div class="empty-state">
+          <i class="pi pi-book empty-icon"></i>
+          <h4>لا توجد دورات تدريبية متاحة حالياً</h4>
+          <p>يرجى المحاولة مرة أخرى لاحقاً</p>
+        </div>
       </div>
     </div>
   </div>

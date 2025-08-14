@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 import { appRoutes } from './app.routes';
 import {
   provideHttpClient,
@@ -32,7 +32,11 @@ export const appConfig: ApplicationConfig = {
       defaultLanguage: 'en', // Set your default language here
     }),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(appRoutes),
+    provideRouter(
+      appRoutes,
+      withViewTransitions(),
+      withInMemoryScrolling({ scrollPositionRestoration: 'top' })
+    ),
     provideAnimations(),
   ],
 };
