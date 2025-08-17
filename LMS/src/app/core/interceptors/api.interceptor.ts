@@ -5,7 +5,7 @@ export function apiInterceptor(
   request: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> {
-  const baseUrl = 'http://etfapi.itechpro-eg.com/api';
+  const baseUrl = 'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net';
 
   // Check if URL starts with http or https (absolute URLs)
   const isAbsoluteUrl =

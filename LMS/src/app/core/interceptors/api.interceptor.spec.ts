@@ -14,7 +14,8 @@ describe('apiInterceptor', () => {
 
   it('should add base URL to relative URLs starting with /api', () => {
     const request = new HttpRequest('GET', '/api/Course?lang=ar');
-    const expectedUrl = 'http://etfapi.itechpro-eg.com/api/Course?lang=ar';
+    const expectedUrl =
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar';
 
     apiInterceptor(request, mockHandler);
 
@@ -27,7 +28,8 @@ describe('apiInterceptor', () => {
 
   it('should add base URL to relative URLs without leading slash', () => {
     const request = new HttpRequest('GET', 'api/Course?lang=ar');
-    const expectedUrl = 'http://etfapi.itechpro-eg.com/api/Course?lang=ar';
+    const expectedUrl =
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar';
 
     apiInterceptor(request, mockHandler);
 
@@ -41,7 +43,7 @@ describe('apiInterceptor', () => {
   it('should not modify requests that start with http://', () => {
     const request = new HttpRequest(
       'GET',
-      'http://etfapi.itechpro-eg.com/api/Course?lang=ar'
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar'
     );
 
     apiInterceptor(request, mockHandler);
@@ -60,7 +62,7 @@ describe('apiInterceptor', () => {
   it('should handle other relative URLs by adding base URL', () => {
     const request = new HttpRequest('GET', 'assets/data/courses.json');
     const expectedUrl =
-      'http://etfapi.itechpro-eg.com/api/assets/data/courses.json';
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/assets/data/courses.json';
 
     apiInterceptor(request, mockHandler);
 

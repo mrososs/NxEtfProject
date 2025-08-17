@@ -1,6 +1,24 @@
-  <iframe
+<div class="course-viewer-container">
+  <div class="course-header">
+    <h2>Course Viewer</h2>
+    <p *ngIf="courseId">Course ID: {{ courseId }}</p>
+  </div>
+
+  <div class="course-content">
+    <iframe
+      #courseIframe
       [src]="courseUrl"
       width="100%"
       height="1000px"
       frameborder="0"
+      (load)="onIframeLoad()"
+      allowfullscreen
     ></iframe>
+  </div>
+
+  <div class="course-controls">
+    <button (click)="getCourseProgress()" class="btn btn-primary">
+      Get Progress
+    </button>
+  </div>
+</div>

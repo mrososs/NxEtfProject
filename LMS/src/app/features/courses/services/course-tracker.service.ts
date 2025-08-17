@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import {
   CourseTrackerRequest,
   CourseTrackerResponse,
@@ -13,6 +13,10 @@ import {
 })
 export class CourseTrackerService {
   private _http = inject(HttpClient);
+  private _progressSubject = new BehaviorSubject<CourseProgress | null>(null);
+
+  // Observable for course progress updates
+  public courseProgress$ = this._progressSubject.asObservable();
 
   /**
    * Get course tracking data for a specific element and course
@@ -22,7 +26,7 @@ export class CourseTrackerService {
    */
   getCourseTracker(element: string, courseId: number): Observable<string> {
     return this._http.get<string>(
-      `CourseTracker?element=${element}&courseId=${courseId}`
+      `/api/CourseTracker?element=${element}&courseId=${courseId}`
     );
   }
 
@@ -34,7 +38,10 @@ export class CourseTrackerService {
   postCourseTracker(
     request: CourseTrackerRequest
   ): Observable<CourseTrackerResponse> {
-    return this._http.post<CourseTrackerResponse>('CourseTracker', request);
+    return this._http.post<CourseTrackerResponse>(
+      '/api/CourseTracker',
+      request
+    );
   }
 
   /**
@@ -148,26 +155,169 @@ export class CourseTrackerService {
   }
 
   /**
+   * Track checkpoint data
+   * @param courseId - The course ID
+   * @param checkpointData - The checkpoint data
+   * @returns Observable of tracking response
+   */
+  trackCheckpoint(
+    courseId: number,
+    checkpointData: string
+  ): Observable<CourseTrackerResponse> {
+    const request: CourseTrackerRequest = {
+      element: 'checkpoint',
+      courseId: courseId,
+      value: checkpointData,
+    };
+    return this.postCourseTracker(request);
+  }
+
+  /**
+   * Track course completion percentage
+   * @param courseId - The course ID
+   * @param percentage - The completion percentage (0-100)
+   * @returns Observable of tracking response
+   */
+  trackCompletionPercentage(
+    courseId: number,
+    percentage: number
+  ): Observable<CourseTrackerResponse> {
+    const request: CourseTrackerRequest = {
+      element: 'completion_percentage',
+      courseId: courseId,
+      value: percentage.toString(),
+    };
+    return this.postCourseTracker(request);
+  }
+
+  /**
    * Get course progress summary
    * @param courseId - The course ID
    * @returns Observable of course progress
    */
   getCourseProgress(courseId: number): Observable<CourseProgress> {
-    // This would typically call a different endpoint that returns progress summary
+    // Try to get progress from API first
+    return new Observable((observer) => {
+      // Get all tracked elements for this course
+      this.getAllCourseElements(courseId).subscribe({
+        next: (elements) => {
+          const progress = this.calculateProgressFromElements(
+            courseId,
+            elements
+          );
+          this._progressSubject.next(progress);
+          observer.next(progress);
+          observer.complete();
+        },
+        error: (err) => {
+          console.error('Error getting course progress:', err);
+          // Return mock progress if API fails
+          const mockProgress = this.createMockProgress(courseId);
+          this._progressSubject.next(mockProgress);
+          observer.next(mockProgress);
+          observer.complete();
+        },
+      });
+    });
+  }
+
+  /**
+   * Get all tracked elements for a course
+   * @param courseId - The course ID
+   * @returns Observable of tracked elements
+   */
+  private getAllCourseElements(courseId: number): Observable<ScormElement[]> {
+    // This would typically call an API endpoint that returns all elements for a course
     // For now, we'll return a mock implementation
     return new Observable((observer) => {
-      // Mock implementation - in real scenario, this would call an API
-      const mockProgress: CourseProgress = {
-        courseId: courseId,
-        userId: 1, // Mock user ID
-        elements: [],
-        lastUpdated: new Date(),
-        completionPercentage: 0,
-        status: 'not_started',
-      };
-      observer.next(mockProgress);
+      const mockElements: ScormElement[] = [
+        {
+          id: '1',
+          name: 'lesson_status',
+          type: 'lesson_status',
+          value: 'incomplete',
+          timestamp: new Date(),
+        },
+        {
+          id: '2',
+          name: 'completion_percentage',
+          type: 'custom',
+          value: '25',
+          timestamp: new Date(),
+        },
+      ];
+      observer.next(mockElements);
       observer.complete();
     });
+  }
+
+  /**
+   * Calculate progress from tracked elements
+   * @param courseId - The course ID
+   * @param elements - The tracked elements
+   * @returns CourseProgress object
+   */
+  private calculateProgressFromElements(
+    courseId: number,
+    elements: ScormElement[]
+  ): CourseProgress {
+    let completionPercentage = 0;
+    let status: 'not_started' | 'in_progress' | 'completed' | 'failed' =
+      'not_started';
+
+    // Find completion percentage
+    const completionElement = elements.find(
+      (el) => el.name === 'completion_percentage'
+    );
+    if (completionElement) {
+      completionPercentage = parseInt(completionElement.value) || 0;
+    }
+
+    // Find lesson status
+    const statusElement = elements.find((el) => el.name === 'lesson_status');
+    if (statusElement) {
+      switch (statusElement.value) {
+        case 'completed':
+        case 'passed':
+          status = 'completed';
+          completionPercentage = 100;
+          break;
+        case 'failed':
+          status = 'failed';
+          break;
+        case 'incomplete':
+        case 'in_progress':
+          status = 'in_progress';
+          break;
+        default:
+          status = 'not_started';
+      }
+    }
+
+    return {
+      courseId,
+      userId: 1, // Mock user ID
+      elements,
+      lastUpdated: new Date(),
+      completionPercentage,
+      status,
+    };
+  }
+
+  /**
+   * Create mock progress for fallback
+   * @param courseId - The course ID
+   * @returns Mock CourseProgress object
+   */
+  private createMockProgress(courseId: number): CourseProgress {
+    return {
+      courseId,
+      userId: 1,
+      elements: [],
+      lastUpdated: new Date(),
+      completionPercentage: 0,
+      status: 'not_started',
+    };
   }
 
   /**
@@ -184,5 +334,21 @@ export class CourseTrackerService {
       value: 'not_attempted',
     };
     return this.postCourseTracker(request);
+  }
+
+  /**
+   * Update progress in the subject
+   * @param progress - The updated progress
+   */
+  updateProgress(progress: CourseProgress): void {
+    this._progressSubject.next(progress);
+  }
+
+  /**
+   * Get current progress value
+   * @returns Current progress or null
+   */
+  getCurrentProgress(): CourseProgress | null {
+    return this._progressSubject.value;
   }
 }

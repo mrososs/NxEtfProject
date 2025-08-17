@@ -285,7 +285,7 @@ export class CourseDetailsComponent implements OnInit {
 
   private loadCourseFromApi(): void {
     // Call the specific API endpoint
-    const apiUrl = `http://etfapi.itechpro-eg.com/api/Course/${this.courseId}`;
+    const apiUrl = `api/Course/${this.courseId}`;
 
     this._http.get<CourseApiResponse>(apiUrl).subscribe({
       next: (data: CourseApiResponse) => {
@@ -371,6 +371,14 @@ export class CourseDetailsComponent implements OnInit {
         );
         this.trackingInitialized = true;
         console.log('Course tracking initialized successfully');
+
+        // Subscribe to progress updates
+        this._courseTrackerService.courseProgress$.subscribe((progress) => {
+          if (progress && progress.courseId === this.courseId) {
+            this.courseProgress = progress;
+            console.log('Course progress updated:', progress);
+          }
+        });
       } catch (err) {
         console.error('Error initializing course tracking:', err);
       }
@@ -557,6 +565,66 @@ export class CourseDetailsComponent implements OnInit {
    */
   loadCourse(): void {
     this.loadCourseDetails();
+  }
+
+  /**
+   * Refresh course progress from CourseTracker API
+   */
+  refreshCourseProgress(): void {
+    if (this.courseId) {
+      this._courseTrackerService.getCourseProgress(this.courseId).subscribe({
+        next: (progress) => {
+          this.courseProgress = progress;
+          console.log('Course progress refreshed:', progress);
+
+          // Show success message
+          this._messageService.add({
+            severity: 'success',
+            summary: 'تم تحديث التقدم',
+            detail: 'تم تحديث تقدم الدورة بنجاح',
+          });
+        },
+        error: (err) => {
+          console.error('Error refreshing course progress:', err);
+          this._messageService.add({
+            severity: 'error',
+            summary: 'خطأ في تحديث التقدم',
+            detail: 'حدث خطأ أثناء تحديث تقدم الدورة',
+          });
+        },
+      });
+    }
+  }
+
+  /**
+   * Get tracked elements for display
+   */
+  getTrackedElements(): any[] {
+    if (!this.courseProgress?.elements) return [];
+
+    return this.courseProgress.elements.map((element) => ({
+      name: this.getElementDisplayName(element.name),
+      value: element.value,
+      type: element.type,
+      timestamp: element.timestamp,
+    }));
+  }
+
+  /**
+   * Get display name for SCORM element
+   */
+  private getElementDisplayName(elementName: string): string {
+    const elementNames: { [key: string]: string } = {
+      lesson_status: 'حالة الدرس',
+      lesson_location: 'موقع الدرس',
+      score: 'الدرجة',
+      total_time: 'الوقت الإجمالي',
+      suspend_data: 'بيانات الإيقاف المؤقت',
+      completion_percentage: 'نسبة الإكمال',
+      checkpoint: 'نقطة التحقق',
+    };
+
+    return elementNames[elementName] || elementName;
   }
 
   /**

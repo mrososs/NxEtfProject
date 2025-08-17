@@ -38,7 +38,7 @@ export interface EnrollmentResponse {
 })
 export class EnrollmentService {
   private _http = inject(HttpClient);
-  private readonly baseUrl = 'http://etfapi.itechpro-eg.com/api/Enrollment';
+  private readonly baseUrl = 'api/Enrollment';
 
   // BehaviorSubject to track enrolled courses
   private _enrolledCourses = new BehaviorSubject<Enrollment[]>([]);

@@ -58,7 +58,7 @@ describe('InstructorApiService', () => {
       expect(response).toEqual(mockResponse);
     });
 
-    const req = httpMock.expectOne('Trainer');
+    const req = httpMock.expectOne('api/Trainer');
     expect(req.request.method).toBe('GET');
     req.flush(mockResponse);
   });
@@ -84,7 +84,7 @@ describe('InstructorApiService', () => {
     });
 
     const req = httpMock.expectOne(
-      'Trainer?page=1&pageSize=5&sortBy=Name&sortDir=asc'
+      'api/Trainer?page=1&pageSize=5&sortBy=Name&sortDir=asc'
     );
     expect(req.request.method).toBe('GET');
     req.flush(mockResponse);
@@ -110,7 +110,7 @@ describe('InstructorApiService', () => {
       expect(instructor).toEqual(mockInstructor);
     });
 
-    const req = httpMock.expectOne('Trainer/1');
+    const req = httpMock.expectOne('api/Trainer/1');
     expect(req.request.method).toBe('GET');
     req.flush(mockInstructor);
   });

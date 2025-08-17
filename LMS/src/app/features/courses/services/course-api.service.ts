@@ -100,25 +100,33 @@ export class CourseApiService {
     };
 
     console.log('Course API request params:', httpParams.toString());
-    console.log('Full URL will be:', `Course?${httpParams.toString()}`);
+    console.log('Full URL will be:', `api/Course?${httpParams.toString()}`);
 
-    return this._http.get<any>(`Course`, { headers, params: httpParams }).pipe(
-      map((response: any) => {
-        console.log('Raw courses API response:', response);
-
-        // Handle different API response structures
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response && Array.isArray(response.data)) {
-          return response.data;
-        } else if (response && Array.isArray(response.courses)) {
-          return response.courses;
-        } else {
-          console.warn('Unknown API response structure for courses:', response);
-          return [];
-        }
+    return this._http
+      .get<any>(`api/Course`, {
+        headers,
+        params: httpParams,
       })
-    );
+      .pipe(
+        map((response: any) => {
+          console.log('Raw courses API response:', response);
+
+          // Handle different API response structures
+          if (Array.isArray(response)) {
+            return response;
+          } else if (response && Array.isArray(response.data)) {
+            return response.data;
+          } else if (response && Array.isArray(response.courses)) {
+            return response.courses;
+          } else {
+            console.warn(
+              'Unknown API response structure for courses:',
+              response
+            );
+            return [];
+          }
+        })
+      );
   }
 
   /**
@@ -128,7 +136,7 @@ export class CourseApiService {
    * @returns Observable of ApiCourse
    */
   getCourseById(id: number, lang = 'ar'): Observable<ApiCourse> {
-    return this._http.get<ApiCourse>(`Course/${id}?lang=${lang}`);
+    return this._http.get<ApiCourse>(`api/Course/${id}?lang=${lang}`);
   }
 
   /**

@@ -42,7 +42,7 @@ describe('CourseApiService', () => {
       expect(courses).toEqual(mockCourses);
     });
 
-    const req = httpMock.expectOne('Course?lang=ar');
+    const req = httpMock.expectOne('api/Course?lang=ar');
     expect(req.request.method).toBe('GET');
     req.flush(mockCourses);
   });

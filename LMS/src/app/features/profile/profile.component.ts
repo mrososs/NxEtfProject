@@ -16,6 +16,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { FileUploadModule } from 'primeng/fileupload';
 import { BannerComponent } from '../../shared/components/banner/banner.component';
 
 @Component({
@@ -27,6 +28,7 @@ import { BannerComponent } from '../../shared/components/banner/banner.component
     InputTextModule,
     ButtonModule,
     ToastModule,
+    FileUploadModule,
     BannerComponent,
   ],
   providers: [MessageService],
@@ -40,6 +42,9 @@ export class ProfileComponent implements OnInit {
   userCourses: any[] = [];
   enrolledCourses: Enrollment[] = [];
   enrollmentLoading = false;
+  selectedImage: File | null = null;
+  imagePreview: string | null = null;
+  currentProfile: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -84,12 +89,18 @@ export class ProfileComponent implements OnInit {
       next: (profile) => {
         if (profile) {
           this.isEditMode = true;
+          this.currentProfile = profile;
           this.profileForm.patchValue({
             firstName: profile.firstName || '',
             middleName: profile.middleName || '',
             lastName: profile.lastName || '',
             description: profile.description || '',
           });
+
+          // Set image preview if profile has image
+          if (profile.imageUrl || profile.imageLink) {
+            this.imagePreview = profile.imageUrl || profile.imageLink || null;
+          }
 
           // Handle courses data
           if (profile.courses && Array.isArray(profile.courses)) {
@@ -171,7 +182,10 @@ export class ProfileComponent implements OnInit {
         this.profileForm.get('description')?.value || ''
       );
 
-      // Note: Image upload removed as per requirements
+      // Add image if selected
+      if (this.selectedImage) {
+        formData.append('Image', this.selectedImage);
+      }
 
       // Use the simplified postProfile method
       this.profileService.postProfile(formData).subscribe({
@@ -289,6 +303,62 @@ export class ProfileComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  /**
+   * Handle image selection
+   */
+  onImageSelect(event: any): void {
+    const file = event.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'يرجى اختيار ملف صورة صحيح',
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'حجم الصورة يجب أن يكون أقل من 5 ميجابايت',
+        });
+        return;
+      }
+
+      this.selectedImage = file;
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'نجح',
+        detail: 'تم اختيار الصورة بنجاح',
+      });
+    }
+  }
+
+  /**
+   * Remove selected image
+   */
+  removeImage(): void {
+    this.selectedImage = null;
+    this.imagePreview = null;
+    this.messageService.add({
+      severity: 'info',
+      summary: 'تم',
+      detail: 'تم إزالة الصورة',
+    });
   }
 
   /**

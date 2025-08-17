@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  CanActivate,
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ProfileService } from '../../features/profile/profile.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProfileGuard implements CanActivate {
-  constructor(
-    private profileService: ProfileService,
-    private router: Router
-  ) {}
+  constructor(private profileService: ProfileService, private router: Router) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -27,7 +29,7 @@ export class ProfileGuard implements CanActivate {
 
     // Check if user has a profile
     return this.profileService.hasProfile().pipe(
-      map(hasProfile => {
+      map((hasProfile) => {
         if (!hasProfile) {
           console.log('User has no profile, redirecting to profile page');
           this.router.navigate(['/profile']);
@@ -35,7 +37,7 @@ export class ProfileGuard implements CanActivate {
         }
         return true;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error checking profile:', error);
         // If there's an error, assume no profile and redirect
         this.router.navigate(['/profile']);
@@ -43,4 +45,4 @@ export class ProfileGuard implements CanActivate {
       })
     );
   }
-} 
+}

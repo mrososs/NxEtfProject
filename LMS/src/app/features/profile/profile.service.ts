@@ -23,8 +23,7 @@ export interface UserProfile {
 })
 export class ProfileService {
   private http = inject(HttpClient);
-  private readonly PROFILE_ENDPOINT =
-    'http://etfapi.itechpro-eg.com/api/profile/me';
+  private readonly PROFILE_ENDPOINT = 'api/profile/me';
   private hasRedirectedToError = false;
   private hasRedirectedToProfile = false; // Track if we've redirected to profile page
   private redirectToProfileTimestamp = 0; // Track when we redirected to profile
@@ -135,10 +134,22 @@ export class ProfileService {
     return this.http
       .get<UserProfile>(`${this.PROFILE_ENDPOINT}`, {
         headers,
+        observe: 'response', // Get full response to check content type
       })
       .pipe(
         map((response) => {
-          const profile = response as UserProfile;
+          // Check if response is HTML instead of JSON
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+            console.error(
+              'API returned HTML instead of JSON. This usually means a redirect to login page.'
+            );
+            throw new Error(
+              'API returned HTML instead of JSON - possible redirect to login page'
+            );
+          }
+
+          const profile = response.body as UserProfile;
 
           // Save user's name to localStorage for homepage display
           if (profile.firstName && profile.lastName) {
@@ -152,6 +163,13 @@ export class ProfileService {
           return profile;
         }),
         catchError((error) => {
+          // Handle HTML response (redirect to login page)
+          if (error.message && error.message.includes('HTML instead of JSON')) {
+            console.log('API returned HTML - likely redirect to login page');
+            this.showAuthErrorPage();
+            return of(null);
+          }
+
           // Handle 302 redirect - user needs to create profile
           if (error.status === 302) {
             console.log(

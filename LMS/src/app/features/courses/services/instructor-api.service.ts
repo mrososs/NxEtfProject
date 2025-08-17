@@ -44,7 +44,7 @@ export class InstructorApiService {
     console.log('Instructors API request params:', httpParams.toString());
 
     return this._http
-      .get<any>('Trainer', {
+      .get<any>('api/Trainer', {
         params: httpParams,
         headers,
       })
@@ -110,7 +110,7 @@ export class InstructorApiService {
    * @returns Observable of ApiInstructor
    */
   getInstructorById(id: number): Observable<ApiInstructor> {
-    return this._http.get<ApiInstructor>(`Trainer/${id}`);
+    return this._http.get<ApiInstructor>(`api/Trainer/${id}`);
   }
 
   /**

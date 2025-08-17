@@ -83,6 +83,15 @@
 .current-image {
   margin-bottom: 1rem;
 
+  .profile-image-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #f7941e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
   .profile-preview {
     width: 120px;
     height: 120px;

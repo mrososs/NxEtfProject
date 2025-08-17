@@ -1,11 +1,31 @@
 import { Injectable } from '@angular/core';
 import { CourseTrackerService } from './course-tracker.service';
+import { BehaviorSubject } from 'rxjs';
+
+export interface ScormMessage {
+  type: string;
+  courseId: number;
+  element?: string;
+  value?: string;
+  data?: any;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class ScormCommunicationService {
-  constructor(private courseTrackerService: CourseTrackerService) {}
+  private _courseTrackerService: CourseTrackerService;
+  private _currentCourseId: number | null = null;
+  private _iframeElement: HTMLIFrameElement | null = null;
+  private _messageListener: ((event: MessageEvent) => void) | null = null;
+  private _scormDataSubject = new BehaviorSubject<any>(null);
+
+  // Observable for SCORM data updates
+  public scormData$ = this._scormDataSubject.asObservable();
+
+  constructor(courseTrackerService: CourseTrackerService) {
+    this._courseTrackerService = courseTrackerService;
+  }
 
   /**
    * Initialize SCORM communication for a course
@@ -13,12 +33,16 @@ export class ScormCommunicationService {
    * @param courseWindow - The window containing the SCORM course
    */
   initializeScormCommunication(courseId: number, courseWindow: Window): void {
+    this._currentCourseId = courseId;
+
     // Set up message listener for SCORM communication
-    window.addEventListener('message', (event) => {
+    this._messageListener = (event: MessageEvent) => {
       if (event.source === courseWindow) {
         this.handleScormMessage(courseId, event.data);
       }
-    });
+    };
+
+    window.addEventListener('message', this._messageListener);
 
     // Send initialization message to SCORM course
     courseWindow.postMessage(
@@ -29,6 +53,43 @@ export class ScormCommunicationService {
       },
       '*'
     );
+
+    console.log('SCORM communication initialized for course:', courseId);
+  }
+
+  /**
+   * Initialize SCORM communication for iframe
+   * @param courseId - The course ID
+   * @param iframeElement - The iframe element containing the SCORM course
+   */
+  initializeIframeScormCommunication(
+    courseId: number,
+    iframeElement: HTMLIFrameElement
+  ): void {
+    this._currentCourseId = courseId;
+    this._iframeElement = iframeElement;
+
+    // Set up message listener for SCORM communication
+    this._messageListener = (event: MessageEvent) => {
+      if (event.source === iframeElement.contentWindow) {
+        this.handleScormMessage(courseId, event.data);
+      }
+    };
+
+    window.addEventListener('message', this._messageListener);
+
+    // Wait for iframe to load, then send initialization message
+    iframeElement.addEventListener('load', () => {
+      setTimeout(() => {
+        this.sendMessageToIframe({
+          type: 'scorm_init',
+          courseId: courseId,
+          apiEndpoint: '/api/CourseTracker',
+        });
+      }, 1000); // Give iframe time to initialize
+    });
+
+    console.log('SCORM iframe communication initialized for course:', courseId);
   }
 
   /**
@@ -45,6 +106,10 @@ export class ScormCommunicationService {
       this.handleCourseCompletion(courseId, data);
     } else if (data.type === 'scorm_error') {
       this.handleScormError(courseId, data);
+    } else if (data.type === 'scorm_checkpoint') {
+      this.handleCheckpoint(courseId, data);
+    } else if (data.type === 'scorm_progress') {
+      this.handleProgressUpdate(courseId, data);
     }
   }
 
@@ -59,53 +124,87 @@ export class ScormCommunicationService {
     element: string,
     value: string
   ): void {
+    console.log(`Tracking SCORM element: ${element} = ${value}`);
+
     switch (element) {
       case 'lesson_status':
-        this.courseTrackerService.trackLessonStatus(courseId, value).subscribe({
-          next: (response) => console.log('Lesson status tracked:', response),
-          error: (err) => console.error('Error tracking lesson status:', err),
-        });
+        this._courseTrackerService
+          .trackLessonStatus(courseId, value)
+          .subscribe({
+            next: (response) => {
+              console.log('Lesson status tracked:', response);
+              this.updateProgress();
+            },
+            error: (err) => console.error('Error tracking lesson status:', err),
+          });
         break;
 
       case 'lesson_location':
-        this.courseTrackerService
+        this._courseTrackerService
           .trackLessonLocation(courseId, value)
           .subscribe({
-            next: (response) =>
-              console.log('Lesson location tracked:', response),
+            next: (response) => {
+              console.log('Lesson location tracked:', response);
+              this.updateProgress();
+            },
             error: (err) =>
               console.error('Error tracking lesson location:', err),
           });
         break;
 
       case 'score':
-        this.courseTrackerService.trackScore(courseId, value).subscribe({
-          next: (response) => console.log('Score tracked:', response),
+        this._courseTrackerService.trackScore(courseId, value).subscribe({
+          next: (response) => {
+            console.log('Score tracked:', response);
+            this.updateProgress();
+          },
           error: (err) => console.error('Error tracking score:', err),
         });
         break;
 
       case 'total_time':
-        this.courseTrackerService.trackTotalTime(courseId, value).subscribe({
-          next: (response) => console.log('Total time tracked:', response),
+        this._courseTrackerService.trackTotalTime(courseId, value).subscribe({
+          next: (response) => {
+            console.log('Total time tracked:', response);
+            this.updateProgress();
+          },
           error: (err) => console.error('Error tracking total time:', err),
         });
         break;
 
       case 'suspend_data':
-        this.courseTrackerService.trackSuspendData(courseId, value).subscribe({
-          next: (response) => console.log('Suspend data tracked:', response),
+        this._courseTrackerService.trackSuspendData(courseId, value).subscribe({
+          next: (response) => {
+            console.log('Suspend data tracked:', response);
+            this.updateProgress();
+          },
           error: (err) => console.error('Error tracking suspend data:', err),
         });
         break;
 
+      case 'completion_percentage':
+        const percentage = parseInt(value) || 0;
+        this._courseTrackerService
+          .trackCompletionPercentage(courseId, percentage)
+          .subscribe({
+            next: (response) => {
+              console.log('Completion percentage tracked:', response);
+              this.updateProgress();
+            },
+            error: (err) =>
+              console.error('Error tracking completion percentage:', err),
+          });
+        break;
+
       default:
         // Handle custom elements
-        this.courseTrackerService
+        this._courseTrackerService
           .trackCustomElement(courseId, element, value)
           .subscribe({
-            next: (response) =>
-              console.log('Custom element tracked:', response),
+            next: (response) => {
+              console.log('Custom element tracked:', response);
+              this.updateProgress();
+            },
             error: (err) =>
               console.error('Error tracking custom element:', err),
           });
@@ -122,12 +221,22 @@ export class ScormCommunicationService {
     console.log('Course completed:', data);
 
     // Track final status
-    this.courseTrackerService
+    this._courseTrackerService
       .trackLessonStatus(courseId, 'completed')
       .subscribe({
         next: (response) => {
           console.log('Course completion tracked:', response);
-          // You can add additional logic here like showing a completion message
+          this.updateProgress();
+
+          // Track 100% completion
+          this._courseTrackerService
+            .trackCompletionPercentage(courseId, 100)
+            .subscribe({
+              next: (response) =>
+                console.log('100% completion tracked:', response),
+              error: (err) =>
+                console.error('Error tracking 100% completion:', err),
+            });
         },
         error: (err) => console.error('Error tracking course completion:', err),
       });
@@ -142,10 +251,71 @@ export class ScormCommunicationService {
     console.error('SCORM error:', data);
 
     // Track error status
-    this.courseTrackerService.trackLessonStatus(courseId, 'failed').subscribe({
-      next: (response) => console.log('Error status tracked:', response),
+    this._courseTrackerService.trackLessonStatus(courseId, 'failed').subscribe({
+      next: (response) => {
+        console.log('Error status tracked:', response);
+        this.updateProgress();
+      },
       error: (err) => console.error('Error tracking error status:', err),
     });
+  }
+
+  /**
+   * Handle checkpoint data
+   * @param courseId - The course ID
+   * @param data - Checkpoint data
+   */
+  private handleCheckpoint(courseId: number, data: any): void {
+    console.log('Checkpoint received:', data);
+
+    const checkpointData = JSON.stringify(data);
+    this._courseTrackerService
+      .trackCheckpoint(courseId, checkpointData)
+      .subscribe({
+        next: (response) => {
+          console.log('Checkpoint tracked:', response);
+          this.updateProgress();
+        },
+        error: (err) => console.error('Error tracking checkpoint:', err),
+      });
+  }
+
+  /**
+   * Handle progress updates
+   * @param courseId - The course ID
+   * @param data - Progress data
+   */
+  private handleProgressUpdate(courseId: number, data: any): void {
+    console.log('Progress update received:', data);
+
+    if (data.percentage !== undefined) {
+      this._courseTrackerService
+        .trackCompletionPercentage(courseId, data.percentage)
+        .subscribe({
+          next: (response) => {
+            console.log('Progress tracked:', response);
+            this.updateProgress();
+          },
+          error: (err) => console.error('Error tracking progress:', err),
+        });
+    }
+  }
+
+  /**
+   * Update progress in the course tracker service
+   */
+  private updateProgress(): void {
+    if (this._currentCourseId) {
+      this._courseTrackerService
+        .getCourseProgress(this._currentCourseId)
+        .subscribe({
+          next: (progress) => {
+            this._courseTrackerService.updateProgress(progress);
+            this._scormDataSubject.next(progress);
+          },
+          error: (err) => console.error('Error updating progress:', err),
+        });
+    }
   }
 
   /**
@@ -155,6 +325,16 @@ export class ScormCommunicationService {
    */
   sendMessageToScorm(courseWindow: Window, message: any): void {
     courseWindow.postMessage(message, '*');
+  }
+
+  /**
+   * Send message to iframe
+   * @param message - The message to send
+   */
+  sendMessageToIframe(message: any): void {
+    if (this._iframeElement && this._iframeElement.contentWindow) {
+      this._iframeElement.contentWindow.postMessage(message, '*');
+    }
   }
 
   /**
@@ -168,7 +348,7 @@ export class ScormCommunicationService {
     element: string
   ): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.courseTrackerService.getCourseTracker(element, courseId).subscribe({
+      this._courseTrackerService.getCourseTracker(element, courseId).subscribe({
         next: (data) => resolve(data),
         error: (err) => reject(err),
       });
@@ -182,10 +362,39 @@ export class ScormCommunicationService {
    */
   async initializeCourseTracking(courseId: number): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.courseTrackerService.initializeCourseTracking(courseId).subscribe({
+      this._courseTrackerService.initializeCourseTracking(courseId).subscribe({
         next: (response) => resolve(response),
         error: (err) => reject(err),
       });
     });
+  }
+
+  /**
+   * Clean up SCORM communication
+   */
+  cleanup(): void {
+    if (this._messageListener) {
+      window.removeEventListener('message', this._messageListener);
+      this._messageListener = null;
+    }
+    this._currentCourseId = null;
+    this._iframeElement = null;
+    console.log('SCORM communication cleaned up');
+  }
+
+  /**
+   * Get current course ID
+   * @returns Current course ID or null
+   */
+  getCurrentCourseId(): number | null {
+    return this._currentCourseId;
+  }
+
+  /**
+   * Check if SCORM communication is active
+   * @returns True if communication is active
+   */
+  isActive(): boolean {
+    return this._currentCourseId !== null && this._messageListener !== null;
   }
 }

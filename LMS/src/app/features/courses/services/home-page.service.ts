@@ -239,7 +239,7 @@ export class HomePageService {
    * @returns Observable of course details
    */
   getCourseDetails(courseId: number): Observable<CourseDetails> {
-    const url = `http://etfapi.itechpro-eg.com/api/Course/${courseId}/details`;
+    const url = `api/Course/${courseId}/details`;
     return this._http.get<CourseDetails>(url).pipe(
       catchError((error) => {
         console.error('Error fetching course details:', error);
@@ -254,7 +254,7 @@ export class HomePageService {
    * @returns Observable of review response
    */
   postCourseReview(reviewData: ReviewRequest): Observable<ReviewResponse> {
-    const url = 'http://etfapi.itechpro-eg.com/api/Course/review';
+    const url = 'api/Course/review';
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json',

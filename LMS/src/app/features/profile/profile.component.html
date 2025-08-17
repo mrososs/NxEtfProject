@@ -93,6 +93,50 @@
                 </div>
               </div>
 
+              <!-- Image Upload -->
+              <div class="form-group mb-4">
+                <label class="form-label">الصورة الشخصية</label>
+                <div class="image-upload-container">
+                  <!-- Current Image Preview -->
+                  <div *ngIf="imagePreview" class="current-image mb-3">
+                    <img
+                      [src]="imagePreview"
+                      alt="Profile Image"
+                      class="profile-image-preview"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger mt-2"
+                      (click)="removeImage()"
+                    >
+                      <i class="pi pi-trash"></i> إزالة الصورة
+                    </button>
+                  </div>
+
+                  <!-- File Upload -->
+                  <p-fileUpload
+                    #fileUpload
+                    mode="basic"
+                    name="image"
+                    accept="image/*"
+                    maxFileSize="5000000"
+                    chooseLabel="اختيار صورة"
+                    [auto]="true"
+                    (onSelect)="onImageSelect($event)"
+                    [showCancelButton]="false"
+                    [showUploadButton]="false"
+                    [customUpload]="true"
+                    class="mb-2"
+                  >
+                  </p-fileUpload>
+
+                  <small class="text-muted">
+                    الحد الأقصى لحجم الملف: 5 ميجابايت. الأنواع المدعومة: JPG,
+                    PNG, GIF
+                  </small>
+                </div>
+              </div>
+
               <!-- Description -->
               <div class="form-group mb-4">
                 <label for="description" class="form-label">الوصف</label>
