@@ -119,13 +119,13 @@ export class ProfileComponent implements OnInit {
               severity: 'warn',
               summary: 'تنبيه',
               detail:
-                'حدث خطأ في الخادم. يرجى إدخال بيانات الملف الشخصي للمتابعة',
+                'حدث خطأ في الخادم. يمكنك إدخال بيانات الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.',
             });
           } else {
             this.messageService.add({
               severity: 'info',
               summary: 'معلومات',
-              detail: 'يرجى إدخال بيانات الملف الشخصي للمتابعة',
+              detail: 'يجب إنشاء الملف الشخصي الخاص بك لاستخدام موقع الكورسات',
             });
           }
         }
@@ -146,13 +146,13 @@ export class ProfileComponent implements OnInit {
             severity: 'warn',
             summary: 'تنبيه',
             detail:
-              'حدث خطأ في الخادم. يرجى إدخال بيانات الملف الشخصي للمتابعة',
+              'حدث خطأ في الخادم. يمكنك إدخال بيانات الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.',
           });
         } else {
           this.messageService.add({
             severity: 'info',
             summary: 'معلومات',
-            detail: 'يرجى إدخال بيانات الملف الشخصي للمتابعة',
+            detail: 'يجب إنشاء الملف الشخصي الخاص بك لاستخدام موقع الكورسات',
           });
         }
       },

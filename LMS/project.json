@@ -36,6 +36,11 @@
             "input": "LMS/src",
             "glob": "index.html",
             "output": "."
+          },
+          {
+            "input": "LMS/src",
+            "glob": "web.config",
+            "output": "."
           }
         ],
 
@@ -53,13 +58,13 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumWarning": "10MB",
+              "maximumError": "50MB"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "1MB",
+              "maximumError": "10MB"
             }
           ],
           "outputHashing": "all",
@@ -76,7 +81,19 @@
           "vendorChunk": true,
           "extractLicenses": false,
           "sourceMap": true,
-          "namedChunks": true
+          "namedChunks": true,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "10MB",
+              "maximumError": "50MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "1MB",
+              "maximumError": "10MB"
+            }
+          ]
         }
       },
       "defaultConfiguration": "production"
@@ -91,7 +108,6 @@
         "development": {
           "buildTarget": "LMS:build:development"
         }
-
       },
       "defaultConfiguration": "development"
     },

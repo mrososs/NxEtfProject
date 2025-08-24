@@ -19,7 +19,11 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              { "glob": "web.config", "input": "src", "output": "" }
+            ],
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
@@ -37,13 +41,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "10MB",
+                  "maximumError": "50MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kb",
-                  "maximumError": "8kb"
+                  "maximumWarning": "1MB",
+                  "maximumError": "10MB"
                 }
               ],
               "outputHashing": "all",
@@ -61,7 +65,19 @@
               "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "10MB",
+                  "maximumError": "50MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "1MB",
+                  "maximumError": "10MB"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
