@@ -6,6 +6,7 @@ import { ProfileRequiredService } from './shared/services/profile-required.servi
 import { ProfileRequiredDialogComponent } from './shared/components/profile-required-dialog/profile-required-dialog.component';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { ErrorStateService } from './shared/services/error-state.service';
+import { AiAssistantComponent } from './shared/components/ai-assistant/ai-assistant.component';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ import { ErrorStateService } from './shared/services/error-state.service';
     RouterOutlet,
     ProfileRequiredDialogComponent,
     NavbarComponent,
+    AiAssistantComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
