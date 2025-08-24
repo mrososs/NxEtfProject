@@ -1,57 +1,70 @@
-<p-card [style]="{ overflow: 'hidden' }">
+<p-card
+  [style]="{
+    overflow: 'hidden',
+    borderRadius: '12px',
+    boxShadow:
+      '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    border: 'none'
+  }"
+  styleClass="blog-card"
+>
   <ng-template pTemplate="header">
-    <img [src]="blog.img" alt="blog Image" class="w-full" />
+    <div class="blog-image-container">
+      <img
+        src="../../../../assets/img/blankImage.jpg"
+        alt="blog Image"
+        class="blog-image"
+      />
+      <div class="blog-overlay">
+        <p-tag
+          [value]="getCategory()"
+          severity="info"
+          styleClass="category-tag"
+        ></p-tag>
+      </div>
+    </div>
   </ng-template>
 
   <ng-template pTemplate="title">
-    {{ blog.title }}
+    <div class="blog-title">
+      <h3>{{ blog.title }}</h3>
+    </div>
   </ng-template>
 
-  <div class="row d-flex justify-content-between align-items-center">
-    <div class="col-3 mb-3">
-      <div class="d-flex justify-content-center align-items-center gap-2">
-        <img
-          class="img-profile"
-          src="../../../../assets/img/student img.png"
-          alt="student"
-        />
-        <span>{{ blog.writer }}</span>
-      </div>
-    </div>
-    <div class="col-3 mb-3">
-      <div class="d-flex justify-content-center align-items-center gap-2">
-        <img
-          class="img-profile"
-          src="../../../../assets/svg/blog/message-2.svg"
-          alt="student"
-        />
-        <span>{{ blog.comment }}</span>
-      </div>
-    </div>
-    <div class="col-3 mb-3">
-      <div class="d-flex justify-content-center align-items-center gap-2">
-        <img
-          class="img-profile"
-          src="../../../../assets/svg/blog/eye.svg"
-          alt="student"
-        />
-        <span>{{ blog.seen }}</span>
-      </div>
-    </div>
-  </div>
+  <ng-template pTemplate="content">
+    <div class="blog-content">
+      <p class="blog-excerpt">{{ getExcerpt() }}</p>
 
-  <div class="row d-flex justify-content-center">
-    <div class="col-md-6">
-      <hr class="dotted-line" />
+      <div class="blog-meta">
+        <div class="meta-item">
+          <i class="pi pi-clock"></i>
+          <span>{{ formatDate(blog.published) }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-book"></i>
+          <span>{{ getReadingTime() }}</span>
+        </div>
+      </div>
     </div>
-  </div>
+  </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="d-flex justify-content-center mt-1">
+    <div class="blog-footer">
+      <div class="author-info">
+        <p-avatar
+          image="../../../../assets/img/student img.png"
+          size="normal"
+          shape="circle"
+        ></p-avatar>
+        <span class="author-name">كاتب المقال</span>
+      </div>
+
       <p-button
         label="الاطلاع عليها"
-        styleClass="w-full"
-        [routerLink]="['/blogsDetails', blog?.id]"
+        icon="pi pi-arrow-left"
+        styleClass="p-button-outlined p-button-primary"
+        [routerLink]="['/blogs', blog.slug]"
+        class="read-more-btn"
       ></p-button>
     </div>
   </ng-template>

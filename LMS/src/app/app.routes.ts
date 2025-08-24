@@ -46,7 +46,7 @@ export const appRoutes: Route[] = [
     canActivate: [ErrorPageGuard],
   },
   {
-    path: 'blogsDetails/:id',
+    path: 'blogs/:slug',
     loadComponent: () =>
       import('./features/blogs/blog-details/blog-details.component').then(
         (c) => c.BlogDetailsComponent
