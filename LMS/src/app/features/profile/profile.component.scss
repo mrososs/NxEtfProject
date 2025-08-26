@@ -265,6 +265,8 @@
   }
 
   .course-actions {
+    display: flex;
+    justify-content: space-between;
     .btn-primary {
       background: linear-gradient(135deg, #f7941e 0%, #f7941e80 100%);
       border: none;

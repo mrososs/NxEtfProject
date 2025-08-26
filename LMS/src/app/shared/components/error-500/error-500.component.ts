@@ -113,11 +113,17 @@ export class Error500Component implements OnInit {
     // Set error state to prevent further API calls
     this.errorStateService.setErrorState(true);
     console.log('Error 500 page loaded - preventing further API calls');
+
+    // Automatically redirect to ETF website after 3 seconds
+    setTimeout(() => {
+      console.log('Auto-redirecting to ETF website after 3 seconds...');
+      window.location.href = 'http://etf.itechpro-eg.com/';
+    }, 5000);
   }
 
   // Prevent browser back/forward navigation
   @HostListener('window:popstate', ['$event'])
-  onPopState(event: any): void {
+  onPopState(): void {
     console.log('Navigation attempt blocked from error page');
     // Prevent going back from error page
     window.history.pushState(null, '', '/error-500');

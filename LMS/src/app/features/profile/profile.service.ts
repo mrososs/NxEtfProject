@@ -170,12 +170,12 @@ export class ProfileService {
             return of(null);
           }
 
-          // Handle 302 redirect - user needs to create profile
-          if (error.status === 302) {
+          // Handle 302 redirect - user needs authentication, show error page first
+          if (error.status === 200) {
             console.log(
-              'Profile not found - redirecting to profile creation page'
+              'Profile API returned 302 - redirecting to error page before ETF website'
             );
-            this.redirectToProfilePage();
+            this.showAuthErrorPage();
             return of(null);
           }
 
