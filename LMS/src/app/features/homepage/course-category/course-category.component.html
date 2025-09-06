@@ -3,7 +3,14 @@
     <h1 class="mt-2">التصنيفات</h1>
     <img src="../../../../assets/svg/category.svg" alt="category" />
   </div>
-  <div class="checkList">
+
+  <!-- Loading indicator -->
+  <div *ngIf="loading" class="text-center p-3">
+    <p>جاري تحميل التصنيفات...</p>
+  </div>
+
+  <!-- Categories list -->
+  <div class="checkList" *ngIf="!loading">
     <ul>
       <li *ngFor="let category of categories">
         <p-checkbox
@@ -11,7 +18,10 @@
           [binary]="true"
           (onChange)="onCheckboxChange()"
         ></p-checkbox>
-        <h3>{{ category.label }}</h3>
+        <div class="category-info">
+          <h3>{{ category.label }}</h3>
+          <span class="course-count">({{ category.courseCount }} كورس)</span>
+        </div>
       </li>
     </ul>
   </div>

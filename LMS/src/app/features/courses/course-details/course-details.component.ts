@@ -115,6 +115,10 @@ export class CourseDetailsComponent implements OnInit {
   isEnrolled = false;
   enrollmentLoading = false;
 
+  // Certificate properties
+  certificateAvailable = false;
+  certificateLoading = false;
+
   // Mock data for the comprehensive design
   reviews: Review[] = [
     {
@@ -259,7 +263,18 @@ export class CourseDetailsComponent implements OnInit {
       this.loadCourseDetails();
       this.loadCourseProgress();
       this.loadCourseFromApi();
-      this.checkEnrollmentStatus();
+
+      // Load enrolled courses first, then check enrollment status
+      this._enrollmentService.getEnrolledCourses().subscribe({
+        next: (enrollments) => {
+          console.log('Enrolled courses loaded in component:', enrollments);
+          this.checkEnrollmentStatus();
+        },
+        error: (error) => {
+          console.error('Error loading enrolled courses:', error);
+          this.checkEnrollmentStatus(); // Check anyway
+        },
+      });
     });
   }
 
@@ -356,9 +371,37 @@ export class CourseDetailsComponent implements OnInit {
     this._courseTrackerService.getCourseProgress(this.courseId).subscribe({
       next: (progress: CourseProgress) => {
         this.courseProgress = progress;
+        console.log('=== COURSE PROGRESS LOADED ===');
+        console.log('Progress:', progress);
+        console.log('Status:', progress?.status);
+        console.log('Completion Percentage:', progress?.completionPercentage);
+        console.log('==============================');
+        this.checkCertificateAvailability();
       },
       error: (err) => {
         console.error('Error loading course progress:', err);
+        // Set default progress if API fails
+        this.courseProgress = {
+          courseId: this.courseId,
+          userId: 1,
+          elements: [],
+          lastUpdated: new Date(),
+          completionPercentage: 0,
+          status: 'not_started',
+        };
+      },
+    });
+  }
+
+  private checkCertificateAvailability(): void {
+    this._courseTrackerService.isCertificateAvailable(this.courseId).subscribe({
+      next: (available) => {
+        this.certificateAvailable = available;
+        console.log('Certificate available:', available);
+      },
+      error: (err) => {
+        console.error('Error checking certificate availability:', err);
+        this.certificateAvailable = false;
       },
     });
   }
@@ -388,11 +431,35 @@ export class CourseDetailsComponent implements OnInit {
   // Launch course in iframe
   launchCourseInIframe(): void {
     if (this.courseApiData?.launchUrl) {
-      this.iframeUrl = this._sanitizer.bypassSecurityTrustResourceUrl(
-        this.courseApiData.launchUrl
-      );
+      // Add SCORM wrapper script to the course URL
+      const courseUrl = this.courseApiData.launchUrl;
+      const urlWithScript = this.addScormWrapperToUrl(courseUrl);
+
+      this.iframeUrl =
+        this._sanitizer.bypassSecurityTrustResourceUrl(urlWithScript);
       this.showIframe = true;
-      console.log('Launching course in iframe:', this.courseApiData.launchUrl);
+      console.log(
+        'Launching course in iframe with SCORM wrapper:',
+        urlWithScript
+      );
+
+      // Initialize SCORM communication after iframe loads
+      setTimeout(() => {
+        if (this.courseId) {
+          console.log(
+            'Initializing SCORM communication for course:',
+            this.courseId
+          );
+          // Get the iframe window reference
+          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+          if (iframe && iframe.contentWindow) {
+            this._scormCommunicationService.initializeScormCommunication(
+              this.courseId,
+              iframe.contentWindow
+            );
+          }
+        }
+      }, 3000); // Wait 3 seconds for iframe to load
     } else {
       console.error('No launch URL available for this course');
     }
@@ -402,6 +469,62 @@ export class CourseDetailsComponent implements OnInit {
   closeIframe(): void {
     this.showIframe = false;
     this.iframeUrl = null;
+  }
+
+  // Add SCORM wrapper script to course URL
+  private addScormWrapperToUrl(courseUrl: string): string {
+    // Use the SCORM wrapper HTML page
+    const wrapperUrl = `/assets/scorm-course-wrapper.html?courseUrl=${encodeURIComponent(
+      courseUrl
+    )}&courseId=${this.courseId}`;
+    return wrapperUrl;
+  }
+
+  // Inject SCORM wrapper script into iframe
+  private injectScormWrapper(iframe: HTMLIFrameElement): void {
+    try {
+      // Try to access iframe document (may fail due to CORS)
+      const iframeDoc =
+        iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        // Create script element for SCORM wrapper
+        const script = iframeDoc.createElement('script');
+        script.src = '/assets/scorm-wrapper.js';
+        script.onload = () => {
+          console.log('SCORM wrapper script loaded successfully');
+        };
+        script.onerror = () => {
+          console.error('Failed to load SCORM wrapper script');
+        };
+
+        // Add script to iframe head
+        iframeDoc.head.appendChild(script);
+        console.log('SCORM wrapper script injected into iframe');
+      } else {
+        // If we can't access iframe document (CORS), send message to iframe
+        console.log(
+          'Cannot access iframe document, sending SCORM wrapper URL via postMessage'
+        );
+        iframe.contentWindow?.postMessage(
+          {
+            type: 'load_scorm_wrapper',
+            scriptUrl: '/assets/scorm-wrapper.js',
+          },
+          '*'
+        );
+      }
+    } catch (error) {
+      console.error('Error injecting SCORM wrapper:', error);
+      // Fallback: send message to iframe
+      console.log('Fallback: sending SCORM wrapper URL via postMessage');
+      iframe.contentWindow?.postMessage(
+        {
+          type: 'load_scorm_wrapper',
+          scriptUrl: '/assets/scorm-wrapper.js',
+        },
+        '*'
+      );
+    }
   }
 
   // Launch course in new window (fallback)
@@ -457,7 +580,7 @@ export class CourseDetailsComponent implements OnInit {
    */
   getProgressStatus(): string {
     if (!this.courseProgress) return 'not_started';
-    return this.courseProgress.status;
+    return this.courseProgress.status || 'not_started';
   }
 
   /**
@@ -465,8 +588,16 @@ export class CourseDetailsComponent implements OnInit {
    * @returns The completion percentage
    */
   getCompletionPercentage(): number {
+    console.log('=== GET COMPLETION PERCENTAGE ===');
+    console.log('Course Progress:', this.courseProgress);
+    console.log(
+      'Completion Percentage:',
+      this.courseProgress?.completionPercentage
+    );
+    console.log('=================================');
+
     if (!this.courseProgress) return 0;
-    return this.courseProgress.completionPercentage;
+    return this.courseProgress.completionPercentage || 0;
   }
 
   /**
@@ -653,6 +784,10 @@ export class CourseDetailsComponent implements OnInit {
    */
   private checkEnrollmentStatus(): void {
     this.isEnrolled = this._enrollmentService.isEnrolledInCourse(this.courseId);
+    console.log('=== ENROLLMENT STATUS CHECK ===');
+    console.log('Course ID:', this.courseId);
+    console.log('Is Enrolled:', this.isEnrolled);
+    console.log('===============================');
   }
 
   /**
@@ -673,6 +808,11 @@ export class CourseDetailsComponent implements OnInit {
    * Enroll in the course
    */
   enrollInCourse(): void {
+    console.log('=== ENROLL IN COURSE CALLED ===');
+    console.log('Course ID:', this.courseId);
+    console.log('Is Enrolled:', this.isEnrolled);
+    console.log('================================');
+
     if (this.isEnrolled) {
       this._messageService.add({
         severity: 'info',
@@ -694,6 +834,9 @@ export class CourseDetailsComponent implements OnInit {
 
           // Force refresh enrollment status and update UI
           this.updateEnrollmentStatus();
+
+          // Add initial 10% progress when enrolling
+          this.addInitialProgress();
 
           this._messageService.add({
             severity: 'success',
@@ -743,12 +886,84 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   /**
+   * Get button text based on enrollment status
+   */
+  getButtonText(): string {
+    console.log('=== GET BUTTON TEXT ===');
+    console.log('Enrollment Loading:', this.enrollmentLoading);
+    console.log('Is Enrolled:', this.isEnrolled);
+    console.log('Course Progress:', this.courseProgress);
+    console.log('Course Progress Status:', this.courseProgress?.status);
+    console.log('========================');
+
+    if (this.enrollmentLoading) {
+      return 'جاري التسجيل...';
+    }
+
+    if (this.isEnrolled) {
+      // Check if user has progress
+      if (this.courseProgress && this.courseProgress.status !== 'not_started') {
+        return 'اكمل الدورة';
+      } else {
+        return 'ابدأ الدورة';
+      }
+    } else {
+      return 'سجل في الدورة';
+    }
+  }
+
+  /**
+   * Add initial 10% progress when user enrolls
+   */
+  private addInitialProgress(): void {
+    console.log('Adding initial 10% progress for course:', this.courseId);
+
+    // Use the GET API to track progress
+    this._courseTrackerService
+      .trackProgressWithGet(this.courseId, 10)
+      .subscribe({
+        next: (response) => {
+          console.log(
+            'Initial progress tracked successfully with GET API:',
+            response
+          );
+          // Reload course progress to update UI
+          setTimeout(() => {
+            this.loadCourseProgress();
+          }, 1000);
+        },
+        error: (error) => {
+          console.error('Error tracking initial progress with GET API:', error);
+        },
+      });
+
+    // Also track lesson status
+    this._courseTrackerService
+      .trackLessonStatus(this.courseId, 'incomplete')
+      .subscribe({
+        next: (response) => {
+          console.log('Initial lesson status tracked:', response);
+        },
+        error: (error) => {
+          console.error('Error tracking initial lesson status:', error);
+        },
+      });
+  }
+
+  /**
    * Start course (enroll first if not enrolled)
    */
   startCourse(): void {
+    console.log('=== START COURSE CALLED ===');
+    console.log('Course ID:', this.courseId);
+    console.log('Is Enrolled:', this.isEnrolled);
+    console.log('============================');
+
     if (!this.isEnrolled) {
+      console.log('User not enrolled, calling enrollInCourse()');
       this.enrollInCourse();
     } else {
+      console.log('User already enrolled, calling checkAndLaunchCourse()');
       // Check if user has progress and resume from checkpoint
       this.checkAndLaunchCourse();
     }
@@ -775,5 +990,66 @@ export class CourseDetailsComponent implements OnInit {
       });
       this.launchCourseInIframe();
     }
+  }
+
+  /**
+   * Download course certificate
+   */
+  downloadCertificate(): void {
+    if (!this.certificateAvailable) {
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'الشهادة غير متاحة',
+        detail: 'يجب إكمال الدورة بنسبة 100% لتحميل الشهادة',
+      });
+      return;
+    }
+
+    this.certificateLoading = true;
+    this._courseTrackerService
+      .downloadCourseCertificate(this.courseId)
+      .subscribe({
+        next: (blob) => {
+          this.certificateLoading = false;
+
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `certificate-course-${this.courseId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          this._messageService.add({
+            severity: 'success',
+            summary: 'تم تحميل الشهادة',
+            detail: 'تم تحميل شهادة إتمام الدورة بنجاح',
+          });
+        },
+        error: (error) => {
+          this.certificateLoading = false;
+          console.error('Error downloading certificate:', error);
+
+          this._messageService.add({
+            severity: 'error',
+            summary: 'خطأ في تحميل الشهادة',
+            detail: 'حدث خطأ أثناء تحميل الشهادة. يرجى المحاولة مرة أخرى.',
+          });
+        },
+      });
+  }
+
+  /**
+   * Check if certificate button should be shown
+   */
+  shouldShowCertificateButton(): boolean {
+    return (
+      this.certificateAvailable &&
+      this.courseProgress &&
+      this.courseProgress.status === 'completed' &&
+      this.courseProgress.completionPercentage >= 100
+    );
   }
 }

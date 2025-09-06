@@ -1,0 +1,75 @@
+<div class="selected-courses" *ngIf="selectedCourses.length > 0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>الكورسات المختارة</h2>
+    <span class="badge bg-primary">{{ selectedCourses.length }} كورس</span>
+  </div>
+
+  <div class="courses-by-category">
+    <div
+      *ngFor="let categoryId of getObjectKeys(groupedCourses)"
+      class="category-group mb-4"
+    >
+      <h4 class="category-title">{{ getCategoryLabel(+categoryId) }}</h4>
+      <div class="row">
+        <div
+          class="col-12 col-md-6 col-lg-4 mb-3"
+          *ngFor="let course of groupedCourses[+categoryId]"
+        >
+          <div class="course-item">
+            <div class="course-card">
+              <div class="course-header">
+                <h5 class="course-title">{{ getCourseLabel(course) }}</h5>
+                <span class="course-id">ID: {{ course.id }}</span>
+              </div>
+              <div class="course-details">
+                <p class="course-info">
+                  <strong>معرف الفئة:</strong> {{ course.categoryId }}
+                </p>
+                <p
+                  class="course-info"
+                  *ngIf="course.category && course.category.trim() !== ''"
+                >
+                  <strong>اسم الفئة:</strong> {{ course.category }}
+                </p>
+                <p
+                  class="course-info"
+                  *ngIf="!course.category || course.category.trim() === ''"
+                >
+                  <strong>اسم الفئة:</strong> فئة {{ course.categoryId }} (غير
+                  متوفر في API)
+                </p>
+                <p
+                  class="course-info"
+                  *ngIf="course.course && course.course.trim() !== ''"
+                >
+                  <strong>اسم الكورس:</strong> {{ course.course }}
+                </p>
+                <p
+                  class="course-info"
+                  *ngIf="!course.course || course.course.trim() === ''"
+                >
+                  <strong>اسم الكورس:</strong> كورس {{ course.courseId }} (غير
+                  متوفر في API)
+                </p>
+              </div>
+              <div class="course-actions">
+                <button class="btn btn-outline-primary btn-sm">
+                  <i class="pi pi-eye me-1"></i>
+                  عرض التفاصيل
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-courses" *ngIf="selectedCourses.length === 0">
+  <div class="text-center p-4">
+    <i class="pi pi-info-circle text-muted" style="font-size: 2rem"></i>
+    <p class="text-muted mt-2">لم يتم اختيار أي فئات بعد</p>
+    <small class="text-muted">اختر فئة من القائمة أعلاه لعرض الكورسات</small>
+  </div>
+</div>

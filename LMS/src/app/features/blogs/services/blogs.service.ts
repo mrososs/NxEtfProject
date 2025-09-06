@@ -9,19 +9,18 @@ import { environment } from '../../../../environments/environment';
 })
 export class BlogsService {
   private _http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
 
   // Get all blogs from the API
   getBlogs(): Observable<BlogPost[]> {
     return this._http
-      .get<BlogResponse>(`${this.apiUrl}/api/Blog/blog`)
+      .get<BlogResponse>(`/api/Blog/blog`)
       .pipe(map((response) => response.posts.$values));
   }
 
   // Get blog details by slug
   getBlogDetails(archiveSlug: string, postSlug: string): Observable<BlogPost> {
     return this._http.get<BlogPost>(
-      `${this.apiUrl}/api/Blog/${archiveSlug}/${postSlug}`
+      `/api/Blog/${archiveSlug}/${postSlug}`
     );
   }
 

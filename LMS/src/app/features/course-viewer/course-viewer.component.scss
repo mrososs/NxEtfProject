@@ -1,0 +1,232 @@
+// Course Viewer Component Styling
+.course-viewer-container {
+  min-height: 100vh;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+
+  .course-header {
+    background: white;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .header-content {
+      h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .course-id {
+        margin: 5px 0 0 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+    }
+
+    .header-actions {
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+
+  .course-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+
+    .iframe-wrapper {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      min-height: 600px;
+
+      iframe {
+        border: none;
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
+      }
+    }
+  }
+
+  .course-status {
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+
+    .status-card {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      border: 1px solid #dee2e6;
+
+      h3 {
+        margin: 0 0 15px 0;
+        color: #2c3e50;
+        font-size: 1.2rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .progress-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+
+        .progress-bar {
+          flex: 1;
+          height: 12px;
+          background: #e9ecef;
+          border-radius: 6px;
+          overflow: hidden;
+          position: relative;
+
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            border-radius: 6px;
+            transition: width 0.5s ease-in-out;
+            position: relative;
+
+            &::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+              );
+              animation: progressShine 2s ease-in-out infinite;
+            }
+          }
+        }
+
+        .progress-text {
+          font-weight: 600;
+          color: #28a745;
+          font-size: 1.1rem;
+          min-width: 50px;
+          text-align: center;
+        }
+      }
+
+      .status-text {
+        margin: 0;
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes progressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .course-viewer-container {
+    .course-header {
+      flex-direction: column;
+      gap: 15px;
+      text-align: center;
+
+      .header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+    }
+
+    .course-content {
+      padding: 15px;
+
+      .iframe-wrapper {
+        min-height: 500px;
+
+        iframe {
+          min-height: 500px;
+        }
+      }
+    }
+
+    .course-status {
+      padding: 15px;
+
+      .status-card {
+        padding: 15px;
+
+        .progress-info {
+          flex-direction: column;
+          gap: 10px;
+
+          .progress-text {
+            min-width: auto;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .course-viewer-container {
+    .course-header {
+      padding: 15px;
+
+      .header-content h2 {
+        font-size: 1.3rem;
+      }
+    }
+
+    .course-content {
+      padding: 10px;
+
+      .iframe-wrapper {
+        min-height: 400px;
+
+        iframe {
+          min-height: 400px;
+        }
+      }
+    }
+
+    .course-status {
+      padding: 10px;
+    }
+  }
+}

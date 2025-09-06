@@ -26,6 +26,7 @@ export class CourseViewerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   courseUrl: SafeResourceUrl;
   courseId: number | null = null;
+  courseProgress: any = null;
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -140,12 +141,31 @@ export class CourseViewerComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.courseId) {
       this.courseTrackerService.getCourseProgress(this.courseId).subscribe({
         next: (progress) => {
+          this.courseProgress = progress;
           console.log('Current course progress:', progress);
         },
         error: (err) => {
           console.error('Error getting course progress:', err);
         },
       });
+    }
+  }
+
+  /**
+   * Get status text in Arabic
+   */
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'not_started':
+        return 'لم تبدأ بعد';
+      case 'in_progress':
+        return 'قيد التقدم';
+      case 'completed':
+        return 'مكتملة';
+      case 'failed':
+        return 'فشلت';
+      default:
+        return 'غير معروف';
     }
   }
 }

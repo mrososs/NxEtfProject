@@ -66,8 +66,8 @@
                   <div class="course-actions mt-2">
                     <button
                       class="btn btn-primary btn-sm"
-                      (click)="launchCourse(enrollment.course?.launchUrl || '')"
-                      [disabled]="!enrollment.course?.launchUrl"
+                      (click)="launchCourse(enrollment.course?.id || 0)"
+                      [disabled]="!enrollment.course?.id"
                     >
                       <i class="pi pi-play me-1"></i>
                       متابعة الدورة
@@ -103,6 +103,7 @@
         <div class="category mt-3">
           <app-course-category
             (selectedCategoriesChange)="onCategoryChange($event)"
+            (selectedCoursesChange)="onSelectedCoursesChange($event)"
           ></app-course-category>
         </div>
         <div class="level mt-3">
@@ -189,12 +190,19 @@
             </div>
           </div>
 
+          <!-- Selected Courses Section -->
+          <div class="mt-4">
+            <app-selected-courses
+              [selectedCourses]="selectedCourses"
+            ></app-selected-courses>
+          </div>
+
           <!-- Category Results Section -->
           <div class="d-flex justify-content-center" #categorySection>
             <div *ngIf="selectedCategories.length">
               <h1>
                 المناهج المتعلقة بأختيارك عن "{{
-                  selectedCategories.join(' - ')
+                  getCategoryLabels(selectedCategories).join(' - ')
                 }}"
               </h1>
             </div>
@@ -264,6 +272,7 @@
           <div class="category mt-3">
             <app-course-category
               (selectedCategoriesChange)="onCategoryChange($event)"
+              (selectedCoursesChange)="onSelectedCoursesChange($event)"
             ></app-course-category>
           </div>
           <div class="level mt-3">

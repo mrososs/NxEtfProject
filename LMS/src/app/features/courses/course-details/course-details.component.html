@@ -24,7 +24,7 @@
                   class="pi pi-spinner pi-spin me-2"
                   *ngIf="enrollmentLoading"
                 ></i>
-                {{ isEnrolled ? 'ابدأ الدورة' : 'سجل في الدورة' }}
+                {{ getButtonText() }}
               </button>
               <button
                 class="btn btn-outline-primary btn-lg launch-btn"
@@ -71,7 +71,7 @@
           <!-- Course Content -->
           <div *ngIf="!loading && !error && course" class="course-content">
             <!-- Course Progress Section -->
-            <div class="progress-section" *ngIf="courseProgress">
+            <div class="progress-section">
               <div class="progress-card">
                 <h3 class="section-title">
                   <i class="pi pi-chart-line me-2"></i>
@@ -98,6 +98,34 @@
                     <span class="progress-percentage"
                       >{{ getCompletionPercentage() }}%</span
                     >
+                  </div>
+
+                  <!-- Certificate Button -->
+                  <div
+                    class="certificate-section"
+                    *ngIf="shouldShowCertificateButton()"
+                  >
+                    <button
+                      class="btn btn-success certificate-btn"
+                      (click)="downloadCertificate()"
+                      [disabled]="certificateLoading"
+                    >
+                      <i
+                        class="pi pi-download me-2"
+                        *ngIf="!certificateLoading"
+                      ></i>
+                      <i
+                        class="pi pi-spinner pi-spin me-2"
+                        *ngIf="certificateLoading"
+                      ></i>
+                      {{
+                        certificateLoading ? 'جاري التحميل...' : 'تحميل الشهادة'
+                      }}
+                    </button>
+                    <p class="certificate-note">
+                      <i class="pi pi-check-circle me-1"></i>
+                      تهانينا! لقد أكملت الدورة بنجاح. يمكنك الآن تحميل شهادتك.
+                    </p>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   CourseTrackerRequest,
   CourseTrackerResponse,
@@ -183,11 +184,33 @@ export class CourseTrackerService {
     percentage: number
   ): Observable<CourseTrackerResponse> {
     const request: CourseTrackerRequest = {
-      element: 'completion_percentage',
+      element: 'progress',
       courseId: courseId,
       value: percentage.toString(),
     };
     return this.postCourseTracker(request);
+  }
+
+  /**
+   * Track progress using GET API
+   * @param courseId - The course ID
+   * @param percentage - The completion percentage (0-100)
+   * @returns Observable of tracking response
+   */
+  trackProgressWithGet(courseId: number, percentage: number): Observable<any> {
+    const getUrl = `/api/CourseTracker?element=progress&courseId=${courseId}&value=${percentage}`;
+    console.log('Tracking progress with GET API:', getUrl);
+
+    return this._http.get<any>(getUrl).pipe(
+      map((response) => {
+        console.log('GET API progress tracking response:', response);
+        return response;
+      }),
+      catchError((error) => {
+        console.error('Error tracking progress with GET API:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -196,29 +219,77 @@ export class CourseTrackerService {
    * @returns Observable of course progress
    */
   getCourseProgress(courseId: number): Observable<CourseProgress> {
-    // Try to get progress from API first
+    // Try to get progress from GET API first
     return new Observable((observer) => {
-      // Get all tracked elements for this course
-      this.getAllCourseElements(courseId).subscribe({
-        next: (elements) => {
-          const progress = this.calculateProgressFromElements(
-            courseId,
-            elements
-          );
+      // Get progress from GET API
+      this.getProgressFromAPI(courseId).subscribe({
+        next: (progress) => {
           this._progressSubject.next(progress);
           observer.next(progress);
           observer.complete();
         },
         error: (err) => {
-          console.error('Error getting course progress:', err);
-          // Return mock progress if API fails
-          const mockProgress = this.createMockProgress(courseId);
-          this._progressSubject.next(mockProgress);
-          observer.next(mockProgress);
-          observer.complete();
+          console.error('Error getting course progress from GET API:', err);
+          // Fallback to getting all elements
+          this.getAllCourseElements(courseId).subscribe({
+            next: (elements) => {
+              const progress = this.calculateProgressFromElements(
+                courseId,
+                elements
+              );
+              this._progressSubject.next(progress);
+              observer.next(progress);
+              observer.complete();
+            },
+            error: (err2) => {
+              console.error('Error getting course progress:', err2);
+              // Return mock progress if API fails
+              const mockProgress = this.createMockProgress(courseId);
+              this._progressSubject.next(mockProgress);
+              observer.next(mockProgress);
+              observer.complete();
+            },
+          });
         },
       });
     });
+  }
+
+  /**
+   * Get progress directly from GET API
+   * @param courseId - The course ID
+   * @returns Observable of course progress
+   */
+  private getProgressFromAPI(courseId: number): Observable<CourseProgress> {
+    return this._http
+      .get<any>(`/api/CourseTracker?element=progress&courseId=${courseId}`)
+      .pipe(
+        map((response) => {
+          console.log('GET API response for progress:', response);
+          const progress: CourseProgress = {
+            courseId: courseId,
+            userId: 1, // Default user ID
+            elements: [
+              {
+                id: '1',
+                name: 'progress',
+                type: 'custom',
+                value: response.value || '0',
+                timestamp: new Date(),
+              },
+            ],
+            lastUpdated: new Date(),
+            completionPercentage: parseInt(response.value) || 0,
+            status:
+              parseInt(response.value) > 0 ? 'in_progress' : 'not_started',
+          };
+          return progress;
+        }),
+        catchError((error) => {
+          console.error('Error fetching progress from GET API:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**
@@ -227,28 +298,53 @@ export class CourseTrackerService {
    * @returns Observable of tracked elements
    */
   private getAllCourseElements(courseId: number): Observable<ScormElement[]> {
-    // This would typically call an API endpoint that returns all elements for a course
-    // For now, we'll return a mock implementation
-    return new Observable((observer) => {
-      const mockElements: ScormElement[] = [
-        {
-          id: '1',
-          name: 'lesson_status',
-          type: 'lesson_status',
-          value: 'incomplete',
-          timestamp: new Date(),
-        },
-        {
-          id: '2',
-          name: 'completion_percentage',
-          type: 'custom',
-          value: '25',
-          timestamp: new Date(),
-        },
-      ];
-      observer.next(mockElements);
-      observer.complete();
-    });
+    // Call the GET API to get progress for this course
+    return this._http
+      .get<any>(`/api/CourseTracker?element=progress&courseId=${courseId}`)
+      .pipe(
+        map((response) => {
+          console.log('GET API response:', response);
+          // Convert response to ScormElement format
+          const elements: ScormElement[] = [
+            {
+              id: '1',
+              name: 'progress',
+              type: 'custom',
+              value: response.value || '0',
+              timestamp: new Date(),
+            },
+            {
+              id: '2',
+              name: 'lesson_status',
+              type: 'lesson_status',
+              value: 'incomplete',
+              timestamp: new Date(),
+            },
+          ];
+          return elements;
+        }),
+        catchError((error) => {
+          console.error('Error fetching course progress from GET API:', error);
+          // Return mock data as fallback
+          const mockElements: ScormElement[] = [
+            {
+              id: '1',
+              name: 'lesson_status',
+              type: 'lesson_status',
+              value: 'not_attempted',
+              timestamp: new Date(),
+            },
+            {
+              id: '2',
+              name: 'progress',
+              type: 'custom',
+              value: '0',
+              timestamp: new Date(),
+            },
+          ];
+          return of(mockElements);
+        })
+      );
   }
 
   /**
@@ -261,16 +357,25 @@ export class CourseTrackerService {
     courseId: number,
     elements: ScormElement[]
   ): CourseProgress {
+    console.log('=== CALCULATING PROGRESS FROM ELEMENTS ===');
+    console.log('Course ID:', courseId);
+    console.log('Elements:', elements);
+    console.log('==========================================');
+
     let completionPercentage = 0;
     let status: 'not_started' | 'in_progress' | 'completed' | 'failed' =
       'not_started';
 
-    // Find completion percentage
-    const completionElement = elements.find(
-      (el) => el.name === 'completion_percentage'
+    // Find completion percentage (look for both 'progress' and 'completion_percentage')
+    const progressElement = elements.find(
+      (el) => el.name === 'progress' || el.name === 'completion_percentage'
     );
-    if (completionElement) {
-      completionPercentage = parseInt(completionElement.value) || 0;
+    if (progressElement) {
+      completionPercentage = parseInt(progressElement.value) || 0;
+      console.log('Found progress element:', progressElement);
+      console.log('Completion percentage:', completionPercentage);
+    } else {
+      console.log('No progress element found');
     }
 
     // Find lesson status
@@ -350,5 +455,54 @@ export class CourseTrackerService {
    */
   getCurrentProgress(): CourseProgress | null {
     return this._progressSubject.value;
+  }
+
+  /**
+   * Get course certificate
+   * @param courseId - The course ID
+   * @returns Observable of certificate data
+   */
+  getCourseCertificate(courseId: number): Observable<any> {
+    return this._http.get(`/api/CourseTracker/certificate/${courseId}`).pipe(
+      catchError((error) => {
+        console.error('Error fetching course certificate:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Download course certificate
+   * @param courseId - The course ID
+   * @returns Observable of certificate download response
+   */
+  downloadCourseCertificate(courseId: number): Observable<Blob> {
+    return this._http
+      .get(`/api/CourseTracker/certificate/${courseId}/download`, {
+        responseType: 'blob',
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error downloading course certificate:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Check if course is completed and certificate is available
+   * @param courseId - The course ID
+   * @returns Observable of certificate availability
+   */
+  isCertificateAvailable(courseId: number): Observable<boolean> {
+    return this.getCourseProgress(courseId).pipe(
+      map((progress) => {
+        return (
+          progress?.status === 'completed' &&
+          progress?.completionPercentage >= 100
+        );
+      }),
+      catchError(() => of(false))
+    );
   }
 }

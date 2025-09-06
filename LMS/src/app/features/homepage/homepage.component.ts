@@ -7,11 +7,13 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CourseCardComponent } from './course-card/course-card.component';
 import { SerachBarComponent } from './search-bar/serach-bar.component';
 import { BannerComponent } from './banner/banner.component';
 import { CourseCategoryComponent } from './course-category/course-category.component';
 import { CourseLevelComponent } from './course-level/course-level.component';
+import { SelectedCoursesComponent } from './selected-courses/selected-courses.component';
 import { Subject, of, startWith } from 'rxjs';
 import {
   debounceTime,
@@ -28,6 +30,7 @@ import {
 } from '../courses/services/enrollment.service';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
 import { ProfileService } from '../profile/profile.service';
+import { Category } from './model/category.model';
 
 @Component({
   selector: 'app-homepage',
@@ -40,6 +43,7 @@ import { ProfileService } from '../profile/profile.service';
     CourseCategoryComponent,
     CourseLevelComponent,
     CourseInstructorComponent,
+    SelectedCoursesComponent,
   ],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.scss',
@@ -77,16 +81,17 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
   searchTerm = '';
   showFilters = false;
-  selectedCategories: string[] = [];
+  selectedCategories: number[] = [];
   selectedLevels: string[] = [];
   selectedInstructors: string[] = [];
+  selectedCourses: Category[] = [];
   private searchSubject = new Subject<string>();
   firstCategorySelected = false;
 
   @ViewChild('categorySection') categorySectionRef!: ElementRef;
   @ViewChild('searchSection') searchSectionRef!: ElementRef;
 
-  constructor() {
+  constructor(private router: Router) {
     // Debug API endpoints on component initialization
     this.homepageService.debugApiEndpoints();
   }
@@ -194,7 +199,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     this.searchSubject.next(term); // send value to subject
   }
 
-  onCategoryChange(selected: string[]) {
+  onCategoryChange(selected: number[]) {
     const hadNoSelectionBefore = this.selectedCategories.length === 0;
     this.selectedCategories = selected;
 
@@ -222,6 +227,17 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     if (selected.length === 0) {
       this.firstCategorySelected = false;
     }
+  }
+
+  onSelectedCoursesChange(selectedCourses: Category[]) {
+    this.selectedCourses = selectedCourses;
+    console.log('Selected courses from categories:', selectedCourses);
+  }
+
+  // Convert category IDs to labels for display
+  getCategoryLabels(categoryIds: number[]): string[] {
+    // Use generic labels based on category IDs
+    return categoryIds.map((id) => `فئة ${id}`);
   }
 
   onLevelChange(selected: string[]) {
@@ -273,9 +289,11 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   }
 
   // Update category filter
-  private updateCategoryFilter(categories: string[]) {
+  private updateCategoryFilter(categories: number[]) {
     if (categories.length > 0) {
-      this.homepageService.updateFilters({ category: categories });
+      // Convert numbers to strings for the filter
+      const categoryStrings = categories.map((cat) => cat.toString());
+      this.homepageService.updateFilters({ category: categoryStrings });
     } else {
       // Remove category filter if empty
       const currentFilters = this.homepageService['_currentFilters'].value;
@@ -343,14 +361,14 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Launch a course using the provided URL
+   * Navigate to course details page
    */
-  launchCourse(launchUrl: string): void {
-    if (launchUrl) {
-      // Open course in new tab/window
-      window.open(launchUrl, '_blank');
+  launchCourse(courseId: number): void {
+    if (courseId) {
+      // Navigate to course details page
+      this.router.navigate(['/courses', courseId]);
     } else {
-      console.warn('No launch URL available for this course');
+      console.warn('No course ID available for navigation');
     }
   }
 }

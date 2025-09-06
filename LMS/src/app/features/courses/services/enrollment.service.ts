@@ -8,6 +8,8 @@ import {
   tap,
   map,
 } from 'rxjs';
+// import { DialogService } from './dialog.service';
+// import { ToastService } from './toast.service';
 
 export interface Enrollment {
   id: number;
@@ -30,7 +32,7 @@ export interface Enrollment {
 export interface EnrollmentResponse {
   success: boolean;
   message: string;
-  data?: Enrollment;
+  data?: Enrollment | null;
 }
 
 @Injectable({
@@ -38,6 +40,8 @@ export interface EnrollmentResponse {
 })
 export class EnrollmentService {
   private _http = inject(HttpClient);
+  // private _dialogService = inject(DialogService);
+  // private _toastService = inject(ToastService);
   private readonly baseUrl = 'api/Enrollment';
 
   // BehaviorSubject to track enrolled courses
@@ -73,9 +77,11 @@ export class EnrollmentService {
     const headers = this.getAuthHeaders();
     const url = `${this.baseUrl}?courseId=${courseId}`;
 
-    return this._http.post<any>(url, {}, { headers }).pipe(
+    return this._http.post<EnrollmentResponse>(url, {}, { headers }).pipe(
       tap((response) => {
         console.log('Enrollment API response:', response);
+        // TODO: Show success toast when ToastService is available
+        console.log('تم التسجيل في الدورة بنجاح');
         // Reload enrolled courses after successful enrollment
         this.loadEnrolledCourses();
       }),
@@ -83,13 +89,6 @@ export class EnrollmentService {
         // Handle different response structures
         if (response.success !== undefined) {
           return response as EnrollmentResponse;
-        } else if (response.status === 200 || response.statusCode === 200) {
-          // If API returns 200 but no success field, treat as success
-          return {
-            success: true,
-            message: 'تم التسجيل بنجاح',
-            data: response.data || null,
-          } as EnrollmentResponse;
         } else {
           // Default success response
           return {
@@ -101,6 +100,8 @@ export class EnrollmentService {
       }),
       catchError((error) => {
         console.error('Error enrolling in course:', error);
+        // TODO: Show error toast when ToastService is available
+        console.error('حدث خطأ أثناء التسجيل في الدورة');
         return throwError(() => error);
       })
     );
@@ -111,18 +112,41 @@ export class EnrollmentService {
    */
   unenrollFromCourse(enrollmentId: number): Observable<EnrollmentResponse> {
     const headers = this.getAuthHeaders();
-    const url = `${this.baseUrl}?id=${enrollmentId}`;
+    const url = `${this.baseUrl}/${enrollmentId}`;
 
-    return this._http.delete<EnrollmentResponse>(url, { headers }).pipe(
+    return this._http.delete(url, { headers, observe: 'response' }).pipe(
       tap((response) => {
-        if (response.success) {
+        console.log('Unenroll API response:', response);
+        // 204 No Content means successful deletion
+        if (response.status === 204) {
           console.log('Successfully unenrolled from course:', enrollmentId);
+          // TODO: Show success toast when ToastService is available
+          console.log('تم إلغاء التسجيل بنجاح');
           // Reload enrolled courses after successful unenrollment
           this.loadEnrolledCourses();
         }
       }),
+      map((response) => {
+        // Handle 204 No Content response
+        if (response.status === 204) {
+          return {
+            success: true,
+            message: 'تم إلغاء التسجيل بنجاح',
+            data: null,
+          } as EnrollmentResponse;
+        }
+
+        // Handle other successful responses
+        return {
+          success: true,
+          message: 'تم إلغاء التسجيل بنجاح',
+          data: null,
+        } as EnrollmentResponse;
+      }),
       catchError((error) => {
         console.error('Error unenrolling from course:', error);
+        // TODO: Show error toast when ToastService is available
+        console.error('حدث خطأ أثناء إلغاء التسجيل');
         return throwError(() => error);
       })
     );
@@ -133,9 +157,17 @@ export class EnrollmentService {
    */
   isEnrolledInCourse(courseId: number): boolean {
     const enrolledCourses = this._enrolledCourses.value;
-    return enrolledCourses.some(
+    const isEnrolled = enrolledCourses.some(
       (enrollment) => enrollment.courseId === courseId
     );
+
+    console.log('=== IS ENROLLED IN COURSE CHECK ===');
+    console.log('Course ID:', courseId);
+    console.log('Enrolled Courses:', enrolledCourses);
+    console.log('Is Enrolled:', isEnrolled);
+    console.log('===================================');
+
+    return isEnrolled;
   }
 
   /**

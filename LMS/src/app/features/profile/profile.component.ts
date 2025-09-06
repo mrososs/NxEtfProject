@@ -12,12 +12,14 @@ import {
   EnrollmentService,
   Enrollment,
 } from '../courses/services/enrollment.service';
+import { EnrollmentDeleteService } from '../courses/services/enrollment-delete.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { FileUploadModule } from 'primeng/fileupload';
 import { BannerComponent } from '../../shared/components/banner/banner.component';
+import { COURSE_PROVIDERS } from '../courses/providers/course-providers';
 
 @Component({
   selector: 'app-profile',
@@ -31,7 +33,7 @@ import { BannerComponent } from '../../shared/components/banner/banner.component
     FileUploadModule,
     BannerComponent,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ...COURSE_PROVIDERS],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
@@ -50,6 +52,7 @@ export class ProfileComponent implements OnInit {
     private fb: FormBuilder,
     private profileService: ProfileService,
     private enrollmentService: EnrollmentService,
+    private enrollmentDeleteService: EnrollmentDeleteService,
     private router: Router,
     private messageService: MessageService
   ) {
@@ -387,34 +390,39 @@ export class ProfileComponent implements OnInit {
   /**
    * Delete enrollment from a course
    */
-  deleteEnrollment(enrollmentId: number): void {
-    this.enrollmentService.unenrollFromCourse(enrollmentId).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'نجح',
-            detail: 'تم حذف التسجيل من الدورة بنجاح',
-          });
-          // Refresh enrolled courses
-          this.loadEnrolledCourses();
-        } else {
+  deleteEnrollment(enrollmentId: number, courseName?: string): void {
+    this.enrollmentDeleteService
+      .unenrollFromCourseWithConfirmation(enrollmentId, courseName)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'نجح',
+              detail: 'تم حذف التسجيل من الدورة بنجاح',
+            });
+            // Refresh enrolled courses
+            this.loadEnrolledCourses();
+          } else if (response.message === 'تم إلغاء العملية') {
+            // User cancelled, no need to show error message
+            console.log('User cancelled deletion');
+          } else {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'خطأ',
+              detail: response.message || 'حدث خطأ في حذف التسجيل',
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting enrollment:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'خطأ',
-            detail: response.message || 'حدث خطأ في حذف التسجيل',
+            detail: 'حدث خطأ في حذف التسجيل من الدورة',
           });
-        }
-      },
-      error: (error) => {
-        console.error('Error deleting enrollment:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'خطأ',
-          detail: 'حدث خطأ في حذف التسجيل من الدورة',
-        });
-      },
-    });
+        },
+      });
   }
 
   /**
