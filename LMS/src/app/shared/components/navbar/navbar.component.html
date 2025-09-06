@@ -70,25 +70,49 @@
         </li>
       </ul>
 
-      <!-- Logout Button for Desktop -->
-      <button
-        class="btn btn-outline-danger logout-btn d-none d-lg-block me-3"
-        (click)="logout()"
-        title="تسجيل الخروج من النظام"
-      >
-        <i class="pi pi-sign-out me-2"></i>
-        تسجيل الخروج
-      </button>
+      <!-- Authentication Button for Desktop -->
+      <div class="d-none d-lg-block me-3">
+        <!-- Login Button (when not authenticated) -->
+        <button
+          *ngIf="!isAuthenticated()"
+          class="btn btn-outline-primary login-btn"
+          (click)="login()"
+          title="تسجيل الدخول"
+        >
+          <i class="pi pi-sign-in me-2"></i>
+          تسجيل الدخول
+        </button>
 
-      <!-- User Info Display -->
-      <div class="user-info d-none d-lg-block me-3">
+        <!-- Logout Button (when authenticated) -->
+        <button
+          *ngIf="isAuthenticated()"
+          class="btn btn-outline-danger logout-btn"
+          (click)="logout()"
+          title="تسجيل الخروج من النظام"
+        >
+          <i class="pi pi-sign-out me-2"></i>
+          تسجيل الخروج
+        </button>
+      </div>
+
+      <!-- User Info Display (only when authenticated) -->
+      <div *ngIf="isAuthenticated()" class="user-info d-none d-lg-block me-3">
         <span class="user-name">{{ getUserName() }}</span>
       </div>
     </div>
 
     <!-- Mobile Menu -->
     <ul class="navbar-nav d-lg-none">
-      <li class="nav-item">
+      <!-- Login Button (when not authenticated) -->
+      <li *ngIf="!isAuthenticated()" class="nav-item">
+        <a class="nav-link text-primary" (click)="login()">
+          <i class="pi pi-sign-in me-2"></i>
+          تسجيل الدخول
+        </a>
+      </li>
+
+      <!-- Logout Button (when authenticated) -->
+      <li *ngIf="isAuthenticated()" class="nav-item">
         <a class="nav-link text-danger" (click)="logout()">
           <i class="pi pi-sign-out me-2"></i>
           تسجيل الخروج

@@ -26,62 +26,54 @@
 
           <div class="instructor-stats mt-4">
             <div class="row">
-              <div class="col-md-4">
-                <div class="stat-item">
-                  <strong>المهارة الرئيسية:</strong> {{ instructor.mainSkill }}
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="stat-item">
-                  <strong>عدد الدورات:</strong> {{ instructor.numberOfCourses }}
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="stat-item">
-                  <strong>عدد الطلاب:</strong> {{ instructor.numberOfStudents }}
-                </div>
-              </div>
-            </div>
-            <div class="row mt-3">
               <div class="col-md-6">
                 <div class="stat-item">
-                  <strong>التقييم:</strong>
-                  <span class="stars">
-                    <i
-                      *ngFor="let star of [1, 2, 3, 4, 5]"
-                      class="fas fa-star"
-                      [class.text-warning]="star <= instructor.starRanking"
-                      [class.text-muted]="star > instructor.starRanking"
-                    >
-                    </i>
-                    {{ instructor.starRanking }}/5
-                  </span>
+                  <i class="pi pi-briefcase stat-icon"></i>
+                  <div class="stat-content">
+                    <strong>المهارة الرئيسية</strong>
+                    <span>{{ instructor.mainSkill }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="stat-item">
+                  <i class="pi pi-book stat-icon"></i>
+                  <div class="stat-content">
+                    <strong>الدورات</strong>
+                    <span>{{ instructor.courses?.length || 0 }} دورة</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Channels Section -->
+          <!-- Communication Channels Section -->
           <div
             class="channels-section mt-4"
-            *ngIf="getChannelLinks().length > 0"
+            *ngIf="instructor.communicationChannels.length > 0"
           >
-            <h3>قنوات التواصل</h3>
-            <div class="row">
-              <div class="col-md-6" *ngFor="let channel of getChannelLinks()">
-                <div class="channel-item">
+            <h3 class="section-title">
+              <i class="pi pi-share-alt me-2"></i>
+              قنوات التواصل
+            </h3>
+            <div class="channels-grid">
+              <div
+                class="channel-card"
+                *ngFor="let channel of instructor.communicationChannels"
+              >
+                <div class="channel-icon">
+                  <i [class]="'pi ' + channel.icon"></i>
+                </div>
+                <div class="channel-content">
                   <h5>{{ channel.name }}</h5>
-                  <ul class="list-unstyled">
-                    <li *ngFor="let link of channel.links">
-                      <a
-                        [href]="link"
-                        target="_blank"
-                        class="text-decoration-none"
-                      >
-                        {{ link }}
-                      </a>
-                    </li>
-                  </ul>
+                  <a
+                    [href]="getChannelLink(channel)"
+                    target="_blank"
+                    class="channel-link"
+                    [title]="'فتح ' + channel.name"
+                  >
+                    {{ getChannelDisplayText(channel) }}
+                  </a>
                 </div>
               </div>
             </div>
@@ -90,33 +82,29 @@
 
         <div class="col-lg-4">
           <div class="instructor-card">
-            <img
-              [src]="instructor.avatar"
-              [alt]="instructor.name"
-              class="instructor-image"
-            />
+            <div class="instructor-image-container">
+              <img
+                *ngIf="hasValidImage()"
+                [src]="getInstructorImage()"
+                [alt]="instructor.name"
+                class="instructor-image"
+                (error)="onImageError($event)"
+              />
+              <div *ngIf="!hasValidImage()" class="default-image-placeholder">
+                <i class="pi pi-user default-user-icon"></i>
+              </div>
+            </div>
             <div class="instructor-card-body">
               <h5>{{ instructor.name }}</h5>
-              <p>{{ instructor.title }}</p>
+              <p class="instructor-title-small">{{ instructor.title }}</p>
               <div class="instructor-stats-small">
-                <span class="badge bg-primary">{{ instructor.mainSkill }}</span>
-                <span class="badge bg-secondary"
-                  >{{ instructor.numberOfCourses }} دورة</span
-                >
-                <span class="badge bg-info"
-                  >{{ instructor.numberOfStudents }} طالب</span
-                >
-              </div>
-              <div class="rating-small mt-2">
-                <span class="stars">
-                  <i
-                    *ngFor="let star of [1, 2, 3, 4, 5]"
-                    class="fas fa-star"
-                    [class.text-warning]="star <= instructor.starRanking"
-                    [class.text-muted]="star > instructor.starRanking"
-                  >
-                  </i>
-                  {{ instructor.starRanking }}/5
+                <span class="badge bg-primary">
+                  <i class="pi pi-briefcase me-1"></i>
+                  {{ instructor.mainSkill }}
+                </span>
+                <span class="badge bg-secondary">
+                  <i class="pi pi-book me-1"></i>
+                  {{ instructor.courses?.length || 0 }} دورة
                 </span>
               </div>
             </div>

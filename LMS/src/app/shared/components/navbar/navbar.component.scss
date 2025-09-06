@@ -54,6 +54,31 @@
   }
 }
 
+.login-btn {
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid #007bff;
+  color: #007bff;
+  background: transparent;
+
+  &:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -69,13 +94,27 @@
   }
 }
 
-// Mobile logout link styling
+// Mobile authentication link styling
 .navbar-nav .nav-link.text-danger {
   cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
     background: rgba(220, 53, 69, 0.1);
+    border-radius: 8px;
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+.navbar-nav .nav-link.text-primary {
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(0, 123, 255, 0.1);
     border-radius: 8px;
   }
 

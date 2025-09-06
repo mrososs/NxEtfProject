@@ -58,6 +58,22 @@ export class NavbarComponent {
   }
 
   /**
+   * Check if user is authenticated
+   * @returns true if user is authenticated, false otherwise
+   */
+  isAuthenticated(): boolean {
+    return this.profileService.isAuthenticated();
+  }
+
+  /**
+   * Redirect to login page
+   */
+  login(): void {
+    window.location.href =
+      'https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/landing-page/login';
+  }
+
+  /**
    * Get user name from localStorage
    * @returns User's full name or default text
    */
