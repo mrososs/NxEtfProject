@@ -14,4 +14,35 @@ import { RouterModule } from '@angular/router';
 })
 export class InstructorCardComponent {
   @Input() instructor!: Instructor;
+  private imageError = false;
+
+  /**
+   * Check if instructor has a valid image
+   */
+  hasValidImage(): boolean {
+    if (this.imageError) return false;
+
+    const imageUrl = this.getInstructorImage();
+    return !!(
+      imageUrl &&
+      imageUrl.trim() !== '' &&
+      imageUrl !== 'null' &&
+      imageUrl !== 'undefined'
+    );
+  }
+
+  /**
+   * Get instructor image URL with fallback
+   */
+  getInstructorImage(): string {
+    return this.instructor?.avatar || this.instructor?.img || '';
+  }
+
+  /**
+   * Handle image loading error
+   */
+  onImageError(event: Event): void {
+    console.log('Image failed to load:', event);
+    this.imageError = true;
+  }
 }

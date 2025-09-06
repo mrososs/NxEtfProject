@@ -323,6 +323,19 @@ export class ProfileService {
   }
 
   /**
+   * Check if user is authenticated (synchronous check)
+   * This method checks for token existence in localStorage
+   */
+  isAuthenticated(): boolean {
+    // Check if we have any of the possible token keys in localStorage
+    const tokenKeys = ['authToken', 'token', 'accessToken', 'auth_token'];
+    return tokenKeys.some((key) => {
+      const token = localStorage.getItem(key);
+      return token && token.trim() !== '';
+    });
+  }
+
+  /**
    * Redirect to profile page
    */
   private redirectToProfilePage(): void {
@@ -333,7 +346,8 @@ export class ProfileService {
    * Redirect to main site
    */
   private redirectToMainSite(): void {
-    window.location.href = 'http://etf.itechpro-eg.com/';
+    window.location.href =
+      'https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/';
   }
 
   /**

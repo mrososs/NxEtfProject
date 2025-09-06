@@ -32,10 +32,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         <h1 class="error-title">خطأ في المصادقة</h1>
         <p class="error-message">
           يجب التسجيل أولاً في
-          <a href="http://etf.itechpro-eg.com/" class="union-link" target="_blank">صفحة الاتحاد الرسمية</a>
+          <a href="https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/" class="union-link" target="_blank">صفحة الاتحاد الرسمية</a>
           للذهاب إلى موقع الكورسات
         </p>
-        <a href="http://etf.itechpro-eg.com/" class="auth-button" target="_blank"> الذهاب إلى صفحة الاتحاد الرسمية </a>
+        <a href="https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/" class="auth-button" target="_blank"> الذهاب إلى صفحة الاتحاد الرسمية </a>
       </div>
     </div>
   `,
@@ -174,7 +174,7 @@ checkAuthenticationOnStartup(): Observable<boolean> {
 
 1. اذهب إلى: `/error-500`
 2. ستجد صفحة خطأ جميلة باللغة العربية
-3. اضغط على الزر للذهاب إلى [http://etf.itechpro-eg.com/](http://etf.itechpro-eg.com/)
+3. اضغط على الزر للذهاب إلى [https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/](https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/)
 
 ### **Expected API Requests:**
 
@@ -193,7 +193,7 @@ withCredentials: true  // ← Added by AuthInterceptor
 - **النتيجة:** توجيه إلى `/error-500` page
 - **المحتوى:** صفحة خطأ مصادقة جميلة باللغة العربية
 - **التصميم:** Gradient background مع تصميم متجاوب
-- **الزر:** يوجه إلى [http://etf.itechpro-eg.com/](http://etf.itechpro-eg.com/)
+- **الزر:** يوجه إلى [https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/](https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/)
 
 ### **2. خطأ "No Profile Created":**
 

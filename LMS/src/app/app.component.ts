@@ -37,8 +37,12 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Skip authentication check if we're on error page or already checked
-    if (this.errorStateService.shouldSkipApiCalls() || this.hasCheckedAuth) {
+    // Skip authentication check if we're on error page, already checked, or on courses page
+    if (
+      this.errorStateService.shouldSkipApiCalls() ||
+      this.hasCheckedAuth ||
+      this.isOnCoursesPage()
+    ) {
       return;
     }
 
@@ -109,6 +113,13 @@ export class AppComponent implements OnInit {
     if (isOnErrorPage) {
       this.errorStateService.setErrorState(true);
     }
+  }
+
+  private isOnCoursesPage(): boolean {
+    const currentPath = window.location.pathname;
+    return (
+      currentPath === '/courses' || currentPath === '/' || currentPath === ''
+    );
   }
 
   private checkUserProfile(): void {

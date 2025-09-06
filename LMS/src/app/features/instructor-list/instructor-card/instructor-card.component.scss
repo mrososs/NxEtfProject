@@ -1,6 +1,170 @@
+// Instructor Card Styles
+.instructor-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Image Container
+.instructor-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+// Instructor Image
+.instructor-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Default Image Placeholder
+.default-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.1) 25%,
+        transparent 25%
+      ),
+      linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    opacity: 0.3;
+  }
+}
+
+// Default User Icon
+.default-user-icon {
+  font-size: 4rem;
+  color: #8b9dc3;
+  z-index: 1;
+  position: relative;
+}
+
+// Plus Button
+.plus-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+  }
+
+  span {
+    color: #667eea;
+    font-size: 14px;
+    font-weight: bold;
+  }
+}
+
+// Instructor Info
 .instructor-info {
-  min-height: 100px; // أو أي رقم يناسب محتواك حسب الخطوط والـ padding
+  min-height: 120px;
   display: flex;
   flex-wrap: wrap;
   align-items: start;
+  padding: 16px 0;
+}
+
+// Dotted Line
+.dotted-line {
+  border: none;
+  border-top: 2px dotted #e0e0e0;
+  margin: 16px 0;
+}
+
+// Button Styles
+::ng-deep .p-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+}
+
+// Card Title
+::ng-deep .p-card .p-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+// Card Content
+::ng-deep .p-card .p-card-content {
+  padding: 0 1.5rem;
+}
+
+// Card Footer
+::ng-deep .p-card .p-card-footer {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .instructor-image-container {
+    height: 180px;
+  }
+
+  .default-user-icon {
+    font-size: 3rem;
+  }
+
+  .instructor-info {
+    min-height: 100px;
+  }
 }

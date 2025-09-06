@@ -1,6 +1,6 @@
 # Redirect Functionality Summary
 
-## ✅ **تم إضافة Redirect تلقائي إلى [http://etf.itechpro-eg.com/](http://etf.itechpro-eg.com/)**
+## ✅ **تم إضافة Redirect تلقائي إلى [https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/](https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/)**
 
 ### **المواقع التي تم إضافة Redirect فيها:**
 
@@ -66,8 +66,8 @@ updateProfile(formData: FormData): Observable<any> {
 
 ```typescript
 private redirectToMainSite(): void {
-  console.log('🌐 Redirecting to main site: http://etf.itechpro-eg.com/');
-  window.location.href = 'http://etf.itechpro-eg.com/';
+  console.log('🌐 Redirecting to main site: https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/');
+  window.location.href = 'https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/';
 }
 ```
 
@@ -79,7 +79,7 @@ private redirectToMainSite(): void {
 2. اكتب: `localStorage.clear()`
 3. اكتب: `document.cookie = ''`
 4. Refresh الصفحة
-5. ستتم إعادة التوجيه إلى [http://etf.itechpro-eg.com/](http://etf.itechpro-eg.com/)
+5. ستتم إعادة التوجيه إلى [https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/](https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/)
 
 ### **لاختبار Normal Flow (مع token):**
 
@@ -99,7 +99,7 @@ private redirectToMainSite(): void {
 📦 localStorage tokens: {authToken: null, token: null, accessToken: null}
 ❌ No authentication token found
 🔄 User not authenticated, redirecting to main site...
-🌐 Redirecting to main site: http://etf.itechpro-eg.com/
+🌐 Redirecting to main site: https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/
 ```
 
 ### **عند وجود Token:**
@@ -123,4 +123,4 @@ private redirectToMainSite(): void {
 
 ## **النتيجة:**
 
-الآن عندما لا يوجد token أو يحدث خطأ في الـ authentication، سيتم توجيه المستخدم تلقائياً إلى [http://etf.itechpro-eg.com/](http://etf.itechpro-eg.com/) بدلاً من عرض أخطاء في التطبيق! 🚀
+الآن عندما لا يوجد token أو يحدث خطأ في الـ authentication، سيتم توجيه المستخدم تلقائياً إلى [https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/](https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/) بدلاً من عرض أخطاء في التطبيق! 🚀

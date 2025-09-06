@@ -14,7 +14,7 @@ import { ErrorStateService } from '../../services/error-state.service';
         <p class="error-message">
           يجب التسجيل أولاً في
           <a
-            href="http://etf.itechpro-eg.com/"
+            href="https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/"
             class="union-link"
             target="_blank"
             >صفحة الاتحاد الرسمية</a
@@ -22,7 +22,7 @@ import { ErrorStateService } from '../../services/error-state.service';
           للذهاب إلى موقع الكورسات
         </p>
         <a
-          href="http://etf.itechpro-eg.com/"
+          href="https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/"
           class="auth-button"
           target="_blank"
         >
@@ -117,7 +117,8 @@ export class Error500Component implements OnInit {
     // Automatically redirect to ETF website after 3 seconds
     setTimeout(() => {
       console.log('Auto-redirecting to ETF website after 3 seconds...');
-      window.location.href = 'http://etf.itechpro-eg.com/';
+      window.location.href =
+        'https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/';
     }, 5000);
   }
 

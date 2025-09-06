@@ -1,14 +1,24 @@
-<p-card [style]="{ overflow: 'hidden', height: '35rem' }">
+<p-card
+  [style]="{ overflow: 'hidden', height: '35rem' }"
+  class="instructor-card"
+>
   <ng-template pTemplate="header">
-    <img
-      alt="Card"
-      class="w-full"
-      [src]="instructor?.avatar || instructor?.img"
-    />
-    <div class="plus-button"><span class="pi pi-plus"></span></div>
+    <div class="instructor-image-container">
+      <img
+        *ngIf="hasValidImage()"
+        alt="Instructor"
+        class="instructor-image"
+        [src]="getInstructorImage()"
+        (error)="onImageError($event)"
+      />
+      <div *ngIf="!hasValidImage()" class="default-image-placeholder">
+        <i class="pi pi-user default-user-icon"></i>
+      </div>
+      <div class="plus-button"><span class="pi pi-plus"></span></div>
+    </div>
   </ng-template>
 
-  <ng-template pTemplate="title"> {{ instructor?.name }} </ng-template>
+  <ng-template pTemplate="title"> {{ instructor.name }} </ng-template>
 
   <div
     class="row d-flex justify-content-between align-items-center instructor-info"
@@ -16,21 +26,19 @@
     <div class="col-6 mb-3">
       <div class="d-flex gap-2">
         <img src="../../../../assets/svg/card/bookmark.svg" alt="video" />
-        <span>{{ instructor?.mainSkill || instructor?.technicalSkill }}</span>
+        <span>{{ instructor.mainSkill || instructor.technicalSkill }}</span>
       </div>
     </div>
     <div class="col-6 mb-3">
       <div class="d-flex justify-content-center gap-2">
         <img src="../../../../assets/svg/card/clock.svg" alt="chart" />
-        <span
-          >{{ instructor?.numberOfCourses || instructor?.course }} منهج</span
-        >
+        <span>{{ instructor.numberOfCourses || instructor.course }} منهج</span>
       </div>
     </div>
     <div class="col-6 mb-3">
       <div class="d-flex gap-2">
         <img src="../../../../assets/svg/card/star.svg" alt="star" />
-        <span>{{ instructor?.starRanking || instructor?.rating }}/5</span>
+        <span>{{ instructor.starRanking || instructor.rating }}/5</span>
       </div>
     </div>
     <div class="col-6 mb-3">
@@ -40,7 +48,7 @@
           alt="student"
         />
         <span
-          >{{ instructor?.numberOfStudents || instructor?.students }} طالب</span
+          >{{ instructor.numberOfStudents || instructor.students }} طالب</span
         >
       </div>
     </div>
@@ -55,7 +63,7 @@
   <ng-template pTemplate="footer">
     <div class="d-flex justify-content-center mt-1">
       <a
-        [routerLink]="['/instructorDetails', instructor?.id]"
+        [routerLink]="['/instructorDetails', instructor.id]"
         class="w-100 text-center text-decoration-none"
       >
         <p-button label="الإطلاع علي المدرب" styleClass="w-full"></p-button>

@@ -36,7 +36,8 @@ export class NavbarComponent {
     this.clearAllCookies();
 
     // Redirect to ETF site
-    window.location.href = 'http://etf.itechpro-eg.com/';
+    window.location.href =
+      'https://etfwebsite-gcf6ggathwd6ehgv.canadacentral-01.azurewebsites.net/';
   }
 
   /**
