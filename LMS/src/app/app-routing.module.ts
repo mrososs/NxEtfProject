@@ -23,14 +23,7 @@ const routes: Routes = [
       ),
     canActivate: [ProfileGuard],
   },
-  {
-    path: 'favorites',
-    loadChildren: () =>
-      import('./features/favorites/favorites.module').then(
-        (m) => m.FavoritesModule
-      ),
-    canActivate: [ProfileGuard],
-  },
+ 
   { path: '**', redirectTo: '' },
 ];
 
