@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -14,8 +14,6 @@ import {
 } from '../services/home-page.service';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Course } from '../model/course.model';
-import { HttpClient } from '@angular/common/http';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 interface Review {
   id: number;
@@ -67,15 +65,6 @@ interface CourseLesson {
   duration: string;
 }
 
-interface CourseApiResponse {
-  id: number;
-  title: string;
-  description: string;
-  launchUrl: string;
-  uploadedAt: string;
-  reviews: Review[];
-}
-
 @Component({
   selector: 'app-course-details',
   standalone: true,
@@ -89,20 +78,13 @@ export class CourseDetailsComponent implements OnInit {
   private _homePageService = inject(HomePageService);
   private _enrollmentService = inject(EnrollmentService);
   private _messageService = inject(MessageService);
-  private _http = inject(HttpClient);
-  private _sanitizer = inject(DomSanitizer);
+  private _cdr = inject(ChangeDetectorRef);
 
   course!: Course;
   courseDetails!: CourseDetails;
   loading = true;
   error = false;
   courseId!: number;
-  courseWindow: Window | null = null;
-
-  // Course API Response
-  courseApiData: CourseApiResponse | null = null;
-  showIframe = false;
-  iframeUrl: SafeResourceUrl | null = null;
 
   // Enrollment properties
   isEnrolled = false;
@@ -250,7 +232,6 @@ export class CourseDetailsComponent implements OnInit {
     this._route.params.subscribe((params) => {
       this.courseId = +params['id'];
       this.loadCourseDetails();
-      this.loadCourseFromApi();
 
       // Load enrolled courses first, then check enrollment status
       this._enrollmentService.getEnrolledCourses().subscribe({
@@ -263,6 +244,11 @@ export class CourseDetailsComponent implements OnInit {
           this.checkEnrollmentStatus(); // Check anyway
         },
       });
+    });
+
+    // Configure toast position to bottom-right
+    this._messageService.messageObserver.subscribe(() => {
+      // This ensures toasts appear in bottom-right
     });
   }
 
@@ -282,21 +268,6 @@ export class CourseDetailsComponent implements OnInit {
         console.error('Error fetching course details:', err);
         this.error = true;
         this.loading = false;
-      },
-    });
-  }
-
-  private loadCourseFromApi(): void {
-    // Call the specific API endpoint
-    const apiUrl = `api/Course/${this.courseId}`;
-
-    this._http.get<CourseApiResponse>(apiUrl).subscribe({
-      next: (data: CourseApiResponse) => {
-        this.courseApiData = data;
-        console.log('Course API Data:', data);
-      },
-      error: (err) => {
-        console.error('Error fetching course from API:', err);
       },
     });
   }
@@ -349,44 +320,6 @@ export class CourseDetailsComponent implements OnInit {
         isExpanded: false,
       }));
     }
-  }
-
-  // Launch course in iframe
-  launchCourseInIframe(): void {
-    if (this.courseApiData?.launchUrl) {
-      this.iframeUrl = this._sanitizer.bypassSecurityTrustResourceUrl(
-        this.courseApiData.launchUrl
-      );
-      this.showIframe = true;
-      console.log('Launching course in iframe:', this.courseApiData.launchUrl);
-    } else {
-      console.error('No launch URL available for this course');
-    }
-  }
-
-  // Close iframe
-  closeIframe(): void {
-    this.showIframe = false;
-    this.iframeUrl = null;
-  }
-
-  /**
-   * Get the full SCORM course URL
-   * @returns The complete URL to the SCORM course index.html
-   */
-  getScormCourseUrl(): string {
-    if (this.courseApiData?.launchUrl) {
-      return this.courseApiData.launchUrl;
-    }
-    return '';
-  }
-
-  /**
-   * Check if the course has a valid launch URL
-   * @returns True if the course can be launched
-   */
-  canLaunchCourse(): boolean {
-    return !!this.courseApiData?.launchUrl;
   }
 
   /**
@@ -503,30 +436,40 @@ export class CourseDetailsComponent implements OnInit {
    * Update enrollment status manually
    */
   private updateEnrollmentStatus(): void {
-    // Force refresh and check status
+    // Force refresh enrolled courses
     this._enrollmentService.refreshEnrolledCourses();
-    setTimeout(() => {
-      this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
-        this.courseId
-      );
-      console.log('Updated enrollment status:', this.isEnrolled);
-    }, 500);
+
+    // Subscribe to enrolled courses to get the updated status
+    this._enrollmentService.getEnrolledCourses().subscribe({
+      next: () => {
+        // Update local status based on actual enrolled courses
+        this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
+          this.courseId
+        );
+        this._cdr.detectChanges();
+        console.log('Updated enrollment status:', this.isEnrolled);
+      },
+      error: (error) => {
+        console.error('Error updating enrollment status:', error);
+        // Fallback: check status anyway
+        this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
+          this.courseId
+        );
+        this._cdr.detectChanges();
+      },
+    });
   }
 
   /**
    * Enroll in the course
    */
   enrollInCourse(): void {
-    console.log('=== ENROLL IN COURSE CALLED ===');
-    console.log('Course ID:', this.courseId);
-    console.log('Is Enrolled:', this.isEnrolled);
-    console.log('================================');
-
     if (this.isEnrolled) {
       this._messageService.add({
         severity: 'info',
         summary: 'معلومات',
         detail: 'أنت مسجل بالفعل في هذه الدورة',
+        life: 5000,
       });
       return;
     }
@@ -535,56 +478,66 @@ export class CourseDetailsComponent implements OnInit {
     this._enrollmentService.enrollInCourse(this.courseId).subscribe({
       next: (response) => {
         this.enrollmentLoading = false;
-        console.log('Enrollment response in component:', response);
 
         if (response.success) {
           // Update enrollment status immediately
           this.isEnrolled = true;
 
-          // Force refresh enrollment status and update UI
+          // Force change detection first
+          this._cdr.detectChanges();
+          console.log(
+            'Enrollment successful, updating UI. isEnrolled:',
+            this.isEnrolled
+          );
+
+          // Force update the enrollment service (this will further update status)
           this.updateEnrollmentStatus();
 
           this._messageService.add({
             severity: 'success',
             summary: 'نجح التسجيل',
-            detail: 'تم تسجيلك في الدورة بنجاح! يمكنك الآن بدء الدورة',
+            detail: 'تم تسجيلك في الدورة بنجاح!',
+            life: 5000,
           });
-
-          // Automatically launch course after successful enrollment
-          setTimeout(() => {
-            this.checkAndLaunchCourse();
-          }, 1500);
         } else {
           this._messageService.add({
             severity: 'error',
             summary: 'خطأ في التسجيل',
             detail: response.message || 'حدث خطأ أثناء التسجيل في الدورة',
+            life: 5000,
           });
         }
       },
       error: (error) => {
         this.enrollmentLoading = false;
-        console.error('Error enrolling in course:', error);
 
         // Check if it's actually a success (HTTP 200 but caught as error)
         if (error.status === 200 || error.statusText === 'OK') {
+          // Update enrollment status immediately
           this.isEnrolled = true;
+
+          // Force change detection first
+          this._cdr.detectChanges();
+          console.log(
+            'Enrollment successful (via error handler), updating UI. isEnrolled:',
+            this.isEnrolled
+          );
+
+          // Force update the enrollment service (this will further update status)
           this.updateEnrollmentStatus();
 
           this._messageService.add({
             severity: 'success',
             summary: 'نجح التسجيل',
-            detail: 'تم تسجيلك في الدورة بنجاح! يمكنك الآن بدء الدورة',
+            detail: 'تم تسجيلك في الدورة بنجاح!',
+            life: 5000,
           });
-
-          setTimeout(() => {
-            this.checkAndLaunchCourse();
-          }, 1500);
         } else {
           this._messageService.add({
             severity: 'error',
             summary: 'خطأ في التسجيل',
             detail: 'حدث خطأ أثناء التسجيل في الدورة',
+            life: 5000,
           });
         }
       },
@@ -610,31 +563,16 @@ export class CourseDetailsComponent implements OnInit {
    * Start course (enroll first if not enrolled)
    */
   startCourse(): void {
-    console.log('=== START COURSE CALLED ===');
-    console.log('Course ID:', this.courseId);
-    console.log('Is Enrolled:', this.isEnrolled);
-    console.log('============================');
-
     if (!this.isEnrolled) {
-      console.log('User not enrolled, calling enrollInCourse()');
       this.enrollInCourse();
     } else {
-      console.log('User already enrolled, calling checkAndLaunchCourse()');
-      // Check if user has progress and resume from checkpoint
-      this.checkAndLaunchCourse();
+      this._messageService.add({
+        severity: 'info',
+        summary: 'بدء الدورة',
+        detail: 'الدورة جاهزة للبدء',
+        life: 3000,
+      });
     }
-  }
-
-  /**
-   * Launch the course
-   */
-  private checkAndLaunchCourse(): void {
-    this._messageService.add({
-      severity: 'info',
-      summary: 'بدء الدورة',
-      detail: 'سيتم بدء الدورة',
-    });
-    this.launchCourseInIframe();
   }
 
   /**

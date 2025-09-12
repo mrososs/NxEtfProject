@@ -80,15 +80,23 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   filteredCourses$: Observable<Course[]>;
 
   // Pagination
-  pageSize = 12;
+  pageSize = 6;
   currentPage = 1;
   totalPages = 1;
+  totalCourses = 0;
 
   @ViewChild('categorySection') categorySectionRef!: ElementRef;
   @ViewChild('searchSection') searchSectionRef!: ElementRef;
+
+  // Mobile filter components
   @ViewChild('categoryComponent') categoryComponent!: any;
   @ViewChild('levelComponent') levelComponent!: any;
   @ViewChild('instructorComponent') instructorComponent!: any;
+
+  // Desktop sidebar filter components
+  @ViewChild('categoryComponentSidebar') categoryComponentSidebar!: any;
+  @ViewChild('levelComponentSidebar') levelComponentSidebar!: any;
+  @ViewChild('instructorComponentSidebar') instructorComponentSidebar!: any;
 
   constructor(private router: Router) {
     // Setup filtered courses observable
@@ -99,13 +107,24 @@ export class HomepageComponent implements OnInit, AfterViewInit {
       this.instructorsSubject$.pipe(startWith([])),
     ]).pipe(
       map(([searchTerm, categories, levels, instructors]) => {
-        return this.filterCourses(
+        const filtered = this.filterCourses(
           this.allCourses,
           searchTerm,
           categories,
           levels,
           instructors
         );
+
+        // Update pagination info
+        this.totalCourses = filtered.length;
+        this.totalPages = Math.ceil(this.totalCourses / this.pageSize);
+
+        // Reset to first page if current page exceeds total pages
+        if (this.currentPage > this.totalPages && this.totalPages > 0) {
+          this.currentPage = 1;
+        }
+
+        return this.getPaginatedCourses(filtered);
       })
     );
   }
@@ -293,11 +312,13 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
   onSearchSectionChange(term: string) {
     this.searchTerm = term;
+    this.currentPage = 1; // Reset to first page when searching
     this.searchSubject$.next(term);
   }
 
   onCategoryChange(selected: number[]) {
     this.selectedCategories = selected;
+    this.currentPage = 1; // Reset to first page when filtering
     this.categoriesSubject$.next(selected);
     console.log('Category filter changed:', selected);
   }
@@ -309,12 +330,14 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
   onLevelChange(selected: string[]) {
     this.selectedLevels = selected;
+    this.currentPage = 1; // Reset to first page when filtering
     this.levelsSubject$.next(selected);
     console.log('Level filter changed:', selected);
   }
 
   onInstructorChange(selected: string[]) {
     this.selectedInstructors = selected;
+    this.currentPage = 1; // Reset to first page when filtering
     this.instructorsSubject$.next(selected);
     console.log('Instructor filter changed:', selected);
   }
@@ -347,16 +370,27 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
   // Clear all filters
   clearAllFilters() {
+    // Reset all filter values
     this.searchTerm = '';
     this.selectedCategories = [];
     this.selectedLevels = [];
     this.selectedInstructors = [];
-    this.searchSubject$.next('');
-    this.categoriesSubject$.next([]);
-    this.levelsSubject$.next([]);
-    this.instructorsSubject$.next([]);
+    this.currentPage = 1; // Reset to first page
 
-    // Clear component selections
+    // Clear UI component selections first
+    this.clearComponentSelections();
+
+    // Update subjects after a small delay to ensure UI updates
+    setTimeout(() => {
+      this.updateFilterSubjects();
+    }, 50);
+  }
+
+  /**
+   * Clear selections in all filter components (both mobile and desktop)
+   */
+  private clearComponentSelections(): void {
+    // Clear mobile filter components
     if (this.categoryComponent) {
       this.categoryComponent.clearSelection();
     }
@@ -366,6 +400,27 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     if (this.instructorComponent) {
       this.instructorComponent.clearSelection();
     }
+
+    // Clear desktop sidebar filter components
+    if (this.categoryComponentSidebar) {
+      this.categoryComponentSidebar.clearSelection();
+    }
+    if (this.levelComponentSidebar) {
+      this.levelComponentSidebar.clearSelection();
+    }
+    if (this.instructorComponentSidebar) {
+      this.instructorComponentSidebar.clearSelection();
+    }
+  }
+
+  /**
+   * Update all filter subjects
+   */
+  private updateFilterSubjects(): void {
+    this.searchSubject$.next(this.searchTerm);
+    this.categoriesSubject$.next(this.selectedCategories);
+    this.levelsSubject$.next(this.selectedLevels);
+    this.instructorsSubject$.next(this.selectedInstructors);
   }
 
   /**
@@ -375,6 +430,116 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     return courses.slice(startIndex, endIndex);
+  }
+
+  /**
+   * Navigate to next page
+   */
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.refreshPagination();
+    }
+  }
+
+  /**
+   * Navigate to previous page
+   */
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.refreshPagination();
+    }
+  }
+
+  /**
+   * Navigate to specific page
+   */
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.refreshPagination();
+    }
+  }
+
+  /**
+   * Navigate to first page
+   */
+  goToFirstPage(): void {
+    this.currentPage = 1;
+    this.refreshPagination();
+  }
+
+  /**
+   * Navigate to last page
+   */
+  goToLastPage(): void {
+    this.currentPage = this.totalPages;
+    this.refreshPagination();
+  }
+
+  /**
+   * Refresh pagination after page change
+   */
+  private refreshPagination(): void {
+    // Trigger a refresh of the filtered courses observable
+    this.searchSubject$.next(this.searchTerm);
+  }
+
+  /**
+   * Get page numbers for pagination display
+   */
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+
+    if (this.totalPages <= maxPagesToShow) {
+      // Show all pages if total is small
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  /**
+   * Check if previous page is available
+   */
+  hasPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  /**
+   * Check if next page is available
+   */
+  hasNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  /**
+   * Get pagination info text
+   */
+  getPaginationInfo(): string {
+    if (this.totalCourses === 0) {
+      return 'لا توجد دورات';
+    }
+
+    const startItem = (this.currentPage - 1) * this.pageSize + 1;
+    const endItem = Math.min(
+      this.currentPage * this.pageSize,
+      this.totalCourses
+    );
+
+    return `عرض ${startItem}-${endItem} من ${this.totalCourses} دورة`;
   }
 
   /**

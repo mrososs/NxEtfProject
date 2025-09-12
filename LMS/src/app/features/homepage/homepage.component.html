@@ -94,13 +94,7 @@
                 <!-- Display filtered courses -->
                 <div
                   class="col-12 col-md-6 col-lg-4 mb-3"
-                  *ngFor="
-                    let course of filteredCourses$
-                      | async
-                      | slice
-                        : (currentPage - 1) * pageSize
-                        : currentPage * pageSize
-                  "
+                  *ngFor="let course of filteredCourses$ | async"
                 >
                   <app-course-card [course]="course"></app-course-card>
                 </div>
@@ -149,40 +143,72 @@
               </div>
 
               <!-- Pagination -->
-              <div
-                class="text-center mt-4"
-                *ngIf="((filteredCourses$ | async) || []).length > pageSize"
-              >
+              <div class="text-center mt-4" *ngIf="totalPages > 1">
+                <!-- Pagination Info -->
+                <div class="mb-3">
+                  <small class="text-muted">{{ getPaginationInfo() }}</small>
+                </div>
+
                 <nav>
                   <ul class="pagination justify-content-center">
-                    <li class="page-item" [class.disabled]="currentPage === 1">
+                    <!-- First Page -->
+                    <li class="page-item" [class.disabled]="!hasPreviousPage()">
                       <button
                         class="page-link"
-                        (click)="currentPage = currentPage - 1"
-                        [disabled]="currentPage === 1"
+                        (click)="goToFirstPage()"
+                        [disabled]="!hasPreviousPage()"
+                        title="الصفحة الأولى"
+                      >
+                        <i class="pi pi-angle-double-left"></i>
+                      </button>
+                    </li>
+
+                    <!-- Previous Page -->
+                    <li class="page-item" [class.disabled]="!hasPreviousPage()">
+                      <button
+                        class="page-link"
+                        (click)="previousPage()"
+                        [disabled]="!hasPreviousPage()"
                       >
                         السابق
                       </button>
                     </li>
-                    <li class="page-item active">
-                      <span class="page-link">{{ currentPage }}</span>
-                    </li>
+
+                    <!-- Page Numbers -->
                     <li
                       class="page-item"
-                      [class.disabled]="
-                        currentPage * pageSize >=
-                        ((filteredCourses$ | async) || []).length
-                      "
+                      *ngFor="let page of getPageNumbers()"
+                      [class.active]="page === currentPage"
                     >
                       <button
                         class="page-link"
-                        (click)="currentPage = currentPage + 1"
-                        [disabled]="
-                          currentPage * pageSize >=
-                          ((filteredCourses$ | async) || []).length
-                        "
+                        (click)="goToPage(page)"
+                        [disabled]="page === currentPage"
+                      >
+                        {{ page }}
+                      </button>
+                    </li>
+
+                    <!-- Next Page -->
+                    <li class="page-item" [class.disabled]="!hasNextPage()">
+                      <button
+                        class="page-link"
+                        (click)="nextPage()"
+                        [disabled]="!hasNextPage()"
                       >
                         التالي
+                      </button>
+                    </li>
+
+                    <!-- Last Page -->
+                    <li class="page-item" [class.disabled]="!hasNextPage()">
+                      <button
+                        class="page-link"
+                        (click)="goToLastPage()"
+                        [disabled]="!hasNextPage()"
+                        title="الصفحة الأخيرة"
+                      >
+                        <i class="pi pi-angle-double-right"></i>
                       </button>
                     </li>
                   </ul>

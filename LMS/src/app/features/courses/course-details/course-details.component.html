@@ -23,7 +23,7 @@
               <button
                 class="btn btn-primary btn-lg launch-btn me-3"
                 (click)="startCourse()"
-                [disabled]="!canLaunchCourse() || enrollmentLoading"
+                [disabled]="enrollmentLoading"
               >
                 <i class="pi pi-play me-2" *ngIf="!enrollmentLoading"></i>
                 <i
@@ -379,49 +379,5 @@
   </div>
 </div>
 
-<!-- Iframe Modal -->
-<div
-  class="iframe-modal"
-  *ngIf="showIframe"
-  (click)="closeIframe()"
-  (keydown.escape)="closeIframe()"
-  tabindex="0"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="iframe-title"
->
-  <div
-    class="iframe-container"
-    (click)="$event.stopPropagation()"
-    (keydown.escape)="closeIframe()"
-    tabindex="0"
-  >
-    <div class="iframe-header">
-      <h3 id="iframe-title">
-        {{ courseApiData?.title || 'الدورة التدريبية' }}
-      </h3>
-      <button
-        class="close-btn"
-        (click)="closeIframe()"
-        (keydown.enter)="closeIframe()"
-        (keydown.space)="closeIframe()"
-        aria-label="إغلاق النافذة"
-      >
-        <i class="pi pi-times"></i>
-      </button>
-    </div>
-    <div class="iframe-content">
-      <iframe
-        *ngIf="iframeUrl"
-        [src]="iframeUrl"
-        frameborder="0"
-        allowfullscreen
-        class="course-iframe"
-        title="محتوى الدورة التدريبية"
-      ></iframe>
-    </div>
-  </div>
-</div>
-
 <!-- Toast Messages -->
-<p-toast></p-toast>
+<p-toast position="bottom-right"></p-toast>
