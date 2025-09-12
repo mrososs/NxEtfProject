@@ -17,14 +17,6 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'course-viewer',
-    loadComponent: () =>
-      import('./features/course-viewer/course-viewer.component').then(
-        (m) => m.CourseViewerComponent
-      ),
-    canActivate: [AuthGuard],
-  },
-  {
     path: 'instructorDetails/:id',
     loadComponent: () =>
       import(

@@ -1,7 +1,13 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiCourse, Course, CourseFilter } from '../model/course.model';
+import {
+  ApiCourse,
+  Course,
+  CourseFilter,
+  CourseDetails,
+  FAQ,
+} from '../model/course.model';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -146,17 +152,32 @@ export class CourseApiService {
    */
   transformApiCourseToUiCourse(apiCourse: ApiCourse): Course {
     return {
+      // API properties
       id: apiCourse.id,
       title: apiCourse.title,
       description: apiCourse.description,
       launchUrl: apiCourse.launchUrl,
       uploadedAt: apiCourse.uploadedAt,
-      // Default values for UI display
+      reviews: [], // Default empty reviews array
+      trainerName: null, // Default trainer name
+      courseLevel: '', // Default course level
+      categories: [], // Default empty categories
+      tags: [], // Default empty tags
+      faQs: [], // Default empty FAQs
+      courseDetails: {
+        // Default course details
+        id: 0,
+        intro: '',
+        whatYouWillLearn: '',
+        whyChoose: '',
+        suitableFor: '',
+      },
+
+      // UI properties for display
       img: 'assets/img/homePagecourse.png', // Default image
       lectures: 12, // Default lectures count
       level: 'مبتدئ', // Default level
       rating: 4.5, // Default rating
-      reviews: '1.2k', // Default reviews
       instructor: {
         name: 'الأستاذ أحمد',
         avatar: 'assets/img/instructor-avatar.png',

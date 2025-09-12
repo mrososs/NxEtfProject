@@ -52,7 +52,7 @@ export class CourseInstructorComponent implements OnInit {
         next: (instructors: Instructor[]) => {
           this.categories = instructors.map((instructor) => ({
             label: instructor.name,
-            value: `id:${instructor.id}`,
+            value: instructor.name, // Use name instead of ID for filtering
             checked: false,
           }));
           this.loading = false;
@@ -63,9 +63,10 @@ export class CourseInstructorComponent implements OnInit {
           this.loading = false;
           // Set default categories if both API and local data fail
           this.categories = [
-            { label: 'احمد ياسر', value: 'id:1', checked: false },
-            { label: 'الاء هاني', value: 'id:2', checked: false },
-            { label: 'حسام ابراهيم', value: 'id:3', checked: false },
+            { label: 'احمد ياسر', value: 'احمد ياسر', checked: false },
+            { label: 'الاء هاني', value: 'الاء هاني', checked: false },
+            { label: 'حسام ابراهيم', value: 'حسام ابراهيم', checked: false },
+            { label: 'Test', value: 'Test', checked: false }, // Add Test trainer from API data
           ];
         },
       });
@@ -77,5 +78,13 @@ export class CourseInstructorComponent implements OnInit {
       .map((cat) => cat.value);
 
     this.selectedInstructorsChange.emit(selectedValues);
+  }
+
+  /**
+   * Clear all selected instructors
+   */
+  clearSelection() {
+    this.categories.forEach(cat => cat.checked = false);
+    this.selectedInstructorsChange.emit([]);
   }
 }

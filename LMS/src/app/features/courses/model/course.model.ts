@@ -32,29 +32,50 @@ export interface ApiCourse {
   uploadedAt: string;
 }
 
-// Extended Course interface for UI display
+// Course Details interface matching API courseDetails
+export interface CourseDetails {
+  id: number;
+  intro: string;
+  whatYouWillLearn: string;
+  whyChoose: string;
+  suitableFor: string;
+}
+
+// FAQ interface
+export interface FAQ {
+  id: number;
+  question: string;
+  questionAr?: string;
+  body: string;
+  bodyAr?: string;
+}
+
+// Extended Course interface for UI display matching API response
 export interface Course {
   id: number;
   title: string;
-  img: string;
-  lectures: number;
+  description: string;
+  launchUrl: string;
+  uploadedAt: string;
+  reviews: any[];
+  trainerName: string | null;
+  courseLevel: string;
+  categories: string[];
+  tags: string[];
+  faQs: FAQ[];
+  courseDetails: CourseDetails;
+
+  // UI fields for display
+  img?: string;
+  lectures?: number;
   isFeatured?: boolean;
-  path: string;
-  level: 'مبتدئ' | 'متوسط' | 'متقدم' | string; // Union type with string fallback
-  rating: number;
-  reviews: string; // Formatted as "9k"
-  instructor: Instructor;
-  buttonText?: string; // Optional (default can be "البدء بالمنهج")
-
-  // Optional fields you might need later:
+  path?: string;
+  level?: string;
+  rating?: number;
+  instructor?: Instructor;
+  buttonText?: string;
   price?: string;
-  category?: string;
-  duration?: string; // e.g., "4 أسابيع"
+  duration?: string;
   startDate?: Date | string;
-  progress?: number; // For user progress tracking (0-100)
-
-  // API fields
-  description?: string;
-  launchUrl?: string;
-  uploadedAt?: string;
+  progress?: number;
 }

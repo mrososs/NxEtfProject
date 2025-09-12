@@ -162,4 +162,13 @@ export class CourseCategoryComponent implements OnInit {
       this.selectedCoursesChange.emit([]);
     }
   }
+
+  /**
+   * Clear all selected categories
+   */
+  clearSelection() {
+    this.categories.forEach(cat => cat.checked = false);
+    this.selectedCategoriesChange.emit([]);
+    this.selectedCoursesChange.emit([]);
+  }
 }

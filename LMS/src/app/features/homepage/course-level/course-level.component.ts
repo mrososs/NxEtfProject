@@ -16,7 +16,7 @@ export class CourseLevelComponent {
   checked = false;
   categories = [
     { label: 'مبتدئ', value: 'beginner', checked: false },
-    { label: 'متوسط', value: 'mid', checked: false },
+    { label: 'متوسط', value: 'intermediate', checked: false }, // Match API response
     { label: 'متقدم', value: 'advanced', checked: false },
   ];
 
@@ -26,5 +26,13 @@ export class CourseLevelComponent {
       .map((cat) => cat.value);
 
     this.selectedLevelsChange.emit(selectedValues);
+  }
+
+  /**
+   * Clear all selected levels
+   */
+  clearSelection() {
+    this.categories.forEach(cat => cat.checked = false);
+    this.selectedLevelsChange.emit([]);
   }
 }

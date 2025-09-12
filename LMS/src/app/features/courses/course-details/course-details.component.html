@@ -4,9 +4,15 @@
   <div class="hero-section">
     <div class="hero-image-container">
       <img
-        [src]="course?.img || 'assets/img/default-course.jpg'"
+        [src]="getCourseImage()"
         [alt]="course?.title"
         class="hero-image"
+        style="
+          width: 100%;
+          height: 400px;
+          object-fit: cover;
+          object-position: center;
+        "
       />
       <div class="hero-overlay">
         <div class="container">
@@ -25,14 +31,6 @@
                   *ngIf="enrollmentLoading"
                 ></i>
                 {{ getButtonText() }}
-              </button>
-              <button
-                class="btn btn-outline-primary btn-lg launch-btn"
-                (click)="launchCourse()"
-                [disabled]="!canLaunchCourse() || !isEnrolled"
-              >
-                <i class="pi pi-external-link me-2"></i>
-                فتح في نافذة جديدة
               </button>
             </div>
           </div>
@@ -70,67 +68,6 @@
 
           <!-- Course Content -->
           <div *ngIf="!loading && !error && course" class="course-content">
-            <!-- Course Progress Section -->
-            <div class="progress-section">
-              <div class="progress-card">
-                <h3 class="section-title">
-                  <i class="pi pi-chart-line me-2"></i>
-                  تقدمك في الدورة
-                </h3>
-                <div class="progress-info">
-                  <div class="progress-status">
-                    <span class="status-label">حالة التقدم:</span>
-                    <span
-                      class="status-value"
-                      [class]="'status-' + getProgressStatus()"
-                    >
-                      {{ getProgressStatusText() }}
-                    </span>
-                  </div>
-                  <div class="progress-bar-container">
-                    <div class="progress-bar">
-                      <div
-                        class="progress-fill"
-                        [style.width.%]="getCompletionPercentage()"
-                        [class]="'progress-' + getProgressStatus()"
-                      ></div>
-                    </div>
-                    <span class="progress-percentage"
-                      >{{ getCompletionPercentage() }}%</span
-                    >
-                  </div>
-
-                  <!-- Certificate Button -->
-                  <div
-                    class="certificate-section"
-                    *ngIf="shouldShowCertificateButton()"
-                  >
-                    <button
-                      class="btn btn-success certificate-btn"
-                      (click)="downloadCertificate()"
-                      [disabled]="certificateLoading"
-                    >
-                      <i
-                        class="pi pi-download me-2"
-                        *ngIf="!certificateLoading"
-                      ></i>
-                      <i
-                        class="pi pi-spinner pi-spin me-2"
-                        *ngIf="certificateLoading"
-                      ></i>
-                      {{
-                        certificateLoading ? 'جاري التحميل...' : 'تحميل الشهادة'
-                      }}
-                    </button>
-                    <p class="certificate-note">
-                      <i class="pi pi-check-circle me-1"></i>
-                      تهانينا! لقد أكملت الدورة بنجاح. يمكنك الآن تحميل شهادتك.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- What You Will Learn Section -->
             <div class="learning-section">
               <div class="section-card">

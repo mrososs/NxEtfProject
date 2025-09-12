@@ -10,18 +10,18 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CourseCardComponent } from './course-card/course-card.component';
 import { SerachBarComponent } from './search-bar/serach-bar.component';
-import { BannerComponent } from './banner/banner.component';
 import { CourseCategoryComponent } from './course-category/course-category.component';
 import { CourseLevelComponent } from './course-level/course-level.component';
-import { SelectedCoursesComponent } from './selected-courses/selected-courses.component';
-import { Subject, of, startWith } from 'rxjs';
+import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
+import { Subject, of, BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import {
   debounceTime,
   catchError,
   switchMap,
   distinctUntilChanged,
+  map,
+  startWith,
 } from 'rxjs/operators';
-import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
 import { HomePageService } from '../courses/services/home-page.service';
 import { Course, CourseFilter } from '../courses/model/course.model';
 import {
@@ -30,7 +30,7 @@ import {
 } from '../courses/services/enrollment.service';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
 import { ProfileService } from '../profile/profile.service';
-import { Category } from './model/category.model';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-homepage',
@@ -39,11 +39,9 @@ import { Category } from './model/category.model';
     CommonModule,
     CourseCardComponent,
     SerachBarComponent,
-    BannerComponent,
     CourseCategoryComponent,
     CourseLevelComponent,
     CourseInstructorComponent,
-    SelectedCoursesComponent,
   ],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.scss',
@@ -53,58 +51,71 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   private enrollmentService = inject(EnrollmentService);
   private profileRequiredService = inject(ProfileRequiredService);
   private profileService = inject(ProfileService);
+  private http = inject(HttpClient);
 
   // User name properties
   userFullName: string = '';
   userFirstName: string = '';
   userLastName: string = '';
 
-  // Enrolled courses
-  enrolledCourses: Enrollment[] = [];
-  enrollmentLoading = false;
+  // All courses from API
+  allCourses: Course[] = [];
+  loading = true;
+  error = false;
 
-  // All courses (main display)
-  allCourses$ = this.homepageService.getAllCourses().pipe(
-    catchError((error) => {
-      console.error('Error fetching all courses from API:', error);
-      return of([]); // Return empty array on error
-    })
-  );
-
-  // Filtered courses (for search results)
-  filteredCourses$ = this.homepageService.getFilteredCourses().pipe(
-    catchError((error) => {
-      console.error('Error fetching filtered courses from API:', error);
-      return of([]); // Return empty array on error
-    })
-  );
-
+  // Search and filter properties
   searchTerm = '';
-  showFilters = false;
   selectedCategories: number[] = [];
   selectedLevels: string[] = [];
   selectedInstructors: string[] = [];
-  selectedCourses: Category[] = [];
-  private searchSubject = new Subject<string>();
-  firstCategorySelected = false;
+  showFilters = false;
+
+  // Filter subjects
+  private searchSubject$ = new BehaviorSubject<string>('');
+  private categoriesSubject$ = new BehaviorSubject<number[]>([]);
+  private levelsSubject$ = new BehaviorSubject<string[]>([]);
+  private instructorsSubject$ = new BehaviorSubject<string[]>([]);
+
+  // Filtered courses observable
+  filteredCourses$: Observable<Course[]>;
+
+  // Pagination
+  pageSize = 12;
+  currentPage = 1;
+  totalPages = 1;
 
   @ViewChild('categorySection') categorySectionRef!: ElementRef;
   @ViewChild('searchSection') searchSectionRef!: ElementRef;
+  @ViewChild('categoryComponent') categoryComponent!: any;
+  @ViewChild('levelComponent') levelComponent!: any;
+  @ViewChild('instructorComponent') instructorComponent!: any;
 
   constructor(private router: Router) {
-    // Debug API endpoints on component initialization
-    this.homepageService.debugApiEndpoints();
+    // Setup filtered courses observable
+    this.filteredCourses$ = combineLatest([
+      this.searchSubject$.pipe(startWith('')),
+      this.categoriesSubject$.pipe(startWith([])),
+      this.levelsSubject$.pipe(startWith([])),
+      this.instructorsSubject$.pipe(startWith([])),
+    ]).pipe(
+      map(([searchTerm, categories, levels, instructors]) => {
+        return this.filterCourses(
+          this.allCourses,
+          searchTerm,
+          categories,
+          levels,
+          instructors
+        );
+      })
+    );
   }
 
   ngOnInit(): void {
-    // Initialize with empty filters
-    this.homepageService.updateFilters({});
-
     // Load user name from localStorage
     this.loadUserName();
 
-    // Load enrolled courses
-    this.loadEnrolledCourses();
+    // Load all courses from API
+    this.loadAllCourses();
   }
 
   /**
@@ -177,77 +188,135 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit() {
-    this.searchSubject
-      .pipe(
-        debounceTime(1000), // Reduced debounce time
-        distinctUntilChanged() // Prevent duplicate search terms
-      )
-      .subscribe((term) => {
-        this.searchTerm = term;
-        this.updateSearchFilter(term);
-        if (this.searchSectionRef) {
-          this.searchSectionRef.nativeElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-        }
+  /**
+   * Load all courses from API
+   */
+  loadAllCourses(): void {
+    this.loading = true;
+    this.error = false;
+
+    const apiUrl =
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar';
+
+    this.http
+      .get<{
+        data: Course[];
+        count: number;
+        pageNumber: number;
+        pageSize: number;
+        totalPages: number;
+      }>(apiUrl)
+      .subscribe({
+        next: (response) => {
+          this.allCourses = response.data || [];
+          this.loading = false;
+          console.log('All courses loaded:', this.allCourses);
+        },
+        error: (error) => {
+          console.error('Error loading courses:', error);
+          this.error = true;
+          this.loading = false;
+          this.allCourses = [];
+        },
       });
   }
 
+  /**
+   * Filter courses based on search term, categories, levels, and instructors
+   */
+  private filterCourses(
+    courses: Course[],
+    searchTerm: string,
+    categories: number[],
+    levels: string[],
+    instructors: string[]
+  ): Course[] {
+    if (!courses || courses.length === 0) {
+      return [];
+    }
+
+    return courses.filter((course) => {
+      // Search filter
+      if (searchTerm && searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase().trim();
+        const titleMatch = course.title.toLowerCase().includes(searchLower);
+        const descriptionMatch = course.description
+          ?.toLowerCase()
+          .includes(searchLower);
+        const trainerMatch = course.trainerName
+          ?.toLowerCase()
+          .includes(searchLower);
+
+        if (!titleMatch && !descriptionMatch && !trainerMatch) {
+          return false;
+        }
+      }
+
+      // Category filter
+      if (categories && categories.length > 0) {
+        // This would be implemented when we have category API integration
+        // For now, we'll skip category filtering
+      }
+
+      // Level filter
+      if (levels && levels.length > 0) {
+        if (
+          !course.courseLevel ||
+          !levels.includes(course.courseLevel.toLowerCase())
+        ) {
+          return false;
+        }
+      }
+
+      // Instructor filter
+      if (instructors && instructors.length > 0) {
+        if (!course.trainerName) {
+          return false;
+        }
+
+        const trainerMatch = instructors.some((instructor) =>
+          course.trainerName?.toLowerCase().includes(instructor.toLowerCase())
+        );
+
+        if (!trainerMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  ngAfterViewInit() {
+    // AfterViewInit implementation for future use
+  }
+
   onSearchSectionChange(term: string) {
-    this.searchSubject.next(term); // send value to subject
+    this.searchTerm = term;
+    this.searchSubject$.next(term);
   }
 
   onCategoryChange(selected: number[]) {
-    const hadNoSelectionBefore = this.selectedCategories.length === 0;
     this.selectedCategories = selected;
-
-    // Update filters with selected categories
-    this.updateCategoryFilter(selected);
-
-    // Only scroll if the user added the *first* selection
-    if (
-      hadNoSelectionBefore &&
-      selected.length > 0 &&
-      !this.firstCategorySelected
-    ) {
-      this.firstCategorySelected = true;
-      setTimeout(() => {
-        if (this.categorySectionRef) {
-          this.categorySectionRef.nativeElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-        }
-      }, 100);
-    }
-
-    // Reset scroll flag if all unchecked
-    if (selected.length === 0) {
-      this.firstCategorySelected = false;
-    }
+    this.categoriesSubject$.next(selected);
+    console.log('Category filter changed:', selected);
   }
 
-  onSelectedCoursesChange(selectedCourses: Category[]) {
-    this.selectedCourses = selectedCourses;
+  onSelectedCoursesChange(selectedCourses: any[]) {
+    // This method is called by course-category component
     console.log('Selected courses from categories:', selectedCourses);
-  }
-
-  // Convert category IDs to labels for display
-  getCategoryLabels(categoryIds: number[]): string[] {
-    // Use generic labels based on category IDs
-    return categoryIds.map((id) => `فئة ${id}`);
   }
 
   onLevelChange(selected: string[]) {
     this.selectedLevels = selected;
-    this.updateLevelFilter(selected);
+    this.levelsSubject$.next(selected);
+    console.log('Level filter changed:', selected);
   }
 
   onInstructorChange(selected: string[]) {
     this.selectedInstructors = selected;
-    this.updateInstructorFilter(selected);
+    this.instructorsSubject$.next(selected);
+    console.log('Instructor filter changed:', selected);
   }
 
   // Check profile before accessing protected features
@@ -276,88 +345,36 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Update search filter
-  private updateSearchFilter(searchTerm: string) {
-    if (searchTerm.trim()) {
-      this.homepageService.updateFilters({ search: searchTerm.trim() });
-    } else {
-      // Remove search filter if empty
-      const currentFilters = this.homepageService['_currentFilters'].value;
-      delete currentFilters.search;
-      this.homepageService.updateFilters(currentFilters);
-    }
-  }
-
-  // Update category filter
-  private updateCategoryFilter(categories: number[]) {
-    if (categories.length > 0) {
-      // Convert numbers to strings for the filter
-      const categoryStrings = categories.map((cat) => cat.toString());
-      this.homepageService.updateFilters({ category: categoryStrings });
-    } else {
-      // Remove category filter if empty
-      const currentFilters = this.homepageService['_currentFilters'].value;
-      delete currentFilters.category;
-      this.homepageService.updateFilters(currentFilters);
-    }
-  }
-
-  // Update level filter
-  private updateLevelFilter(levels: string[]) {
-    if (levels.length > 0) {
-      this.homepageService.updateFilters({ level: levels });
-    } else {
-      // Remove level filter if empty
-      const currentFilters = this.homepageService['_currentFilters'].value;
-      delete currentFilters.level;
-      this.homepageService.updateFilters(currentFilters);
-    }
-  }
-
-  // Update instructor filter
-  private updateInstructorFilter(instructors: string[]) {
-    if (instructors.length > 0) {
-      this.homepageService.updateFilters({ instructor: instructors });
-    } else {
-      // Remove instructor filter if empty
-      const currentFilters = this.homepageService['_currentFilters'].value;
-      delete currentFilters.instructor;
-      this.homepageService.updateFilters(currentFilters);
-    }
-  }
-
   // Clear all filters
   clearAllFilters() {
     this.searchTerm = '';
     this.selectedCategories = [];
     this.selectedLevels = [];
     this.selectedInstructors = [];
-    this.homepageService.updateFilters({});
+    this.searchSubject$.next('');
+    this.categoriesSubject$.next([]);
+    this.levelsSubject$.next([]);
+    this.instructorsSubject$.next([]);
+
+    // Clear component selections
+    if (this.categoryComponent) {
+      this.categoryComponent.clearSelection();
+    }
+    if (this.levelComponent) {
+      this.levelComponent.clearSelection();
+    }
+    if (this.instructorComponent) {
+      this.instructorComponent.clearSelection();
+    }
   }
 
   /**
-   * Load enrolled courses
+   * Get paginated courses
    */
-  private loadEnrolledCourses(): void {
-    this.enrollmentLoading = true;
-    this.enrollmentService.getEnrolledCourses().subscribe({
-      next: (enrollments) => {
-        this.enrolledCourses = enrollments;
-        this.enrollmentLoading = false;
-        console.log('Enrolled courses loaded in homepage:', enrollments);
-      },
-      error: (error) => {
-        console.error('Error loading enrolled courses in homepage:', error);
-        this.enrollmentLoading = false;
-      },
-    });
-  }
-
-  /**
-   * Check if user is enrolled in a specific course
-   */
-  isEnrolledInCourse(courseId: number): boolean {
-    return this.enrollmentService.isEnrolledInCourse(courseId);
+  getPaginatedCourses(courses: Course[]): Course[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return courses.slice(startIndex, endIndex);
   }
 
   /**
@@ -370,5 +387,12 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     } else {
       console.warn('No course ID available for navigation');
     }
+  }
+
+  /**
+   * Check if user is enrolled in a specific course
+   */
+  isEnrolledInCourse(courseId: number): boolean {
+    return this.enrollmentService.isEnrolledInCourse(courseId);
   }
 }

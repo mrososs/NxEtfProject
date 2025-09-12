@@ -1,8 +1,14 @@
 <p-card [style]="{ overflow: 'hidden' }">
   <ng-template pTemplate="header">
     <div class="position-relative">
-      <img [src]="course.img" alt="Course Image" class="w-full" />
-      <div class="course-level-badge">{{ course.level }}</div>
+      <img [src]="getCourseImage()" [alt]="course.title" class="w-full" />
+      <div
+        class="course-level-badge"
+        [style.background-color]="getCourseLevelColor()"
+        [class]="getCourseLevelClass()"
+      >
+        {{ getCourseLevel() }}
+      </div>
     </div>
   </ng-template>
 
@@ -12,18 +18,22 @@
 
   <div class="course-meta">
     <div class="meta-item">
-      <img src="../../../../assets/svg/card/video.svg" alt="video" />
-      <span>{{ course.lectures }} محاضره</span>
-    </div>
-
-    <div class="meta-item">
       <img src="../../../../assets/svg/card/chart.svg" alt="chart" />
-      <span>{{ course.level }}</span>
+      <span
+        class="badge"
+        [style.background-color]="getCourseLevelColor()"
+        [style.color]="'white'"
+        [style.padding]="'2px 8px'"
+        [style.border-radius]="'12px'"
+        [style.font-size]="'12px'"
+      >
+        {{ getCourseLevel() }}
+      </span>
     </div>
 
     <div class="meta-item">
       <img src="../../../../assets/svg/card/star.svg" alt="star" />
-      <span class="rating">(4.2k) {{ course.rating }}</span>
+      <span class="rating">{{ getCourseRating() }}</span>
     </div>
 
     <div class="meta-item">
@@ -31,9 +41,9 @@
         <img
           class="img-profile"
           src="../../../../assets/img/student img.png"
-          alt="student"
+          alt="trainer"
         />
-        <span>{{ course.instructor.name }}</span>
+        <span>{{ getTrainerName() }}</span>
       </div>
     </div>
   </div>
