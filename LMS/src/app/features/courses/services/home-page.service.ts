@@ -5,7 +5,6 @@ import {
   Observable,
   switchMap,
   BehaviorSubject,
-  combineLatest,
   shareReplay,
   startWith,
   distinctUntilChanged,
@@ -20,6 +19,7 @@ import {
   ApiInstructorResponse,
   InstructorQueryParams,
 } from '../model/instructor.model';
+import { CourseTracker } from '../model/course-tracker.model';
 import { CourseApiService } from './course-api.service';
 import { InstructorApiService } from './instructor-api.service';
 import { HttpHeaders } from '@angular/common/http';
@@ -56,7 +56,7 @@ export interface ReviewRequest {
 export interface ReviewResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 @Injectable({
@@ -73,15 +73,21 @@ export class HomePageService {
 
   // Separate observables for different course types
   private _allCourses$ = this._courseApiService.getAllCourses('ar').pipe(
-    map((response: any) => {
+    map((response: unknown) => {
       console.log('All courses API response structure:', response);
       let apiCourses: ApiCourse[];
       if (Array.isArray(response)) {
         apiCourses = response;
-      } else if (response && Array.isArray(response.data)) {
-        apiCourses = response.data;
-      } else if (response && Array.isArray(response.courses)) {
-        apiCourses = response.courses;
+      } else if (
+        response &&
+        Array.isArray((response as { data: unknown }).data)
+      ) {
+        apiCourses = (response as { data: ApiCourse[] }).data;
+      } else if (
+        response &&
+        Array.isArray((response as { courses: unknown }).courses)
+      ) {
+        apiCourses = (response as { courses: ApiCourse[] }).courses;
       } else {
         console.warn(
           'Unknown API response structure for all courses:',
@@ -122,7 +128,7 @@ export class HomePageService {
   // Get courses from API only
   getCoursesFromApi(lang = 'ar'): Observable<Course[]> {
     return this._courseApiService.getAllCourses(lang).pipe(
-      map((response: any) => {
+      map((response: unknown) => {
         // Log the response structure for debugging
         console.log('Courses API response structure:', response);
 
@@ -132,12 +138,18 @@ export class HomePageService {
         if (Array.isArray(response)) {
           // Direct array response
           apiCourses = response;
-        } else if (response && Array.isArray(response.data)) {
+        } else if (
+          response &&
+          Array.isArray((response as { data: unknown }).data)
+        ) {
           // Response with data property
-          apiCourses = response.data;
-        } else if (response && Array.isArray(response.courses)) {
+          apiCourses = (response as { data: ApiCourse[] }).data;
+        } else if (
+          response &&
+          Array.isArray((response as { courses: unknown }).courses)
+        ) {
           // Response with courses property
-          apiCourses = response.courses;
+          apiCourses = (response as { courses: ApiCourse[] }).courses;
         } else {
           // Fallback to empty array if structure is unknown
           console.warn('Unknown API response structure for courses:', response);
@@ -157,7 +169,7 @@ export class HomePageService {
     filter?: CourseFilter
   ): Observable<Course[]> {
     return this._courseApiService.getAllCourses(lang, filter).pipe(
-      map((response: any) => {
+      map((response: unknown) => {
         console.log('Filtered courses API response structure:', response);
 
         // Handle different API response structures
@@ -165,10 +177,16 @@ export class HomePageService {
 
         if (Array.isArray(response)) {
           apiCourses = response;
-        } else if (response && Array.isArray(response.data)) {
-          apiCourses = response.data;
-        } else if (response && Array.isArray(response.courses)) {
-          apiCourses = response.courses;
+        } else if (
+          response &&
+          Array.isArray((response as { data: unknown }).data)
+        ) {
+          apiCourses = (response as { data: ApiCourse[] }).data;
+        } else if (
+          response &&
+          Array.isArray((response as { courses: unknown }).courses)
+        ) {
+          apiCourses = (response as { courses: ApiCourse[] }).courses;
         } else {
           console.warn(
             'Unknown API response structure for filtered courses:',
@@ -376,6 +394,45 @@ export class HomePageService {
       )
       .pipe(
         map((response) => response.instructors) // Extract the instructors array
+      );
+  }
+
+  /**
+   * Get course tracker data for a specific course
+   * @param courseId The course ID to get tracker data for
+   * @returns Observable of course tracker data
+   */
+  getCourseTracker(courseId: number): Observable<CourseTracker> {
+    const url = `api/CourseTracker/${courseId}`;
+    return this._http.get<CourseTracker>(url).pipe(
+      catchError((error) => {
+        console.error('Error fetching course tracker:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Launch course and get HTML content for iframe
+   * @param courseId The course ID to launch
+   * @returns Observable of HTML content as text
+   */
+  launchCourse(courseId: number): Observable<string> {
+    const url = `api/CourseTracker/course/launch?courseId=${courseId}`;
+    const headers = new HttpHeaders({
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    });
+
+    return this._http
+      .get(url, {
+        headers,
+        responseType: 'text',
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error launching course:', error);
+          return throwError(() => error);
+        })
       );
   }
 }

@@ -71,6 +71,14 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'course/:id',
+    loadComponent: () =>
+      import('./features/courses/course-player/course-player.component').then(
+        (c) => c.CoursePlayerComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./features/profile/profile.component').then(

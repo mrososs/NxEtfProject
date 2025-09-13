@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -14,6 +14,7 @@ import {
 } from '../services/home-page.service';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Course } from '../model/course.model';
+import { CourseTracker } from '../model/course-tracker.model';
 
 interface Review {
   id: number;
@@ -75,6 +76,7 @@ interface CourseLesson {
 })
 export class CourseDetailsComponent implements OnInit {
   private _route = inject(ActivatedRoute);
+  private _router = inject(Router);
   private _homePageService = inject(HomePageService);
   private _enrollmentService = inject(EnrollmentService);
   private _messageService = inject(MessageService);
@@ -82,6 +84,7 @@ export class CourseDetailsComponent implements OnInit {
 
   course!: Course;
   courseDetails!: CourseDetails;
+  courseTracker?: CourseTracker;
   loading = true;
   error = false;
   courseId!: number;
@@ -430,6 +433,27 @@ export class CourseDetailsComponent implements OnInit {
     console.log('Course ID:', this.courseId);
     console.log('Is Enrolled:', this.isEnrolled);
     console.log('===============================');
+
+    // If enrolled, load course tracker data
+    if (this.isEnrolled) {
+      this.loadCourseTracker();
+    }
+  }
+
+  /**
+   * Load course tracker data for enrolled course
+   */
+  private loadCourseTracker(): void {
+    this._homePageService.getCourseTracker(this.courseId).subscribe({
+      next: (tracker: CourseTracker) => {
+        this.courseTracker = tracker;
+        console.log('Course tracker loaded:', tracker);
+      },
+      error: (error) => {
+        console.error('Error loading course tracker:', error);
+        // Don't show error to user, just log it
+      },
+    });
   }
 
   /**
@@ -446,6 +470,12 @@ export class CourseDetailsComponent implements OnInit {
         this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
           this.courseId
         );
+
+        // Load course tracker if enrolled
+        if (this.isEnrolled) {
+          this.loadCourseTracker();
+        }
+
         this._cdr.detectChanges();
         console.log('Updated enrollment status:', this.isEnrolled);
       },
@@ -455,6 +485,12 @@ export class CourseDetailsComponent implements OnInit {
         this.isEnrolled = this._enrollmentService.isEnrolledInCourse(
           this.courseId
         );
+
+        // Load course tracker if enrolled
+        if (this.isEnrolled) {
+          this.loadCourseTracker();
+        }
+
         this._cdr.detectChanges();
       },
     });
@@ -566,12 +602,8 @@ export class CourseDetailsComponent implements OnInit {
     if (!this.isEnrolled) {
       this.enrollInCourse();
     } else {
-      this._messageService.add({
-        severity: 'info',
-        summary: 'بدء الدورة',
-        detail: 'الدورة جاهزة للبدء',
-        life: 3000,
-      });
+      // Navigate to course player
+      this._router.navigate(['/course', this.courseId]);
     }
   }
 
@@ -580,5 +612,53 @@ export class CourseDetailsComponent implements OnInit {
    */
   getCourseImage(): string {
     return this.course?.img || 'assets/img/homePagecourse.png';
+  }
+
+  /**
+   * Get course progress percentage
+   */
+  getCourseProgress(): number {
+    if (!this.courseTracker) return 0;
+
+    // If course is completed, return 100%
+    if (this.courseTracker.isCompleted) return 100;
+
+    // If data indicates some progress, return a reasonable percentage
+    // This depends on how the SCORM data is structured
+    if (
+      this.courseTracker.data &&
+      this.courseTracker.data !== 'not attempted'
+    ) {
+      // Parse progress from data if available, otherwise return 50% as started
+      return 50;
+    }
+
+    return 0;
+  }
+
+  /**
+   * Check if course is completed
+   */
+  isCourseCompleted(): boolean {
+    return this.courseTracker?.isCompleted || false;
+  }
+
+  /**
+   * Get course status text
+   */
+  getCourseStatusText(): string {
+    if (!this.isEnrolled) return '';
+    if (!this.courseTracker) return 'جاري التحميل...';
+
+    if (this.courseTracker.isCompleted) {
+      return 'مكتملة';
+    } else if (
+      this.courseTracker.data &&
+      this.courseTracker.data !== 'not attempted'
+    ) {
+      return 'في التقدم';
+    } else {
+      return 'لم تبدأ';
+    }
   }
 }
