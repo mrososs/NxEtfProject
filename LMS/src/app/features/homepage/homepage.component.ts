@@ -214,30 +214,81 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     this.loading = true;
     this.error = false;
 
-    const apiUrl =
+    const apiUrlAr =
       'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar';
+    const apiUrlEn =
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=en';
 
-    this.http
-      .get<{
-        data: Course[];
-        count: number;
-        pageNumber: number;
-        pageSize: number;
-        totalPages: number;
-      }>(apiUrl)
-      .subscribe({
-        next: (response) => {
-          this.allCourses = response.data || [];
-          this.loading = false;
-          console.log('All courses loaded:', this.allCourses);
-        },
-        error: (error) => {
-          console.error('Error loading courses:', error);
-          this.error = true;
-          this.loading = false;
-          this.allCourses = [];
-        },
-      });
+    // Load both Arabic and English courses
+    const arabicCourses$ = this.http.get<{
+      data: Course[];
+      count: number;
+      pageNumber: number;
+      pageSize: number;
+      totalPages: number;
+    }>(apiUrlAr);
+
+    const englishCourses$ = this.http.get<{
+      data: Course[];
+      count: number;
+      pageNumber: number;
+      pageSize: number;
+      totalPages: number;
+    }>(apiUrlEn);
+
+    // Combine both API calls
+    combineLatest([arabicCourses$, englishCourses$]).subscribe({
+      next: ([arabicResponse, englishResponse]) => {
+        const arabicCourses = arabicResponse.data || [];
+        const englishCourses = englishResponse.data || [];
+
+        // Merge courses by ID, keeping Arabic as primary and adding English title
+        this.allCourses = this.mergeCoursesWithBothLanguages(
+          arabicCourses,
+          englishCourses
+        );
+        this.loading = false;
+        console.log('All courses loaded with both languages:', this.allCourses);
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+        this.error = true;
+        this.loading = false;
+        this.allCourses = [];
+      },
+    });
+  }
+
+  /**
+   * Merge Arabic and English courses by ID
+   */
+  private mergeCoursesWithBothLanguages(
+    arabicCourses: Course[],
+    englishCourses: Course[]
+  ): Course[] {
+    const mergedCourses: Course[] = [];
+
+    // Create a map of English courses by ID for quick lookup
+    const englishCoursesMap = new Map<number, Course>();
+    englishCourses.forEach((course) => {
+      englishCoursesMap.set(course.id, course);
+    });
+
+    // Process Arabic courses and add English titles
+    arabicCourses.forEach((arabicCourse) => {
+      const englishCourse = englishCoursesMap.get(arabicCourse.id);
+
+      // Create a new course object with both titles
+      const mergedCourse: Course = {
+        ...arabicCourse,
+        titleAr: arabicCourse.title, // Keep Arabic title
+        titleEn: englishCourse?.title || '', // Add English title
+      };
+
+      mergedCourses.push(mergedCourse);
+    });
+
+    return mergedCourses;
   }
 
   /**

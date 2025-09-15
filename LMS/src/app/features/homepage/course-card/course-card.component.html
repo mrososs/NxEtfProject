@@ -13,7 +13,12 @@
   </ng-template>
 
   <ng-template pTemplate="title">
-    {{ course.title }}
+    <div class="course-title-container">
+      <div class="course-title-ar">{{ getCourseTitleAr() }}</div>
+      <div class="course-title-en" *ngIf="getCourseTitleEn()">
+        {{ getCourseTitleEn() }}
+      </div>
+    </div>
   </ng-template>
 
   <div class="course-meta">

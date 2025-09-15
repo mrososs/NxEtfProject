@@ -5,7 +5,7 @@
     <div class="hero-image-container">
       <img
         [src]="getCourseImage()"
-        [alt]="course?.title"
+        [alt]="course.title"
         class="hero-image"
         style="
           width: 100%;
@@ -17,15 +17,22 @@
       <div class="hero-overlay">
         <div class="container">
           <div class="hero-content">
-            <h1 class="hero-title">{{ course?.title || 'تفاصيل الدورة' }}</h1>
+            <h1 class="hero-title">{{ course.title || 'تفاصيل الدورة' }}</h1>
             <p class="hero-subtitle">{{ getCourseIntro() }}</p>
             <div class="launch-buttons">
               <button
-                class="btn btn-primary btn-lg launch-btn me-3"
+                [class]="getButtonClass()"
                 (click)="startCourse()"
                 [disabled]="enrollmentLoading"
               >
-                <i class="pi pi-play me-2" *ngIf="!enrollmentLoading"></i>
+                <i
+                  class="pi pi-play me-2"
+                  *ngIf="!enrollmentLoading && !courseCompleted"
+                ></i>
+                <i
+                  class="pi pi-check me-2"
+                  *ngIf="!enrollmentLoading && courseCompleted"
+                ></i>
                 <i
                   class="pi pi-spinner pi-spin me-2"
                   *ngIf="enrollmentLoading"
@@ -73,7 +80,7 @@
               <div class="section-card">
                 <h2 class="section-title">
                   <i class="pi pi-graduation-cap me-2"></i>
-                  ماذا سوف تتعلم في هذه الدورة؟
+                  محتوي الدورة
                 </h2>
                 <div class="learning-objectives">
                   <div
@@ -84,6 +91,93 @@
                       <i [class]="objective.icon"></i>
                     </div>
                     <span class="objective-text">{{ objective.text }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Course Completion Status Section (Only for enrolled courses) -->
+            <div *ngIf="isEnrolled" class="completion-status-section">
+              <div class="section-card">
+                <h2 class="section-title">
+                  <i class="pi pi-chart-line me-2"></i>
+                  حالة إكمال الدورة
+                </h2>
+                <div class="completion-status-content">
+                  <div class="status-item">
+                    <div class="status-icon">
+                      <i [class]="getCourseCompletionStatusIcon()"></i>
+                    </div>
+                    <div class="status-info">
+                      <h3 class="status-title">حالة الإكمال</h3>
+                      <p
+                        class="status-text"
+                        [class]="getCourseCompletionStatusClass()"
+                      >
+                        {{ getCourseCompletionStatusText() }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="status-item" *ngIf="courseTracker">
+                    <div class="status-icon">
+                      <i class="pi pi-chart-bar"></i>
+                    </div>
+                    <div class="status-info">
+                      <h3 class="status-title">التقدم</h3>
+                      <p class="status-text">
+                        {{ getCourseStatusText() }}
+                      </p>
+                      <div class="progress-bar" *ngIf="getCourseProgress() > 0">
+                        <div
+                          class="progress-fill"
+                          [style.width.%]="getCourseProgress()"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Certificate Section (Only for completed courses) -->
+            <div
+              *ngIf="isEnrolled && courseCompleted"
+              class="certificate-section"
+            >
+              <div class="section-card">
+                <h2 class="section-title">
+                  <i class="pi pi-certificate me-2"></i>
+                  احصل على شهادتك
+                </h2>
+                <div class="certificate-content">
+                  <div class="certificate-info">
+                    <div class="certificate-icon">
+                      <i class="pi pi-award"></i>
+                    </div>
+                    <div class="certificate-text">
+                      <h3>تهانينا! لقد أتممت الدورة بنجاح</h3>
+                      <p>يمكنك الآن تحميل شهادة إتمام الدورة الرسمية</p>
+                    </div>
+                  </div>
+                  <div class="certificate-actions">
+                    <button
+                      class="btn btn-success btn-lg certificate-btn"
+                      (click)="downloadCertificate()"
+                      [disabled]="certificateLoading"
+                    >
+                      <i
+                        class="pi pi-download me-2"
+                        *ngIf="!certificateLoading"
+                      ></i>
+                      <i
+                        class="pi pi-spinner pi-spin me-2"
+                        *ngIf="certificateLoading"
+                      ></i>
+                      {{
+                        certificateLoading ? 'جاري التحميل...' : 'تحميل الشهادة'
+                      }}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -214,38 +308,30 @@
 
                 <!-- Reviews List -->
                 <div class="reviews-list">
-                  <div class="review-item" *ngFor="let review of reviews">
+                  <div
+                    class="review-item"
+                    *ngFor="let review of reviews; trackBy: trackByReviewId"
+                  >
                     <div class="review-header">
                       <div class="reviewer-info">
-                        <img
-                          [src]="review.avatar"
-                          [alt]="review.name"
-                          class="reviewer-avatar"
-                        />
                         <div class="reviewer-details">
-                          <h4 class="reviewer-name">{{ review.name }}</h4>
+                          <h4 class="reviewer-name">مستخدم</h4>
                           <div class="review-rating">
                             <i
                               class="pi pi-star-fill"
                               *ngFor="let star of [1, 2, 3, 4, 5]"
-                              [class.filled]="star <= review.rating"
+                              [class.filled]="star <= review.reviewRating"
                             ></i>
                           </div>
                         </div>
                       </div>
-                      <span class="review-date">{{ review.date }}</span>
                     </div>
-                    <p class="review-text">{{ review.text }}</p>
-                    <div class="review-actions">
-                      <button class="action-btn">
-                        <i class="pi pi-thumbs-up me-1"></i>
-                        مفيد ({{ review.helpful }})
-                      </button>
-                      <button class="action-btn">
-                        <i class="pi pi-thumbs-down me-1"></i>
-                        غير مفيد ({{ review.notHelpful }})
-                      </button>
-                    </div>
+                    <p class="review-text">{{ review.comment }}</p>
+                  </div>
+
+                  <!-- No reviews message -->
+                  <div class="no-reviews" *ngIf="reviews.length === 0">
+                    <p>لا توجد تقييمات بعد. كن أول من يقيم هذه الدورة!</p>
                   </div>
                 </div>
               </div>

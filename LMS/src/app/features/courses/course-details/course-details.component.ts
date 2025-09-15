@@ -15,16 +15,18 @@ import {
 import { EnrollmentService } from '../services/enrollment.service';
 import { Course } from '../model/course.model';
 import { CourseTracker } from '../model/course-tracker.model';
+import {
+  CertificateService,
+  CertificateData,
+} from '../services/certificate.service';
 
 interface Review {
   id: number;
-  name: string;
-  avatar: string;
-  rating: number;
-  text: string;
-  date: string;
-  helpful: number;
-  notHelpful: number;
+  comment: string;
+  reviewRating: number;
+  courseId?: number;
+  userId?: string;
+  reactions?: any;
 }
 
 interface LearningObjective {
@@ -81,6 +83,7 @@ export class CourseDetailsComponent implements OnInit {
   private _enrollmentService = inject(EnrollmentService);
   private _messageService = inject(MessageService);
   private _cdr = inject(ChangeDetectorRef);
+  private _certificateService = inject(CertificateService);
 
   course!: Course;
   courseDetails!: CourseDetails;
@@ -93,39 +96,16 @@ export class CourseDetailsComponent implements OnInit {
   isEnrolled = false;
   enrollmentLoading = false;
 
-  // Mock data for the comprehensive design
-  reviews: Review[] = [
-    {
-      id: 1,
-      name: 'أحمد محمد',
-      avatar: 'assets/img/instructor-avatar.png',
-      rating: 5,
-      text: 'دورة ممتازة ومفيدة جداً، تعلمت الكثير من المعلومات القيمة في مجال الارشاد السياحي.',
-      date: '2024-01-15',
-      helpful: 12,
-      notHelpful: 2,
-    },
-    {
-      id: 2,
-      name: 'سارة أحمد',
-      avatar: 'assets/img/instructor-avatar.png',
-      rating: 5,
-      text: 'المحتوى منظم بشكل رائع والشرح واضح ومفصل. أنصح الجميع بهذه الدورة.',
-      date: '2024-01-10',
-      helpful: 8,
-      notHelpful: 1,
-    },
-    {
-      id: 3,
-      name: 'محمد علي',
-      avatar: 'assets/img/instructor-avatar.png',
-      rating: 4,
-      text: 'دورة جيدة جداً، ساعدتني في فهم أساسيات الارشاد السياحي.',
-      date: '2024-01-05',
-      helpful: 5,
-      notHelpful: 0,
-    },
-  ];
+  // Course completion properties
+  courseCompleted = false;
+  courseCompletionLoading = false;
+
+  // Certificate properties
+  certificateLoading = false;
+  userName = '';
+
+  // Reviews from API
+  reviews: Review[] = [];
 
   learningObjectives: LearningObjective[] = [
     {
@@ -235,6 +215,7 @@ export class CourseDetailsComponent implements OnInit {
     this._route.params.subscribe((params) => {
       this.courseId = +params['id'];
       this.loadCourseDetails();
+      this.loadUserName();
 
       // Load enrolled courses first, then check enrollment status
       this._enrollmentService.getEnrolledCourses().subscribe({
@@ -263,6 +244,10 @@ export class CourseDetailsComponent implements OnInit {
     this._homePageService.getCourseByIdFromApi(this.courseId, 'ar').subscribe({
       next: (course: Course) => {
         this.course = course;
+        console.log('Course loaded with reviews:', course.reviews);
+
+        // Load reviews from course data
+        this.loadReviewsFromCourse();
 
         // Load course details from new API
         this.loadCourseDetailsFromApi();
@@ -294,6 +279,26 @@ export class CourseDetailsComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  /**
+   * Load reviews from course data
+   */
+  private loadReviewsFromCourse(): void {
+    if (this.course?.reviews && Array.isArray(this.course.reviews)) {
+      this.reviews = this.course.reviews.map((review: any) => ({
+        id: review.id || Math.random(), // Use random ID if id is 0
+        comment: review.comment || '',
+        reviewRating: Math.round(review.reviewRating) || 0, // Round to integer
+        courseId: review.courseId,
+        userId: review.userId,
+        reactions: review.reactions,
+      }));
+      console.log('Reviews loaded from course data:', this.reviews);
+    } else {
+      this.reviews = [];
+      console.log('No reviews found in course data');
+    }
   }
 
   private updateLearningObjectives(): void {
@@ -354,28 +359,52 @@ export class CourseDetailsComponent implements OnInit {
       this._homePageService.postCourseReview(reviewData).subscribe({
         next: (response: ReviewResponse) => {
           if (response.success) {
-            // Add review to local list
-            const review: Review = {
-              id: this.reviews.length + 1,
-              name: 'مستخدم جديد',
-              avatar: 'assets/img/instructor-avatar.png',
-              rating: this.newReview.rating,
-              text: this.newReview.text,
-              date: new Date().toISOString().split('T')[0],
-              helpful: 0,
-              notHelpful: 0,
+            // Add review to local list with the response data
+            const newReview: Review = {
+              id: response.id || this.reviews.length + 1,
+              comment: this.newReview.text.trim(),
+              reviewRating: this.newReview.rating,
+              courseId: this.courseId,
+              userId: response.userId,
+              reactions: response.reactions,
             };
-            this.reviews.unshift(review);
+            this.reviews.unshift(newReview);
             this.newReview = { rating: 0, text: '' };
 
-            console.log('Review posted successfully:', response.message);
+            this._messageService.add({
+              severity: 'success',
+              summary: 'تم إضافة التقييم',
+              detail: 'تم إضافة تقييمك بنجاح',
+              life: 3000,
+            });
+
+            console.log('Review posted successfully:', response);
           } else {
+            this._messageService.add({
+              severity: 'error',
+              summary: 'خطأ في إضافة التقييم',
+              detail: response.message || 'حدث خطأ أثناء إضافة التقييم',
+              life: 5000,
+            });
             console.error('Failed to post review:', response.message);
           }
         },
         error: (error) => {
           console.error('Error posting review:', error);
+          this._messageService.add({
+            severity: 'error',
+            summary: 'خطأ في إضافة التقييم',
+            detail: 'حدث خطأ أثناء إضافة التقييم',
+            life: 5000,
+          });
         },
+      });
+    } else {
+      this._messageService.add({
+        severity: 'warning',
+        summary: 'تحذير',
+        detail: 'يرجى إدخال التقييم والتعليق',
+        life: 3000,
       });
     }
   }
@@ -385,7 +414,10 @@ export class CourseDetailsComponent implements OnInit {
    */
   getAverageRating(): number {
     if (this.reviews.length === 0) return 0;
-    const total = this.reviews.reduce((sum, review) => sum + review.rating, 0);
+    const total = this.reviews.reduce(
+      (sum, review) => sum + review.reviewRating,
+      0
+    );
     return Math.round((total / this.reviews.length) * 10) / 10;
   }
 
@@ -394,6 +426,13 @@ export class CourseDetailsComponent implements OnInit {
    */
   getTotalReviews(): number {
     return this.reviews.length;
+  }
+
+  /**
+   * Track by function for reviews
+   */
+  trackByReviewId(index: number, review: Review): any {
+    return review.id || index;
   }
 
   /**
@@ -434,9 +473,10 @@ export class CourseDetailsComponent implements OnInit {
     console.log('Is Enrolled:', this.isEnrolled);
     console.log('===============================');
 
-    // If enrolled, load course tracker data
+    // If enrolled, load course tracker data and completion status
     if (this.isEnrolled) {
       this.loadCourseTracker();
+      this.loadCourseCompletionStatus();
     }
   }
 
@@ -457,6 +497,25 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   /**
+   * Load course completion status
+   */
+  private loadCourseCompletionStatus(): void {
+    this.courseCompletionLoading = true;
+    this._homePageService.isCourseCompleted(this.courseId).subscribe({
+      next: (isCompleted: boolean) => {
+        this.courseCompleted = isCompleted;
+        this.courseCompletionLoading = false;
+        console.log('Course completion status loaded:', isCompleted);
+      },
+      error: (error) => {
+        console.error('Error loading course completion status:', error);
+        this.courseCompletionLoading = false;
+        // Don't show error to user, just log it
+      },
+    });
+  }
+
+  /**
    * Update enrollment status manually
    */
   private updateEnrollmentStatus(): void {
@@ -471,9 +530,10 @@ export class CourseDetailsComponent implements OnInit {
           this.courseId
         );
 
-        // Load course tracker if enrolled
+        // Load course tracker and completion status if enrolled
         if (this.isEnrolled) {
           this.loadCourseTracker();
+          this.loadCourseCompletionStatus();
         }
 
         this._cdr.detectChanges();
@@ -486,9 +546,10 @@ export class CourseDetailsComponent implements OnInit {
           this.courseId
         );
 
-        // Load course tracker if enrolled
+        // Load course tracker and completion status if enrolled
         if (this.isEnrolled) {
           this.loadCourseTracker();
+          this.loadCourseCompletionStatus();
         }
 
         this._cdr.detectChanges();
@@ -589,6 +650,18 @@ export class CourseDetailsComponent implements OnInit {
     }
 
     if (this.isEnrolled) {
+      // Check if course is completed
+      if (this.courseCompleted) {
+        return 'تم الانتهاء من الدورة';
+      }
+      // Check if course has been started (has tracker data)
+      if (
+        this.courseTracker &&
+        this.courseTracker.data &&
+        this.courseTracker.data !== 'not attempted'
+      ) {
+        return 'كمل الدورة';
+      }
       return 'ابدأ الدورة';
     } else {
       return 'سجل في الدورة';
@@ -601,9 +674,61 @@ export class CourseDetailsComponent implements OnInit {
   startCourse(): void {
     if (!this.isEnrolled) {
       this.enrollInCourse();
+    } else if (this.courseCompleted) {
+      // If course is completed, scroll to certificate section
+      this.scrollToCertificateSection();
     } else {
-      // Navigate to course player
-      this._router.navigate(['/course', this.courseId]);
+      // Open course in new window with SCORM player
+      this.openCourseInNewWindow();
+    }
+  }
+
+  /**
+   * Open course in new window with SCORM player
+   */
+  private openCourseInNewWindow(): void {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      this._messageService.add({
+        severity: 'error',
+        summary: 'خطأ',
+        detail: 'لم يتم العثور على رمز المصادقة',
+        life: 5000,
+      });
+      return;
+    }
+
+    // Construct URL with query parameters
+    const scormPlayerUrl =
+      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/scormplayer';
+    const urlWithParams = `${scormPlayerUrl}?token=${encodeURIComponent(
+      token
+    )}&courseId=${this.courseId}`;
+
+    // Open in new window
+    const newWindow = window.open(
+      urlWithParams,
+      '_blank',
+      'width=1200,height=800,scrollbars=yes,resizable=yes'
+    );
+
+    if (!newWindow) {
+      this._messageService.add({
+        severity: 'error',
+        summary: 'خطأ',
+        detail:
+          'تم منع فتح النافذة الجديدة. يرجى السماح بالنوافذ المنبثقة لهذا الموقع.',
+        life: 5000,
+      });
+    } else {
+      this._messageService.add({
+        severity: 'success',
+        summary: 'تم فتح الدورة',
+        detail: 'تم فتح الدورة في نافذة جديدة',
+        life: 3000,
+      });
     }
   }
 
@@ -620,7 +745,10 @@ export class CourseDetailsComponent implements OnInit {
   getCourseProgress(): number {
     if (!this.courseTracker) return 0;
 
-    // If course is completed, return 100%
+    // If course is completed (from API), return 100%
+    if (this.courseCompleted) return 100;
+
+    // If course tracker indicates completion, return 100%
     if (this.courseTracker.isCompleted) return 100;
 
     // If data indicates some progress, return a reasonable percentage
@@ -659,6 +787,148 @@ export class CourseDetailsComponent implements OnInit {
       return 'في التقدم';
     } else {
       return 'لم تبدأ';
+    }
+  }
+
+  /**
+   * Get course completion status text
+   */
+  getCourseCompletionStatusText(): string {
+    if (!this.isEnrolled) return '';
+    if (this.courseCompletionLoading) return 'جاري التحميل...';
+
+    return this.courseCompleted ? 'مكتملة' : 'غير مكتملة';
+  }
+
+  /**
+   * Get course completion status icon
+   */
+  getCourseCompletionStatusIcon(): string {
+    if (!this.isEnrolled) return '';
+    if (this.courseCompletionLoading) return 'pi pi-spinner pi-spin';
+
+    return this.courseCompleted ? 'pi pi-check-circle' : 'pi pi-clock';
+  }
+
+  /**
+   * Get course completion status class
+   */
+  getCourseCompletionStatusClass(): string {
+    if (!this.isEnrolled) return '';
+    if (this.courseCompletionLoading) return 'loading';
+
+    return this.courseCompleted ? 'completed' : 'in-progress';
+  }
+
+  /**
+   * Load user name from localStorage or profile
+   */
+  private loadUserName(): void {
+    // Try to get user name from localStorage first
+    const storedUserName = localStorage.getItem('userFullName');
+    if (storedUserName) {
+      this.userName = storedUserName;
+      return;
+    }
+
+    // Try to get first and last name separately
+    const firstName = localStorage.getItem('userFirstName');
+    const lastName = localStorage.getItem('userLastName');
+    if (firstName && lastName) {
+      this.userName = `${firstName} ${lastName}`;
+      return;
+    } else if (firstName) {
+      this.userName = firstName;
+      return;
+    }
+
+    // Fallback to a default name
+    this.userName = 'المستخدم';
+  }
+
+  /**
+   * Download course completion certificate
+   */
+  downloadCertificate(): void {
+    if (!this.courseCompleted) {
+      this._messageService.add({
+        severity: 'warning',
+        summary: 'تحذير',
+        detail: 'يجب إكمال الدورة أولاً للحصول على الشهادة',
+        life: 5000,
+      });
+      return;
+    }
+
+    this.certificateLoading = true;
+
+    const certificateData: CertificateData = {
+      userName: this.userName,
+      courseName: this.course?.title || 'الدورة التدريبية',
+      completionDate: this._certificateService.getCurrentDateInArabic(),
+      message:
+        'تهانينا على إتمامك هذه الدورة التدريبية بنجاح. نتمنى لك التوفيق في مسيرتك المهنية.',
+    };
+
+    this._certificateService
+      .generateCertificate(certificateData)
+      .then(() => {
+        this.certificateLoading = false;
+        this._messageService.add({
+          severity: 'success',
+          summary: 'تم تحميل الشهادة',
+          detail: 'تم تحميل شهادة إتمام الدورة بنجاح',
+          life: 5000,
+        });
+      })
+      .catch((error) => {
+        this.certificateLoading = false;
+        console.error('Error downloading certificate:', error);
+        this._messageService.add({
+          severity: 'error',
+          summary: 'خطأ في تحميل الشهادة',
+          detail: error.message || 'حدث خطأ أثناء تحميل الشهادة',
+          life: 5000,
+        });
+      });
+  }
+
+  /**
+   * Get button CSS class based on course status
+   */
+  getButtonClass(): string {
+    if (this.enrollmentLoading) {
+      return 'btn btn-primary btn-lg launch-btn me-3';
+    }
+
+    if (this.isEnrolled) {
+      if (this.courseCompleted) {
+        return 'btn btn-success btn-lg launch-btn me-3';
+      }
+      return 'btn btn-primary btn-lg launch-btn me-3';
+    } else {
+      return 'btn btn-primary btn-lg launch-btn me-3';
+    }
+  }
+
+  /**
+   * Scroll to certificate section
+   */
+  private scrollToCertificateSection(): void {
+    const certificateSection = document.querySelector('.certificate-section');
+    if (certificateSection) {
+      certificateSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } else {
+      // If certificate section is not found, show message
+      this._messageService.add({
+        severity: 'info',
+        summary: 'معلومات',
+        detail: 'قسم الشهادة غير متاح حالياً',
+        life: 3000,
+      });
     }
   }
 }

@@ -158,14 +158,14 @@ export class CourseApiService {
       description: apiCourse.description,
       launchUrl: apiCourse.launchUrl,
       uploadedAt: apiCourse.uploadedAt,
-      reviews: [], // Default empty reviews array
-      trainerName: null, // Default trainer name
-      courseLevel: '', // Default course level
-      categories: [], // Default empty categories
-      tags: [], // Default empty tags
-      faQs: [], // Default empty FAQs
-      courseDetails: {
-        // Default course details
+      reviews: apiCourse.reviews || [], // Use reviews from API or empty array
+      trainerName: apiCourse.trainerName || null, // Use trainer name from API
+      courseLevel: apiCourse.courseLevel || '', // Use course level from API
+      categories: apiCourse.categories || [], // Use categories from API
+      tags: apiCourse.tags || [], // Use tags from API
+      faQs: apiCourse.faQs || [], // Use FAQs from API
+      courseDetails: apiCourse.courseDetails || {
+        // Default course details if not provided
         id: 0,
         intro: '',
         whatYouWillLearn: '',

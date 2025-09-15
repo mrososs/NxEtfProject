@@ -1,12 +1,143 @@
 // ========================================
 // NAVBAR COMPONENT STYLES
 // ========================================
-// Note: Main navbar styles are now consolidated in:
-// assets/styles/partiel/shared/_navbar.scss
-//
-// This file is kept for any component-specific overrides
-// that might be needed in the future.
 
-// Component-specific styles can be added here if needed
-// For example, if you need to override certain styles
-// for this specific navbar component instance.
+// User Menu Styles
+.user-menu {
+  position: relative;
+  display: inline-block;
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #f7941e 0%, #e6851a 100%);
+    color: white;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(247, 148, 30, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(247, 148, 30, 0.4);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      margin-left: 0.5rem;
+    }
+
+    .user-avatar-placeholder {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 0.5rem;
+      border: 2px solid white;
+
+      i {
+        color: white;
+        font-size: 1rem;
+      }
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin: 0 0.5rem;
+    }
+
+    i.pi-chevron-down {
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+
+    &.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      color: #333;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #f8f9fa;
+
+      &:last-child {
+        border-bottom: none;
+        border-radius: 0 0 8px 8px;
+      }
+
+      &:first-child {
+        border-radius: 8px 8px 0 0;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg, #f7941e20 0%, #f7941e40 100%);
+        color: #f7941e;
+      }
+
+      i {
+        font-size: 0.9rem;
+        width: 16px;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 991.98px) {
+  .user-menu {
+    .user-profile {
+      padding: 0.4rem 0.8rem;
+
+      .user-avatar,
+      .user-avatar-placeholder {
+        width: 28px;
+        height: 28px;
+      }
+
+      .user-name {
+        font-size: 0.8rem;
+        margin: 0 0.3rem;
+      }
+    }
+
+    .user-dropdown {
+      min-width: 160px;
+
+      .dropdown-item {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}

@@ -7,309 +7,798 @@
 <section class="profile-page py-5">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-12 col-md-8 col-lg-6">
-        <div class="profile-card">
-          <div class="card-header">
-            <h2 class="text-center mb-4">
-              {{ isEditMode ? 'تعديل الملف الشخصي' : 'إنشاء ملف شخصي جديد' }}
-            </h2>
-          </div>
-
-          <div class="card-body">
-            <!-- Show special message when in 500 error mode -->
-            <div
-              *ngIf="isIn500ErrorMode()"
-              class="alert alert-warning mb-4"
-              role="alert"
-            >
-              <i class="pi pi-exclamation-triangle me-2"></i>
-              <strong>تنبيه:</strong> حدث خطأ في الخادم. يمكنك إدخال بيانات
-              الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.
-            </div>
-
-            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-              <!-- First Name -->
-              <div class="form-group mb-3">
-                <label for="firstName" class="form-label">الاسم الأول *</label>
-                <input
-                  id="firstName"
-                  type="text"
-                  pInputText
-                  formControlName="firstName"
-                  class="form-control"
-                  [class.is-invalid]="
-                    profileForm.get('firstName')?.invalid &&
-                    profileForm.get('firstName')?.touched
+      <div class="col-12">
+        <!-- Tabs with improved styling -->
+        <p-tabView class="custom-tabview">
+          <!-- Personal Profile Tab -->
+          <p-tabPanel header="الملف الشخصي">
+            <div class="profile-content">
+              <!-- Edit/View Toggle Button -->
+              <div class="text-end mb-4" *ngIf="currentProfile">
+                <button
+                  pButton
+                  [label]="
+                    isEditMode ? 'عرض الملف الشخصي' : 'تعديل الملف الشخصي'
                   "
-                  placeholder="أدخل الاسم الأول"
-                />
-                <div
-                  class="invalid-feedback"
-                  *ngIf="
-                    profileForm.get('firstName')?.invalid &&
-                    profileForm.get('firstName')?.touched
-                  "
-                >
-                  {{ getFieldError('firstName') }}
+                  [icon]="isEditMode ? 'pi pi-eye' : 'pi pi-pencil'"
+                  class="p-button-outlined p-button-sm"
+                  (click)="toggleEditMode()"
+                ></button>
+              </div>
+              <!-- Show special message when in 500 error mode -->
+              <div
+                *ngIf="isIn500ErrorMode()"
+                class="alert alert-warning mb-4"
+                role="alert"
+              >
+                <i class="pi pi-exclamation-triangle me-2"></i>
+                <strong>تنبيه:</strong> حدث خطأ في الخادم. يمكنك إدخال بيانات
+                الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.
+              </div>
+
+              <!-- Profile Form -->
+              <form
+                [formGroup]="profileForm"
+                (ngSubmit)="onSubmit()"
+                *ngIf="isEditMode"
+              >
+                <!-- Basic Information Section -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-user me-2"></i>
+                      المعلومات الأساسية
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <!-- First Name -->
+                      <div class="col-md-4 mb-3">
+                        <label for="firstName" class="form-label"
+                          >الاسم الأول *</label
+                        >
+                        <input
+                          id="firstName"
+                          type="text"
+                          pInputText
+                          formControlName="firstName"
+                          class="form-control"
+                          [class.is-invalid]="
+                            profileForm.get('firstName')?.invalid &&
+                            profileForm.get('firstName')?.touched
+                          "
+                          placeholder="أدخل الاسم الأول"
+                        />
+                        <div
+                          class="invalid-feedback"
+                          *ngIf="
+                            profileForm.get('firstName')?.invalid &&
+                            profileForm.get('firstName')?.touched
+                          "
+                        >
+                          {{ getFieldError('firstName') }}
+                        </div>
+                      </div>
+
+                      <!-- Middle Name -->
+                      <div class="col-md-4 mb-3">
+                        <label for="middleName" class="form-label"
+                          >الاسم الأوسط</label
+                        >
+                        <input
+                          id="middleName"
+                          type="text"
+                          pInputText
+                          formControlName="middleName"
+                          class="form-control"
+                          placeholder="أدخل الاسم الأوسط (اختياري)"
+                        />
+                      </div>
+
+                      <!-- Last Name -->
+                      <div class="col-md-4 mb-3">
+                        <label for="lastName" class="form-label"
+                          >الاسم الأخير *</label
+                        >
+                        <input
+                          id="lastName"
+                          type="text"
+                          pInputText
+                          formControlName="lastName"
+                          class="form-control"
+                          [class.is-invalid]="
+                            profileForm.get('lastName')?.invalid &&
+                            profileForm.get('lastName')?.touched
+                          "
+                          placeholder="أدخل الاسم الأخير"
+                        />
+                        <div
+                          class="invalid-feedback"
+                          *ngIf="
+                            profileForm.get('lastName')?.invalid &&
+                            profileForm.get('lastName')?.touched
+                          "
+                        >
+                          {{ getFieldError('lastName') }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="mb-3">
+                      <label class="form-label">الصورة الشخصية</label>
+                      <div class="image-upload-container">
+                        <!-- Current Image Preview -->
+                        <div *ngIf="imagePreview" class="current-image mb-3">
+                          <img
+                            [src]="imagePreview"
+                            alt="Profile Image"
+                            class="profile-image-preview"
+                          />
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger mt-2"
+                            (click)="removeImage()"
+                          >
+                            <i class="pi pi-trash"></i> إزالة الصورة
+                          </button>
+                        </div>
+
+                        <!-- File Upload -->
+                        <p-fileUpload
+                          #fileUpload
+                          mode="basic"
+                          name="image"
+                          accept="image/*"
+                          [maxFileSize]="5000000"
+                          chooseLabel="اختيار صورة"
+                          [auto]="true"
+                          (onSelect)="onImageSelect($event)"
+                          [showCancelButton]="false"
+                          [showUploadButton]="false"
+                          [customUpload]="true"
+                          class="mb-2"
+                        >
+                        </p-fileUpload>
+
+                        <small class="text-muted">
+                          الحد الأقصى لحجم الملف: 5 ميجابايت. الأنواع المدعومة:
+                          JPG, PNG, GIF
+                        </small>
+                      </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                      <label for="description" class="form-label">الوصف</label>
+                      <textarea
+                        id="description"
+                        pInputTextarea
+                        formControlName="description"
+                        class="form-control"
+                        rows="4"
+                        placeholder="أدخل وصفاً مختصراً عن نفسك (اختياري)"
+                      >
+                      </textarea>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Middle Name -->
-              <div class="form-group mb-3">
-                <label for="middleName" class="form-label">الاسم الأوسط</label>
-                <input
-                  id="middleName"
-                  type="text"
-                  pInputText
-                  formControlName="middleName"
-                  class="form-control"
-                  placeholder="أدخل الاسم الأوسط (اختياري)"
-                />
-              </div>
-
-              <!-- Last Name -->
-              <div class="form-group mb-3">
-                <label for="lastName" class="form-label">الاسم الأخير *</label>
-                <input
-                  id="lastName"
-                  type="text"
-                  pInputText
-                  formControlName="lastName"
-                  class="form-control"
-                  [class.is-invalid]="
-                    profileForm.get('lastName')?.invalid &&
-                    profileForm.get('lastName')?.touched
-                  "
-                  placeholder="أدخل الاسم الأخير"
-                />
-                <div
-                  class="invalid-feedback"
-                  *ngIf="
-                    profileForm.get('lastName')?.invalid &&
-                    profileForm.get('lastName')?.touched
-                  "
-                >
-                  {{ getFieldError('lastName') }}
-                </div>
-              </div>
-
-              <!-- Image Upload -->
-              <div class="form-group mb-4">
-                <label class="form-label">الصورة الشخصية</label>
-                <div class="image-upload-container">
-                  <!-- Current Image Preview -->
-                  <div *ngIf="imagePreview" class="current-image mb-3">
-                    <img
-                      [src]="imagePreview"
-                      alt="Profile Image"
-                      class="profile-image-preview"
-                    />
+                <!-- Education Section -->
+                <div class="card mb-4">
+                  <div
+                    class="card-header d-flex justify-content-between align-items-center"
+                  >
+                    <h5 class="mb-0">
+                      <i class="pi pi-graduation-cap me-2"></i>
+                      التعليم
+                    </h5>
                     <button
                       type="button"
-                      class="btn btn-sm btn-outline-danger mt-2"
-                      (click)="removeImage()"
-                    >
-                      <i class="pi pi-trash"></i> إزالة الصورة
-                    </button>
+                      pButton
+                      icon="pi pi-plus"
+                      class="p-button-sm p-button-outlined"
+                      (click)="addEducation()"
+                    ></button>
                   </div>
-
-                  <!-- File Upload -->
-                  <p-fileUpload
-                    #fileUpload
-                    mode="basic"
-                    name="image"
-                    accept="image/*"
-                    [maxFileSize]="5000000"
-                    chooseLabel="اختيار صورة"
-                    [auto]="true"
-                    (onSelect)="onImageSelect($event)"
-                    [showCancelButton]="false"
-                    [showUploadButton]="false"
-                    [customUpload]="true"
-                    class="mb-2"
-                  >
-                  </p-fileUpload>
-
-                  <small class="text-muted">
-                    الحد الأقصى لحجم الملف: 5 ميجابايت. الأنواع المدعومة: JPG,
-                    PNG, GIF
-                  </small>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div class="form-group mb-4">
-                <label for="description" class="form-label">الوصف</label>
-                <textarea
-                  id="description"
-                  pInputTextarea
-                  formControlName="description"
-                  class="form-control"
-                  rows="4"
-                  placeholder="أدخل وصفاً مختصراً عن نفسك (اختياري)"
-                >
-                </textarea>
-              </div>
-
-              <!-- Submit Button -->
-              <div class="form-group text-center">
-                <button
-                  type="submit"
-                  pButton
-                  [disabled]="isLoading || profileForm.invalid"
-                  [loading]="isLoading"
-                  class="btn btn-primary btn-lg px-5"
-                >
-                  <i
-                    class="pi"
-                    [class.pi-user-plus]="!isEditMode"
-                    [class.pi-user-edit]="isEditMode"
-                  ></i>
-                  {{ isEditMode ? 'تحديث الملف الشخصي' : 'إنشاء الملف الشخصي' }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- User Courses Section -->
-<section class="user-courses py-5" *ngIf="userCourses.length > 0">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12">
-        <div class="courses-card">
-          <div class="card-header">
-            <h2 class="text-center mb-4">دوراتي</h2>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div
-                class="col-12 col-md-6 col-lg-4 mb-3"
-                *ngFor="let course of userCourses"
-              >
-                <div class="course-item">
-                  <div class="course-content">
-                    <h5 class="course-title">{{ course.title }}</h5>
-                    <p class="course-description">{{ course.description }}</p>
-                    <div class="course-meta">
-                      <small class="text-muted">
-                        تاريخ الرفع:
-                        {{ course.uploadedAt | date : 'shortDate' }}
-                      </small>
-                    </div>
-                    <div class="course-actions mt-2">
-                      <button
-                        class="btn btn-primary btn-sm"
-                        (click)="launchCourse(course.launchUrl)"
-                      >
-                        بدء الدورة
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Enrolled Courses Section -->
-<section
-  class="enrolled-courses py-5"
-  *ngIf="enrolledCourses.length > 0 || enrollmentLoading"
->
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12">
-        <div class="courses-card">
-          <div class="card-header">
-            <h2 class="text-center mb-4">الدورات المسجلة</h2>
-          </div>
-          <div class="card-body">
-            <!-- Loading State -->
-            <div *ngIf="enrollmentLoading" class="text-center py-4">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
-              </div>
-              <p class="mt-2">جاري تحميل الدورات المسجلة...</p>
-            </div>
-
-            <!-- Enrolled Courses -->
-            <div
-              class="row"
-              *ngIf="!enrollmentLoading && enrolledCourses.length > 0"
-            >
-              <div
-                class="col-12 col-md-6 col-lg-4 mb-3"
-                *ngFor="let enrollment of enrolledCourses"
-              >
-                <div class="course-item enrolled-course">
-                  <div class="course-content">
-                    <div class="enrollment-badge">
-                      <i class="pi pi-check-circle"></i>
-                      مسجل
-                    </div>
-                    <h5 class="course-title">
-                      {{ enrollment.course?.title || 'دورة تدريبية' }}
-                    </h5>
-                    <p class="course-description">
-                      {{ enrollment.course?.description || 'وصف الدورة' }}
-                    </p>
-                    <div class="course-meta">
-                      <small class="text-muted">
-                        تاريخ التسجيل:
-                        {{ enrollment.enrollmentDate | date : 'shortDate' }}
-                      </small>
-                      <br />
-                      <small class="text-muted">
-                        المستوى: {{ enrollment.course?.level || 'غير محدد' }}
-                      </small>
-                    </div>
-                    <div class="course-actions mt-2">
-                      <button
-                        class="btn btn-primary btn-sm me-2"
-                        (click)="
-                          launchCourse(enrollment.course?.launchUrl || '')
+                  <div class="card-body">
+                    <div formArrayName="educations">
+                      <div
+                        *ngFor="
+                          let education of educationsArray.controls;
+                          let i = index
                         "
-                        [disabled]="!enrollment.course?.launchUrl"
+                        [formGroupName]="i"
+                        class="education-item mb-3 p-3 border rounded"
                       >
-                        <i class="pi pi-play me-1"></i>
-                        بدء الدورة
-                      </button>
-                      <button
-                        class="btn btn-danger btn-sm"
-                        (click)="deleteEnrollment(enrollment.id)"
-                        title="حذف التسجيل من الدورة"
+                        <div class="row">
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">المعهد/الجامعة</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="institute"
+                              class="form-control"
+                              placeholder="اسم المعهد أو الجامعة"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">الدرجة العلمية</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="degree"
+                              class="form-control"
+                              placeholder="مثل: بكالوريوس، ماجستير"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">التقدير</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="grade"
+                              class="form-control"
+                              placeholder="مثل: ممتاز، جيد جداً"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">التخصص</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="specialization"
+                              class="form-control"
+                              placeholder="التخصص الدراسي"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-sm p-button-danger p-button-outlined"
+                          (click)="removeEducation(i)"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Experience Section -->
+                <div class="card mb-4">
+                  <div
+                    class="card-header d-flex justify-content-between align-items-center"
+                  >
+                    <h5 class="mb-0">
+                      <i class="pi pi-briefcase me-2"></i>
+                      الخبرة العملية
+                    </h5>
+                    <button
+                      type="button"
+                      pButton
+                      icon="pi pi-plus"
+                      class="p-button-sm p-button-outlined"
+                      (click)="addExperience()"
+                    ></button>
+                  </div>
+                  <div class="card-body">
+                    <div formArrayName="experiences">
+                      <div
+                        *ngFor="
+                          let experience of experiencesArray.controls;
+                          let i = index
+                        "
+                        [formGroupName]="i"
+                        class="experience-item mb-3 p-3 border rounded"
                       >
-                        <i class="pi pi-trash me-1"></i>
-                        حذف
-                      </button>
+                        <div class="row">
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">اسم الشركة</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="employer"
+                              class="form-control"
+                              placeholder="اسم الشركة أو المؤسسة"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">المنصب</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="role"
+                              class="form-control"
+                              placeholder="المنصب أو الوظيفة"
+                            />
+                          </div>
+                          <div class="col-md-3 mb-2">
+                            <label class="form-label">تاريخ البداية</label>
+                            <p-calendar
+                              formControlName="startDate"
+                              [showIcon]="true"
+                              dateFormat="dd/mm/yy"
+                              placeholder="تاريخ البداية"
+                            ></p-calendar>
+                          </div>
+                          <div class="col-md-3 mb-2">
+                            <label class="form-label">تاريخ النهاية</label>
+                            <p-calendar
+                              formControlName="endDate"
+                              [showIcon]="true"
+                              dateFormat="dd/mm/yy"
+                              placeholder="تاريخ النهاية"
+                              [disabled]="experience.get('isCurrent')?.value"
+                            ></p-calendar>
+                          </div>
+                          <div class="col-12 mb-2">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                formControlName="isCurrent"
+                                id="isCurrent{{ i }}"
+                              />
+                              <label
+                                class="form-check-label"
+                                for="isCurrent{{ i }}"
+                              >
+                                العمل الحالي
+                              </label>
+                            </div>
+                          </div>
+                          <div class="col-12 mb-2">
+                            <label class="form-label">الوصف</label>
+                            <textarea
+                              pInputTextarea
+                              formControlName="description"
+                              class="form-control"
+                              rows="3"
+                              placeholder="وصف المهام والمسؤوليات"
+                            ></textarea>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-sm p-button-danger p-button-outlined"
+                          (click)="removeExperience(i)"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="card mb-4">
+                  <div
+                    class="card-header d-flex justify-content-between align-items-center"
+                  >
+                    <h5 class="mb-0">
+                      <i class="pi pi-star me-2"></i>
+                      المهارات
+                    </h5>
+                    <button
+                      type="button"
+                      pButton
+                      icon="pi pi-plus"
+                      class="p-button-sm p-button-outlined"
+                      (click)="addSkill()"
+                    ></button>
+                  </div>
+                  <div class="card-body">
+                    <div formArrayName="skills">
+                      <div
+                        *ngFor="
+                          let skill of skillsArray.controls;
+                          let i = index
+                        "
+                        [formGroupName]="i"
+                        class="skill-item mb-3 p-3 border rounded"
+                      >
+                        <div class="row">
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">اسم المهارة</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="name"
+                              class="form-control"
+                              placeholder="اسم المهارة"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">الوصف</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="description"
+                              class="form-control"
+                              placeholder="وصف المهارة"
+                            />
+                          </div>
+                          <div class="col-md-6 mb-2">
+                            <label class="form-label">مستوى الإتقان</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="proficiency"
+                              class="form-control"
+                              placeholder="مستوى الإتقان (مبتدئ، متوسط، متقدم)"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-sm p-button-danger p-button-outlined"
+                          (click)="removeSkill(i)"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contacts Section -->
+                <div class="card mb-4">
+                  <div
+                    class="card-header d-flex justify-content-between align-items-center"
+                  >
+                    <h5 class="mb-0">
+                      <i class="pi pi-phone me-2"></i>
+                      معلومات التواصل
+                    </h5>
+                    <button
+                      type="button"
+                      pButton
+                      icon="pi pi-plus"
+                      class="p-button-sm p-button-outlined"
+                      (click)="addContact()"
+                    ></button>
+                  </div>
+                  <div class="card-body">
+                    <div formArrayName="contacts">
+                      <div
+                        *ngFor="
+                          let contact of contactsArray.controls;
+                          let i = index
+                        "
+                        [formGroupName]="i"
+                        class="contact-item mb-3 p-3 border rounded"
+                      >
+                        <div class="row">
+                          <div class="col-md-4 mb-2">
+                            <label class="form-label">نوع التواصل</label>
+                            <p-dropdown
+                              formControlName="contactType"
+                              [options]="contactTypes"
+                              placeholder="اختر نوع التواصل"
+                              optionLabel="label"
+                              optionValue="value"
+                            ></p-dropdown>
+                          </div>
+                          <div class="col-md-8 mb-2">
+                            <label class="form-label">معلومات التواصل</label>
+                            <input
+                              type="text"
+                              pInputText
+                              formControlName="contactDetail"
+                              class="form-control"
+                              placeholder="مثال: +201234567890 أو example@email.com"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-sm p-button-danger p-button-outlined"
+                          (click)="removeContact(i)"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                  <button
+                    type="submit"
+                    pButton
+                    [disabled]="isLoading || profileForm.invalid"
+                    [loading]="isLoading"
+                    class="btn btn-primary btn-lg px-5"
+                  >
+                    <i
+                      class="pi"
+                      [class.pi-user-plus]="!isEditMode"
+                      [class.pi-user-edit]="isEditMode"
+                    ></i>
+                    {{
+                      isEditMode ? 'تحديث الملف الشخصي' : 'إنشاء الملف الشخصي'
+                    }}
+                  </button>
+                </div>
+              </form>
+
+              <!-- View Mode -->
+              <div *ngIf="!isEditMode && currentProfile" class="profile-view">
+                <!-- Basic Information Display -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-user me-2"></i>
+                      المعلومات الأساسية
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-3 text-center mb-3">
+                        <img
+                          [src]="
+                            currentProfile.imageLink ||
+                            'assets/img/instructor-avatar.png'
+                          "
+                          alt="Profile Image"
+                          class="profile-image-display"
+                        />
+                      </div>
+                      <div class="col-md-9">
+                        <h4>{{ getFullName() }}</h4>
+                        <p class="text-muted">
+                          {{ currentProfile.description }}
+                        </p>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <strong>البريد الإلكتروني:</strong>
+                            <p>
+                              {{ getContactByType('email') || 'غير محدد' }}
+                            </p>
+                          </div>
+                          <div class="col-md-6">
+                            <strong>رقم الهاتف:</strong>
+                            <p>
+                              {{ getContactByType('phone') || 'غير محدد' }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Education Display -->
+                <div
+                  class="card mb-4"
+                  *ngIf="
+                    currentProfile.educations &&
+                    currentProfile.educations.length > 0
+                  "
+                >
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-graduation-cap me-2"></i>
+                      التعليم
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div
+                        class="col-md-6 mb-3"
+                        *ngFor="let education of currentProfile.educations"
+                      >
+                        <div class="education-item p-3 border rounded">
+                          <h6>{{ education.institute }}</h6>
+                          <p class="mb-1">
+                            <strong>الدرجة:</strong> {{ education.degree }}
+                          </p>
+                          <p class="mb-1">
+                            <strong>التقدير:</strong> {{ education.grade }}
+                          </p>
+                          <p class="mb-0">
+                            <strong>التخصص:</strong>
+                            {{ education.specialization }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Experience Display -->
+                <div
+                  class="card mb-4"
+                  *ngIf="
+                    currentProfile.experiences &&
+                    currentProfile.experiences.length > 0
+                  "
+                >
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-briefcase me-2"></i>
+                      الخبرة العملية
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div
+                        class="col-12 mb-3"
+                        *ngFor="let experience of currentProfile.experiences"
+                      >
+                        <div class="experience-item p-3 border rounded">
+                          <h6>{{ experience.employer }}</h6>
+                          <p class="mb-1" *ngIf="experience.role">
+                            <strong>المنصب:</strong> {{ experience.role }}
+                          </p>
+                          <p class="mb-1">
+                            <strong>الفترة:</strong>
+                            {{ experience.startDate | date : 'MMM yyyy' }} -
+                            {{
+                              experience.isCurrent
+                                ? 'حتى الآن'
+                                : (experience.endDate | date : 'MMM yyyy')
+                            }}
+                          </p>
+                          <p class="mb-0" *ngIf="experience.description">
+                            {{ experience.description }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Skills Display -->
+                <div
+                  class="card mb-4"
+                  *ngIf="
+                    currentProfile.skills && currentProfile.skills.length > 0
+                  "
+                >
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-star me-2"></i>
+                      المهارات
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div
+                        class="col-md-6 mb-3"
+                        *ngFor="let skill of currentProfile.skills"
+                      >
+                        <div class="skill-item p-3 border rounded">
+                          <h6>{{ skill.name }}</h6>
+                          <p class="mb-1" *ngIf="skill.description">
+                            {{ skill.description }}
+                          </p>
+                          <p class="mb-0" *ngIf="skill.proficiency">
+                            <strong>مستوى الإتقان:</strong>
+                            {{ skill.proficiency }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contacts Display -->
+                <div
+                  class="card mb-4"
+                  *ngIf="
+                    currentProfile.contacts &&
+                    currentProfile.contacts.length > 0
+                  "
+                >
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="pi pi-phone me-2"></i>
+                      معلومات التواصل
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div
+                        class="col-md-6 mb-3"
+                        *ngFor="let contact of currentProfile.contacts"
+                      >
+                        <div class="contact-item p-3 border rounded">
+                          <h6>
+                            {{ getContactTypeLabel(contact.contactType) }}
+                          </h6>
+                          <p class="mb-0">{{ contact.contactDetail }}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </p-tabPanel>
 
-            <!-- No Enrolled Courses -->
-            <div
-              *ngIf="!enrollmentLoading && enrolledCourses.length === 0"
-              class="text-center py-4"
-            >
-              <i class="pi pi-book text-muted" style="font-size: 3rem"></i>
-              <h5 class="mt-3">لا توجد دورات مسجلة</h5>
-              <p class="text-muted">
-                قم بالتسجيل في الدورات التدريبية لرؤيتها هنا
-              </p>
+          <!-- Enrolled Courses Tab -->
+          <p-tabPanel header="الدورات المسجلة">
+            <div class="enrolled-courses-content">
+              <!-- Loading State -->
+              <div *ngIf="enrollmentLoading" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="mt-2">جاري تحميل الدورات المسجلة...</p>
+              </div>
+
+              <!-- Enrolled Courses -->
+              <div
+                class="row"
+                *ngIf="!enrollmentLoading && enrolledCourses.length > 0"
+              >
+                <div
+                  class="col-12 col-md-6 col-lg-4 mb-3"
+                  *ngFor="let enrollment of enrolledCourses"
+                >
+                  <div class="course-item enrolled-course">
+                    <div class="course-content">
+                      <div class="enrollment-badge">
+                        <i class="pi pi-check-circle"></i>
+                        مسجل
+                      </div>
+                      <h5 class="course-title">
+                        {{ enrollment.course?.title || 'دورة تدريبية' }}
+                      </h5>
+                      <p class="course-description">
+                        {{ enrollment.course?.description || 'وصف الدورة' }}
+                      </p>
+                      <div class="course-meta">
+                        <small class="text-muted">
+                          تاريخ التسجيل:
+                          {{ enrollment.enrolledAt | date : 'shortDate' }}
+                        </small>
+                        <br />
+                        <small class="text-muted">
+                          المستوى:
+                          {{ enrollment.course?.courseLevel || 'غير محدد' }}
+                        </small>
+                      </div>
+                      <div class="course-actions mt-2">
+                        <button
+                          class="btn btn-primary btn-sm me-2"
+                          (click)="goToCourseDetails(enrollment.course?.id)"
+                          [disabled]="!enrollment.course?.id"
+                        >
+                          <i class="pi pi-play me-1"></i>
+                          أكمل الدورة
+                        </button>
+                        <button
+                          class="btn btn-danger btn-sm"
+                          (click)="deleteEnrollment(enrollment.id)"
+                          title="حذف التسجيل من الدورة"
+                        >
+                          <i class="pi pi-trash me-1"></i>
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Enrolled Courses -->
+              <div
+                *ngIf="!enrollmentLoading && enrolledCourses.length === 0"
+                class="text-center py-4"
+              >
+                <i class="pi pi-book text-muted" style="font-size: 3rem"></i>
+                <h5 class="mt-3">لا توجد دورات مسجلة</h5>
+                <p class="text-muted">
+                  قم بالتسجيل في الدورات التدريبية لرؤيتها هنا
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
+          </p-tabPanel>
+        </p-tabView>
       </div>
     </div>
   </div>

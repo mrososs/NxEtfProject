@@ -54,9 +54,16 @@ export interface ReviewRequest {
 }
 
 export interface ReviewResponse {
-  success: boolean;
-  message: string;
-  data?: unknown;
+  id: number;
+  comment: string;
+  reviewRating: number;
+  courseId: number;
+  course?: any;
+  reactions?: any;
+  userId: string;
+  user?: any;
+  success?: boolean;
+  message?: string;
 }
 
 @Injectable({
@@ -272,13 +279,28 @@ export class HomePageService {
    * @returns Observable of review response
    */
   postCourseReview(reviewData: ReviewRequest): Observable<ReviewResponse> {
-    const url = 'api/Course/review';
+    const url = 'api/Course/reviews';
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
 
     return this._http.post<ReviewResponse>(url, reviewData, { headers }).pipe(
+      map((response: any) => {
+        // Transform the response to match our interface
+        return {
+          id: response.id,
+          comment: response.comment,
+          reviewRating: response.reviewRating,
+          courseId: response.courseId,
+          course: response.course,
+          reactions: response.reactions,
+          userId: response.userId,
+          user: response.user,
+          success: true,
+          message: 'Review posted successfully',
+        };
+      }),
       catchError((error) => {
         console.error('Error posting review:', error);
         return throwError(() => error);
@@ -407,6 +429,21 @@ export class HomePageService {
     return this._http.get<CourseTracker>(url).pipe(
       catchError((error) => {
         console.error('Error fetching course tracker:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Check if course is completed
+   * @param courseId The course ID to check completion status for
+   * @returns Observable of boolean indicating completion status
+   */
+  isCourseCompleted(courseId: number): Observable<boolean> {
+    const url = `api/CourseTracker/${courseId}/isCompleted`;
+    return this._http.get<boolean>(url).pipe(
+      catchError((error) => {
+        console.error('Error checking course completion status:', error);
         return throwError(() => error);
       })
     );

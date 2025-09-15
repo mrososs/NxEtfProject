@@ -18,14 +18,15 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ">
+      <!-- Navigation links - only show for authenticated users -->
+      <ul class="navbar-nav" *ngIf="isAuthenticated()">
         <li class="nav-item">
           <a
             class="nav-link"
             routerLinkActive="active"
             aria-current="page"
             [routerLink]="['/courses']"
-            >الرئيسة</a
+            >الرئيسية</a
           >
         </li>
         <li class="nav-item">
@@ -33,7 +34,7 @@
             class="nav-link"
             routerLinkActive="active"
             [routerLink]="['/homepage']"
-            >دوراتي التدريبية</a
+            >الدورات التدريبية</a
           >
         </li>
         <li class="nav-item">
@@ -63,7 +64,7 @@
         </li>
       </ul>
 
-      <!-- Authentication Button for Desktop -->
+      <!-- Authentication Section for Desktop -->
       <div class="d-none d-lg-block me-5">
         <!-- Login Button (when not authenticated) -->
         <button
@@ -76,21 +77,34 @@
           تسجيل الدخول
         </button>
 
-        <!-- Logout Button (when authenticated) -->
-        <button
-          *ngIf="isAuthenticated()"
-          class="btn btn-outline-danger logout-btn"
-          (click)="logout()"
-          title="تسجيل الخروج من النظام"
-        >
-          <i class="pi pi-sign-out me-2"></i>
-          تسجيل الخروج
-        </button>
-      </div>
+        <!-- User Menu (when authenticated) -->
+        <div *ngIf="isAuthenticated()" class="user-menu">
+          <div class="user-profile" (click)="toggleUserMenu()">
+            <img
+              *ngIf="getUserProfileImage()"
+              [src]="getUserProfileImage()"
+              alt="Profile"
+              class="user-avatar"
+            />
+            <div *ngIf="!getUserProfileImage()" class="user-avatar-placeholder">
+              <i class="pi pi-user"></i>
+            </div>
+            <span class="user-name">{{ getUserName() }}</span>
+            <i class="pi pi-chevron-down ms-2"></i>
+          </div>
 
-      <!-- User Info Display (only when authenticated) -->
-      <div *ngIf="isAuthenticated()" class="user-info d-none d-lg-block me-3">
-        <span class="user-name">{{ getUserName() }}</span>
+          <!-- User Dropdown Menu -->
+          <div class="user-dropdown" [class.show]="showUserMenu">
+            <a href="#" class="dropdown-item" (click)="goToProfile()">
+              <i class="pi pi-user me-2"></i>
+              الملف الشخصي
+            </a>
+            <a href="#" class="dropdown-item" (click)="logout()">
+              <i class="pi pi-sign-out me-2"></i>
+              تسجيل الخروج
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 

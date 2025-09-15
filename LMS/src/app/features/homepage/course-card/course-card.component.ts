@@ -137,4 +137,18 @@ export class CourseCardComponent {
     );
     return totalRating / this.course.reviews.length;
   }
+
+  /**
+   * Get Arabic course title
+   */
+  getCourseTitleAr(): string {
+    return this.course.titleAr || this.course.title || '';
+  }
+
+  /**
+   * Get English course title
+   */
+  getCourseTitleEn(): string {
+    return this.course.titleEn || '';
+  }
 }

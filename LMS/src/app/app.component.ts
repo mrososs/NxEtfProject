@@ -7,6 +7,7 @@ import { ProfileRequiredDialogComponent } from './shared/components/profile-requ
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { ErrorStateService } from './shared/services/error-state.service';
 import { AiAssistantComponent } from './shared/components/ai-assistant/ai-assistant.component';
+import { FooterComponent } from './features/footer/footer.component';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,7 @@ import { AiAssistantComponent } from './shared/components/ai-assistant/ai-assist
     ProfileRequiredDialogComponent,
     NavbarComponent,
     AiAssistantComponent,
+    FooterComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -53,14 +55,19 @@ export class AppComponent implements OnInit {
     this.profileService.checkAuthenticationOnStartup().subscribe({
       next: (isAuthenticated) => {
         this.hasCheckedAuth = true;
+        this.showNavbar = isAuthenticated; // Show navbar only for authenticated users
         if (isAuthenticated) {
           this.checkUserProfile();
+        } else {
+          // Redirect unauthenticated users to courses page
+          this.router.navigate(['/courses']);
         }
-        // If not authenticated, redirect is handled by ProfileService
       },
       error: (error) => {
         this.hasCheckedAuth = true;
-        // Error handling is done by ProfileService
+        this.showNavbar = false; // Hide navbar for unauthenticated users
+        // Redirect to courses page for unauthenticated users
+        this.router.navigate(['/courses']);
       },
     });
 
@@ -131,13 +138,35 @@ export class AppComponent implements OnInit {
 
     this.profileService.getProfile().subscribe({
       next: (profile) => {
-        // Profile check completed
+        // Profile check completed - save data to localStorage for navbar
+        if (profile) {
+          this.saveUserDataToLocalStorage(profile);
+        }
       },
       error: (error) => {
-        // Profile doesn't exist, but don't show dialog immediately
-        // Let individual components handle this
+        // Profile doesn't exist - force user to create profile
+        console.log('No profile found, forcing user to create profile');
+        this.profileRequiredService.showProfileRequiredDialog();
       },
     });
+  }
+
+  /**
+   * Save user data to localStorage for navbar display
+   */
+  private saveUserDataToLocalStorage(profile: any): void {
+    // Save user name
+    if (profile.firstName && profile.lastName) {
+      const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+      localStorage.setItem('userFullName', fullName);
+      localStorage.setItem('userFirstName', profile.firstName);
+      localStorage.setItem('userLastName', profile.lastName);
+    }
+
+    // Save profile image
+    if (profile.imageLink) {
+      localStorage.setItem('userProfileImage', profile.imageLink);
+    }
   }
 
   onCreateProfile(): void {

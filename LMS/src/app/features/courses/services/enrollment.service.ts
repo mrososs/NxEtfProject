@@ -14,18 +14,32 @@ import {
 export interface Enrollment {
   id: number;
   courseId: number;
-  userId: number;
-  enrollmentDate: string;
-  status: string;
+  userId: string;
+  enrolledAt: string; // Changed from enrollmentDate to enrolledAt to match API
+  status?: string; // Made optional since it's not in the API response
   course?: {
     id: number;
     title: string;
+    titleAr?: string;
     description: string;
-    img: string;
-    level: string;
-    duration: string;
-    instructor: string;
+    descriptionAr?: string;
+    fileLink?: string;
+    slug?: string;
     launchUrl?: string;
+    packagePath?: string;
+    isActive?: boolean;
+    uploadedAt?: string;
+    courseLevel?: string;
+    trainerId?: number;
+    trainer?: any;
+    categories?: any;
+    enrollments?: any;
+    courseTrackers?: any;
+    reviews?: any;
+    courseDetailsId?: number;
+    courseDetails?: any;
+    tags?: any;
+    faQs?: any;
   };
 }
 

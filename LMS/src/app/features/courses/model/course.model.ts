@@ -30,6 +30,13 @@ export interface ApiCourse {
   description: string;
   launchUrl: string;
   uploadedAt: string;
+  reviews?: any[];
+  trainerName?: string | null;
+  courseLevel?: string;
+  categories?: string[];
+  tags?: string[];
+  faQs?: any[];
+  courseDetails?: any;
 }
 
 // Course Details interface matching API courseDetails
@@ -64,6 +71,10 @@ export interface Course {
   tags: string[];
   faQs: FAQ[];
   courseDetails: CourseDetails;
+
+  // Bilingual title fields
+  titleAr?: string; // Arabic title
+  titleEn?: string; // English title
 
   // UI fields for display
   img?: string;

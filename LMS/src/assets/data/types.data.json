@@ -1,13 +1,5 @@
 [
   {
-    "id": 1,
-    "img": "assets/svg/types/Screenshot_2025-05-25_230750-removebg-preview.png",
-    "name": "مهارات الاتصال واللغات",
-    "description": "دورات تعليمية في مهارات الاتصال مثل",
-    "examples": "الإنجليزية، الإسبانية، الفرنسية، الماندرين و لغة الإشارة و  وغيرها.",
-    "arrow": "assets/svg/types/arrow-left.svg"
-  },
-  {
     "id": 2,
     "img": "assets/svg/types/profile-2user.svg",
     "name": "خدمة العملاء والضيافة",

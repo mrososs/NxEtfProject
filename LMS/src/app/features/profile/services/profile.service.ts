@@ -1,87 +1,66 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { Profile, ProfileResponse } from '../model/profile.model';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import {
+  Profile,
+  ProfileResponse,
+  Education,
+  Experience,
+  Skill,
+  Contact,
+} from '../model/profile.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProfileService {
   private _http = inject(HttpClient);
+  private readonly baseUrl =
+    'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api';
 
-  // Mock profile data
-  private mockProfile: Profile = {
-    id: 1,
-    image: 'assets/img/instructor-avatar.png',
-    imageLink: 'assets/img/instructor-avatar.png',
-    firstName: 'احمد',
-    middleName: 'ياسر',
-    lastName: 'محمد',
-    description:
-      'مرحباً، أنا احمد ياسر محمد، شغوف بالتعلم والتطوير والتطوير المستمر. لدي خبرة في مجال التعليم الإلكتروني وأسعى دائماً لمشاركة المعرفة وإحداث تأثير إيجابي. أحب التعلم المستمر والابتكار والعمل على المشاريع المبتكرة. هدفي هو تطوير مهاراتي وتقديم قيمة حقيقية للمجتمع، وأتطلع للتواصل مع الأشخاص الذين يشاركون نفس الاهتمامات. لا تتردد في التواصل معي! 😊',
-    user: {
-      username: 'ahmed_yasser',
-      email: 'ahmed@example.com',
-      userId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    },
-  };
+  // Flags for error handling
+  private _isInRedirectPreventionMode = false;
+  private _isIn500ErrorMode = false;
 
   /**
    * Get user profile data
    * @returns Observable of profile data
    */
   getProfile(): Observable<Profile> {
-    // Return mock data instead of API call
-    return of(this.mockProfile);
+    // Check if we're in redirect prevention mode
+    if (this._isInRedirectPreventionMode) {
+      return of(null as any);
+    }
 
-    // Original API call (commented out for now)
-    // return this._http.get<Profile>('http://etfapi.itechpro-eg.com/me');
-  }
+    return this._http.get<Profile>(`${this.baseUrl}/Profile/me`).pipe(
+      map((profile) => {
+        // Reset error flags on successful response
+        this._isIn500ErrorMode = false;
+        this._isInRedirectPreventionMode = false;
 
-  /**
-   * Update user profile
-   * @param profile - The updated profile data
-   * @returns Observable of update response
-   */
-  updateProfile(profile: Partial<Profile>): Observable<ProfileResponse> {
-    // Update mock data
-    this.mockProfile = { ...this.mockProfile, ...profile };
+        // Ensure arrays are initialized if they don't exist
+        if (profile) {
+          profile.courses = profile.courses || [];
+          profile.educations = profile.educations || [];
+          profile.experiences = profile.experiences || [];
+          profile.skills = profile.skills || [];
+          profile.contacts = profile.contacts || [];
+        }
 
-    const mockResponse: ProfileResponse = {
-      success: true,
-      data: this.mockProfile,
-      message: 'Profile updated successfully',
-    };
+        return profile;
+      }),
+      catchError((error) => {
+        console.error('Error loading profile:', error);
 
-    return of(mockResponse);
+        if (error.status === 500) {
+          this._isIn500ErrorMode = true;
+        }
 
-    // Original API call (commented out for now)
-    // return this._http.put<ProfileResponse>('me', profile);
-  }
-
-  /**
-   * Upload profile image
-   * @param imageFile - The image file to upload
-   * @returns Observable of upload response
-   */
-  uploadProfileImage(imageFile: File): Observable<ProfileResponse> {
-    // Create a mock image URL
-    const mockImageUrl = URL.createObjectURL(imageFile);
-    this.mockProfile.image = mockImageUrl;
-    this.mockProfile.imageLink = mockImageUrl;
-
-    const mockResponse: ProfileResponse = {
-      success: true,
-      data: this.mockProfile,
-      message: 'Image uploaded successfully',
-    };
-
-    return of(mockResponse);
-
-    // Original API call (commented out for now)
-    // const formData = new FormData();
-    // formData.append('image', imageFile);
-    // return this._http.post<ProfileResponse>('me/upload-image', formData);
+        // Return null to indicate no profile exists
+        return of(null as any);
+      })
+    );
   }
 
   /**
@@ -92,7 +71,7 @@ export class ProfileService {
   getFullName(profile: Profile): string {
     const parts = [profile.firstName, profile.middleName, profile.lastName]
       .filter((part) => part && part.trim() !== '')
-      .map((part) => part.trim());
+      .map((part) => part!.trim());
 
     return parts.join(' ');
   }
@@ -105,8 +84,70 @@ export class ProfileService {
   getDisplayName(profile: Profile): string {
     const parts = [profile.firstName, profile.lastName]
       .filter((part) => part && part.trim() !== '')
-      .map((part) => part.trim());
+      .map((part) => part!.trim());
 
     return parts.join(' ');
+  }
+
+  /**
+   * Update profile with new data including education, experience, skills, and contacts
+   * @param formData - FormData containing all profile information
+   * @returns Observable of update response
+   */
+  postProfile(formData: FormData): Observable<ProfileResponse> {
+    return this._http
+      .post<ProfileResponse>(`${this.baseUrl}/Profile/me`, formData, {
+        // Angular automatically sets Content-Type to multipart/form-data for FormData
+        // No need to set headers manually
+      })
+      .pipe(
+        map((response) => {
+          // Reset error flags on successful response
+          this._isIn500ErrorMode = false;
+          this._isInRedirectPreventionMode = false;
+          return response;
+        }),
+        catchError((error) => {
+          console.error('Error updating profile:', error);
+
+          if (error.status === 500) {
+            this._isIn500ErrorMode = true;
+          }
+
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Refresh profile data from cache
+   * @returns Observable of profile data
+   */
+  refreshProfile(): Observable<Profile> {
+    return this.getProfile();
+  }
+
+  /**
+   * Check if we're in redirect prevention mode
+   * @returns boolean
+   */
+  isInRedirectPreventionMode(): boolean {
+    return this._isInRedirectPreventionMode;
+  }
+
+  /**
+   * Check if we're in 500 error mode
+   * @returns boolean
+   */
+  isIn500ErrorMode(): boolean {
+    return this._isIn500ErrorMode;
+  }
+
+  /**
+   * Reset redirect flags
+   */
+  resetRedirectFlags(): void {
+    this._isInRedirectPreventionMode = false;
+    this._isIn500ErrorMode = false;
   }
 }

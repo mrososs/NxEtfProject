@@ -1,0 +1,467 @@
+// ========================================
+// FOOTER COMPONENT STYLES
+// ========================================
+
+// Define colors locally to avoid import issues
+$color-primary: rgb(247, 148, 30);
+$color-white: #ffffff;
+$color-black: #000000;
+
+.footer {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: $color-white;
+  margin-top: auto;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-width: 100vw;
+
+  // Background Pattern
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.03)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.03)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.03)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .footer-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 3rem;
+    padding: 4rem 0 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 3rem 0 2rem;
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 2rem 0 1.5rem;
+    }
+  }
+
+  // Brand Section
+  .footer-brand {
+    .footer-logo {
+      margin-bottom: 1.5rem;
+
+      .logo-img {
+        height: 60px;
+        width: auto;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: scale(1.05);
+          filter: brightness(0) invert(1)
+            drop-shadow(0 0 10px rgba(247, 148, 30, 0.5));
+        }
+      }
+    }
+
+    .footer-description {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+
+      .social-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: $color-white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+
+        i {
+          font-size: 1.1rem;
+        }
+
+        &:hover {
+          background: linear-gradient(135deg, $color-primary 0%, #e6851a 100%);
+          transform: translateY(-3px);
+          box-shadow: 0 5px 15px rgba(247, 148, 30, 0.4);
+        }
+      }
+    }
+  }
+
+  // Links Sections
+  .footer-links,
+  .footer-services,
+  .footer-contact {
+    .footer-title {
+      color: $color-white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 30px;
+        height: 2px;
+        background: linear-gradient(135deg, $color-primary 0%, #e6851a 100%);
+        border-radius: 1px;
+      }
+    }
+
+    .footer-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        margin-bottom: 0.8rem;
+
+        .footer-link {
+          color: rgba(255, 255, 255, 0.8);
+          text-decoration: none;
+          transition: all 0.3s ease;
+          display: inline-block;
+          position: relative;
+          cursor: pointer;
+
+          &::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: linear-gradient(
+              135deg,
+              $color-primary 0%,
+              #e6851a 100%
+            );
+            transition: width 0.3s ease;
+          }
+
+          &:hover {
+            color: $color-white;
+            transform: translateX(5px);
+
+            &::before {
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Contact Section
+  .footer-contact {
+    .contact-info {
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s ease;
+
+        i {
+          color: $color-primary;
+          font-size: 1rem;
+          width: 16px;
+          text-align: center;
+        }
+
+        span {
+          font-size: 0.9rem;
+        }
+
+        .contact-link {
+          color: rgba(255, 255, 255, 0.8);
+          text-decoration: none;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+
+          &:hover {
+            color: $color-primary;
+            text-decoration: underline;
+          }
+        }
+
+        &:hover {
+          color: $color-white;
+          transform: translateX(5px);
+
+          i {
+            color: #e6851a;
+          }
+        }
+      }
+    }
+
+    .footer-subtitle {
+      color: $color-white;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 25px;
+        height: 2px;
+        background: linear-gradient(135deg, $color-primary 0%, #e6851a 100%);
+        border-radius: 1px;
+      }
+    }
+  }
+
+  // Services Section - View Only
+  .footer-services {
+    .footer-menu {
+      .footer-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        display: block;
+        padding: 0.3rem 0;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: $color-white;
+          transform: translateX(5px);
+        }
+      }
+    }
+  }
+
+  // Footer Bottom
+  .footer-bottom {
+    padding: 1.5rem 0;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+
+    .footer-bottom-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+      }
+
+      .copyright {
+        p {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.9rem;
+        }
+      }
+
+      .footer-bottom-links {
+        display: flex;
+        gap: 2rem;
+
+        @media (max-width: 768px) {
+          gap: 1rem;
+        }
+
+        .bottom-link {
+          color: rgba(255, 255, 255, 0.7);
+          text-decoration: none;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+          position: relative;
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: $color-primary;
+            transition: width 0.3s ease;
+          }
+
+          &:hover {
+            color: $color-white;
+
+            &::after {
+              width: 100%;
+            }
+          }
+        }
+      }
+
+      .back-to-top {
+        .back-to-top-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 45px;
+          height: 45px;
+          background: linear-gradient(135deg, $color-primary 0%, #e6851a 100%);
+          border: none;
+          border-radius: 50%;
+          color: $color-white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(247, 148, 30, 0.3);
+
+          i {
+            font-size: 1.2rem;
+          }
+
+          &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(247, 148, 30, 0.4);
+            background: linear-gradient(135deg, #e6851a 0%, #d67a15 100%);
+          }
+
+          &:active {
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animation for footer appearance
+.footer {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive Design Enhancements
+@media (max-width: 576px) {
+  .footer {
+    .footer-container {
+      padding: 0 0.5rem;
+    }
+
+    .footer-main {
+      padding: 1.5rem 0 1rem;
+      gap: 1.5rem;
+    }
+
+    .footer-brand {
+      .footer-logo .logo-img {
+        height: 50px;
+      }
+
+      .footer-description {
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .social-links {
+        gap: 0.8rem;
+
+        .social-link {
+          width: 35px;
+          height: 35px;
+
+          i {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+
+    .footer-links,
+    .footer-services,
+    .footer-contact {
+      .footer-title {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .footer-menu li {
+        margin-bottom: 0.6rem;
+
+        .footer-link {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .footer-contact .contact-info .contact-item {
+      margin-bottom: 0.8rem;
+
+      span {
+        font-size: 0.85rem;
+      }
+    }
+
+    .footer-bottom {
+      padding: 1rem 0;
+
+      .footer-bottom-content {
+        .copyright p {
+          font-size: 0.8rem;
+        }
+
+        .footer-bottom-links {
+          .bottom-link {
+            font-size: 0.8rem;
+          }
+        }
+
+        .back-to-top .back-to-top-btn {
+          width: 40px;
+          height: 40px;
+
+          i {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+}
