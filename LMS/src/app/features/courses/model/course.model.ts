@@ -37,6 +37,7 @@ export interface ApiCourse {
   tags?: string[];
   faQs?: any[];
   courseDetails?: any;
+  lessons?: Lesson[];
 }
 
 // Course Details interface matching API courseDetails
@@ -57,6 +58,13 @@ export interface FAQ {
   bodyAr?: string;
 }
 
+// Lesson interface
+export interface Lesson {
+  id: number;
+  title: string;
+  duration: string;
+}
+
 // Extended Course interface for UI display matching API response
 export interface Course {
   id: number;
@@ -71,6 +79,7 @@ export interface Course {
   tags: string[];
   faQs: FAQ[];
   courseDetails: CourseDetails;
+  lessons: Lesson[];
 
   // Bilingual title fields
   titleAr?: string; // Arabic title

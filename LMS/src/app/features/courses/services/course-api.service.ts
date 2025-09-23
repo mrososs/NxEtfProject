@@ -172,6 +172,7 @@ export class CourseApiService {
         whyChoose: '',
         suitableFor: '',
       },
+      lessons: apiCourse.lessons || [], // Use lessons from API
 
       // UI properties for display
       img: 'assets/img/homePagecourse.png', // Default image

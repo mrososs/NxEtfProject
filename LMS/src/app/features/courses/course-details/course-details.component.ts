@@ -13,7 +13,7 @@ import {
   ReviewResponse,
 } from '../services/home-page.service';
 import { EnrollmentService } from '../services/enrollment.service';
-import { Course } from '../model/course.model';
+import { Course, Lesson } from '../model/course.model';
 import { CourseTracker } from '../model/course-tracker.model';
 import {
   CertificateService,
@@ -149,41 +149,7 @@ export class CourseDetailsComponent implements OnInit {
     { id: 4, text: 'مجتمع تعليمي نشط', icon: 'pi pi-users' },
   ];
 
-  courseUnits: CourseUnit[] = [
-    {
-      id: 1,
-      title: 'مقدمة في الارشاد السياحي',
-      duration: '20 دقيقة',
-      isExpanded: false,
-      lessons: [
-        { id: 1, title: 'ما هو الارشاد السياحي؟', duration: '5 دقائق' },
-        { id: 2, title: 'أهمية الارشاد السياحي', duration: '8 دقائق' },
-        { id: 3, title: 'مهارات المرشد السياحي', duration: '7 دقائق' },
-      ],
-    },
-    {
-      id: 2,
-      title: 'التواصل مع السياح',
-      duration: '30 دقيقة',
-      isExpanded: false,
-      lessons: [
-        { id: 4, title: 'أساسيات التواصل', duration: '10 دقائق' },
-        { id: 5, title: 'التعامل مع الثقافات المختلفة', duration: '12 دقائق' },
-        { id: 6, title: 'حل المشاكل والمواقف الصعبة', duration: '8 دقائق' },
-      ],
-    },
-    {
-      id: 3,
-      title: 'المعالم السياحية',
-      duration: '45 دقيقة',
-      isExpanded: false,
-      lessons: [
-        { id: 7, title: 'أنواع المعالم السياحية', duration: '15 دقيقة' },
-        { id: 8, title: 'كيفية تقديم المعلومات', duration: '20 دقيقة' },
-        { id: 9, title: 'التفاعل مع الزوار', duration: '10 دقائق' },
-      ],
-    },
-  ];
+  courseUnits: CourseUnit[] = [];
 
   faqs: FAQ[] = [
     {
@@ -248,6 +214,9 @@ export class CourseDetailsComponent implements OnInit {
 
         // Load reviews from course data
         this.loadReviewsFromCourse();
+
+        // Load course units from API response
+        this.updateCourseUnits();
 
         // Load course details from new API
         this.loadCourseDetailsFromApi();
@@ -328,6 +297,114 @@ export class CourseDetailsComponent implements OnInit {
         isExpanded: false,
       }));
     }
+  }
+
+  /**
+   * Update course units from API response
+   */
+  private updateCourseUnits(): void {
+    if (this.course?.lessons && this.course.lessons.length > 0) {
+      // Create a single unit containing all lessons from the API
+      const totalDuration = this.calculateTotalDuration(this.course.lessons);
+
+      this.courseUnits = [
+        {
+          id: 1,
+          title: 'محتوى الدورة',
+          duration: totalDuration,
+          isExpanded: true, // Expand by default to show lessons
+          lessons: this.course.lessons.map((lesson: Lesson) => ({
+            id: lesson.id,
+            title: lesson.title,
+            duration: this.formatDuration(lesson.duration),
+          })),
+        },
+      ];
+
+      console.log('Course units updated from API:', this.courseUnits);
+    } else {
+      // Fallback to empty array if no lessons
+      this.courseUnits = [];
+      console.log('No lessons found in course data');
+    }
+  }
+
+  /**
+   * Calculate total duration from lessons
+   */
+  private calculateTotalDuration(lessons: Lesson[]): string {
+    let totalMinutes = 0;
+
+    lessons.forEach((lesson) => {
+      const duration = this.parseDuration(lesson.duration);
+      totalMinutes += duration;
+    });
+
+    return this.formatTotalDuration(totalMinutes);
+  }
+
+  /**
+   * Parse duration string to minutes
+   */
+  private parseDuration(duration: string): number {
+    // Handle format like "00:10:00" (HH:MM:SS)
+    if (duration.includes(':')) {
+      const parts = duration.split(':');
+      if (parts.length === 3) {
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        return hours * 60 + minutes;
+      } else if (parts.length === 2) {
+        const minutes = parseInt(parts[0], 10);
+        const seconds = parseInt(parts[1], 10);
+        return minutes + (seconds > 0 ? 1 : 0); // Round up if there are seconds
+      }
+    }
+
+    // Handle format like "10 دقائق" or "10 minutes"
+    const match = duration.match(/(\d+)/);
+    if (match) {
+      return parseInt(match[1], 10);
+    }
+
+    return 0;
+  }
+
+  /**
+   * Format duration in minutes to readable string
+   */
+  private formatDuration(duration: string): string {
+    const minutes = this.parseDuration(duration);
+    if (minutes === 0) return '0 دقيقة';
+    if (minutes === 1) return '1 دقيقة';
+    if (minutes < 60) return `${minutes} دقيقة`;
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (remainingMinutes === 0) {
+      return hours === 1 ? '1 ساعة' : `${hours} ساعة`;
+    }
+
+    return `${hours} ساعة و ${remainingMinutes} دقيقة`;
+  }
+
+  /**
+   * Format total duration
+   */
+  private formatTotalDuration(totalMinutes: number): string {
+    if (totalMinutes === 0) return '0 دقيقة';
+    if (totalMinutes === 1) return '1 دقيقة';
+    if (totalMinutes < 60) return `${totalMinutes} دقيقة`;
+
+    const hours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+
+    if (remainingMinutes === 0) {
+      return hours === 1 ? '1 ساعة' : `${hours} ساعة`;
+    }
+
+    return `${hours} ساعة و ${remainingMinutes} دقيقة`;
   }
 
   /**
@@ -818,6 +895,24 @@ export class CourseDetailsComponent implements OnInit {
     if (this.courseCompletionLoading) return 'loading';
 
     return this.courseCompleted ? 'completed' : 'in-progress';
+  }
+
+  /**
+   * Get total number of lessons
+   */
+  getTotalLessons(): number {
+    return this.course?.lessons?.length || 0;
+  }
+
+  /**
+   * Get total course duration
+   */
+  getTotalCourseDuration(): string {
+    if (!this.course?.lessons || this.course.lessons.length === 0) {
+      return '0 دقيقة';
+    }
+
+    return this.calculateTotalDuration(this.course.lessons);
   }
 
   /**

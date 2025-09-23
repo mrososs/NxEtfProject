@@ -353,12 +353,14 @@
                   </div>
                   <div class="stat-item">
                     <i class="pi pi-clock"></i>
-                    <span class="stat-value">2.5 ساعة</span>
+                    <span class="stat-value">{{
+                      getTotalCourseDuration()
+                    }}</span>
                     <span class="stat-label">مدة الدورة</span>
                   </div>
                   <div class="stat-item">
                     <i class="pi pi-video"></i>
-                    <span class="stat-value">15 درس</span>
+                    <span class="stat-value">{{ getTotalLessons() }} درس</span>
                     <span class="stat-label">عدد الدروس</span>
                   </div>
                 </div>
