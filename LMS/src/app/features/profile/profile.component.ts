@@ -8,7 +8,7 @@ import {
   FormArray,
   FormControl,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProfileService } from './services/profile.service';
 import {
   EnrollmentService,
@@ -81,7 +81,9 @@ export class ProfileComponent implements OnInit {
     private enrollmentService: EnrollmentService,
     private enrollmentDeleteService: EnrollmentDeleteService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private route: ActivatedRoute,            
+
   ) {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -94,8 +96,12 @@ export class ProfileComponent implements OnInit {
       contacts: this.fb.array([]),
     });
   }
+  private returnUrl: string | null = null;
+
 
   ngOnInit(): void {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
     this.loadUserProfile();
   }
 
@@ -138,96 +144,62 @@ export class ProfileComponent implements OnInit {
     this.enrollmentLoading = true;
     this.profileService.getProfile().subscribe({
       next: (profile) => {
-        if (profile) {
+        if (this.isProfileValid(profile)) {
           this.currentProfile = profile;
-          this.isEditMode = false; // Start in view mode
-
-          // Set image preview if profile has image
+          this.isEditMode = false;
+    
           if (profile.imageLink) {
-            this.imagePreview = profile.imageLink;
+            this.imagePreview = profile.imageLink; // أو this.getProfileImageUrl(...)
           }
-
-          // Handle courses data
-          if (profile.courses && Array.isArray(profile.courses)) {
-            this.userCourses = profile.courses;
-            console.log('User courses loaded:', this.userCourses);
-          }
-
-          // Handle enrollements data
-          if (
-            profile.enrollements &&
-            Array.isArray(profile.enrollements) &&
-            profile.enrollements.length > 0
-          ) {
+    
+          // الكورسات والإنرولمنت زي ما هي...
+          this.userCourses = Array.isArray(profile.courses) ? profile.courses : [];
+          if (Array.isArray(profile.enrollements) && profile.enrollements.length) {
             this.enrolledCourses = profile.enrollements;
-            console.log(
-              'Enrolled courses loaded from profile:',
-              this.enrolledCourses
-            );
           } else {
             this.enrolledCourses = [];
-            console.log(
-              'No enrolled courses found in profile, loading from enrollment service...'
-            );
-            // Load from enrollment service if not found in profile
             this.loadEnrolledCoursesFromService();
           }
         } else {
-          // No profile exists, 500 error occurred, or API call was skipped to prevent infinite loop
-          this.isEditMode = true; // Start in edit mode for new profile
+          // أول مرة / بروفايل ناقص
+          this.isEditMode = true;
           this.currentProfile = null;
           this.profileForm.reset();
           this.userCourses = [];
           this.enrolledCourses = [];
-
-          // Show appropriate message based on the situation
-          if (this.isIn500ErrorMode()) {
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'تنبيه',
-              detail:
-                'حدث خطأ في الخادم. يمكنك إدخال بيانات الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.',
-            });
-          } else {
-            this.messageService.add({
-              severity: 'info',
-              summary: 'معلومات',
-              detail: 'يجب إنشاء الملف الشخصي الخاص بك لاستخدام موقع الكورسات',
-            });
-          }
-        }
-        this.isLoading = false;
-        this.enrollmentLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading profile:', error);
-        this.isLoading = false;
-        this.enrollmentLoading = false;
-
-        // For any error, stay in create mode and show appropriate message
-        this.isEditMode = true; // Start in edit mode for new profile
-        this.currentProfile = null;
-        this.profileForm.reset();
-        this.userCourses = [];
-        this.enrolledCourses = [];
-
-        // Show different messages based on error type
-        if (error.status === 500) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'تنبيه',
-            detail:
-              'حدث خطأ في الخادم. يمكنك إدخال بيانات الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.',
-          });
-        } else {
+    
+          // رسالة “أول مرة”
           this.messageService.add({
             severity: 'info',
             summary: 'معلومات',
             detail: 'يجب إنشاء الملف الشخصي الخاص بك لاستخدام موقع الكورسات',
           });
         }
+        this.isLoading = false;
+        this.enrollmentLoading = false;
+      },
+      error: (error) => {
+        // اعتبرها “أول مرة” برضه
+        this.isEditMode = true;
+        this.currentProfile = null;
+        this.profileForm.reset();
+        this.userCourses = [];
+        this.enrolledCourses = [];
+        this.isLoading = false;
+        this.enrollmentLoading = false;
+    
+        // لو 500 اعرض التحذير الإضافي
+        this.messageService.add({
+          severity: error.status === 500 ? 'warn' : 'info',
+          summary: error.status === 500 ? 'تنبيه' : 'معلومات',
+          detail:
+            error.status === 500
+              ? 'حدث خطأ في الخادم. يمكنك إدخال بيانات الملف الشخصي الآن وسيتم حفظها عند عودة الخادم للعمل.'
+              : 'يجب إنشاء الملف الشخصي الخاص بك لاستخدام موقع الكورسات',
+        });
       },
     });
+    
   }
 
   onSubmit(): void {
@@ -369,9 +341,17 @@ export class ProfileComponent implements OnInit {
    * @param response - API response
    */
   private handleSubmissionSuccess(response: any): void {
+    // حدّث الـ currentProfile فورًا لو الـ API بيرجع البروفايل
+    if (response) {
+      this.currentProfile = {
+        ...(this.currentProfile || {}),
+        ...response
+      };
+    }
+  
     // Save user name to localStorage for homepage display
     this.saveUserDataToLocalStorage();
-
+  
     this.messageService.add({
       severity: 'success',
       summary: 'نجح',
@@ -379,23 +359,32 @@ export class ProfileComponent implements OnInit {
         ? 'تم تحديث الملف الشخصي بنجاح'
         : 'تم إنشاء الملف الشخصي بنجاح',
     });
-
+  
     // Reset redirect flags to allow normal API calls again
     this.profileService.resetRedirectFlags();
-
-    // Refresh profile data to get updated information
+  
+    // (اختياري) تجديد الداتا من السيرفر
     this.refreshProfileData();
-
-    // Switch to view mode after successful save
+  
+    // عرض وضع المشاهدة
     this.isEditMode = false;
-
-    // Set loading to false after all operations complete
     this.isLoading = false;
-
-    // Refresh the page after successful operation
+  
+    // ✅ توجيه بدون Reload:
+    const target = this.returnUrl && this.returnUrl !== '/profile'
+      ? this.returnUrl
+      : '/homepage';
+  
+    // مهلة بسيطة لعرض التوست
     setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+      this.router.navigateByUrl(target);
+    }, 800);
+  }
+  private isProfileValid(p: any): boolean {
+    return !!(p && p.firstName && p.lastName);
+  }
+  get hasValidProfile(): boolean {
+    return this.isProfileValid(this.currentProfile);
   }
 
   /**

@@ -1,75 +1,28 @@
+// app.routes.ts
 import { Route } from '@angular/router';
-import { ErrorPageGuard } from './core/guards/error-page.guard';
 import { AuthGuard } from './core/guards/auth.guard';
+import { ProfileGuard } from './core/guards/profile.guard';
 
 export const appRoutes: Route[] = [
-  {
-    path: '',
-    redirectTo: 'courses',
-    pathMatch: 'full',
-  },
-  {
-    path: 'instructor',
-    loadComponent: () =>
-      import('./features/instructor-list/instructor-list.component').then(
-        (m) => m.InstructorListComponent
-      ),
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'instructorDetails/:id',
-    loadComponent: () =>
-      import(
-        './features/instructor-list/instructor-details/instructor-details.component'
-      ).then((c) => c.InstructorDetailsComponent),
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'homepage',
-    loadComponent: () =>
-      import('./features/homepage/homepage.component').then(
-        (c) => c.HomepageComponent
-      ),
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'blogs',
-    loadComponent: () =>
-      import('./features/blogs/blogs.component').then((c) => c.BlogsComponent),
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'blogs/:slug',
-    loadComponent: () =>
-      import('./features/blogs/blog-details/blog-details.component').then(
-        (c) => c.BlogDetailsComponent
-      ),
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'favorites',
-    loadComponent: () =>
-      import('./features/favorites/favorites.component').then(
-        (c) => c.FavoritesComponent
-      ),
-    canActivate: [AuthGuard],
-  },
+  { path: '', redirectTo: 'courses', pathMatch: 'full' },
+
+  // عام (بدون أي حراسة)
   {
     path: 'courses',
     loadComponent: () =>
       import('./features/courses/courses.component').then(
-        (c) => c.CoursesComponent
+        (m) => m.CoursesComponent
       ),
-    // No guard for courses page - it's the landing page
   },
   {
-    path: 'courses/:id',
+    path: 'error-500',
     loadComponent: () =>
-      import('./features/courses/course-details/course-details.component').then(
-        (c) => c.CourseDetailsComponent
+      import('./shared/components/error-500/error-500.component').then(
+        (c) => c.Error500Component
       ),
-    canActivate: [AuthGuard],
   },
+
+  // صفحة إنشاء/تعديل البروفايل: لازم يبقى مُسجّل، بس حتى لو مفيش بروفايل يدخلها
   {
     path: 'profile',
     loadComponent: () =>
@@ -78,12 +31,60 @@ export const appRoutes: Route[] = [
       ),
     canActivate: [AuthGuard],
   },
+
+  // باقي الصفحات “المحمية” — لازم Auth + Profile
   {
-    path: 'error-500',
+    path: 'homepage',
     loadComponent: () =>
-      import('./shared/components/error-500/error-500.component').then(
-        (c) => c.Error500Component
+      import('./features/homepage/homepage.component').then(
+        (c) => c.HomepageComponent
       ),
-    // No guard for error-500 page
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'blogs',
+    loadComponent: () =>
+      import('./features/blogs/blogs.component').then((c) => c.BlogsComponent),
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'blogs/:slug',
+    loadComponent: () =>
+      import('./features/blogs/blog-details/blog-details.component').then(
+        (c) => c.BlogDetailsComponent
+      ),
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'favorites',
+    loadComponent: () =>
+      import('./features/favorites/favorites.component').then(
+        (c) => c.FavoritesComponent
+      ),
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'instructor',
+    loadComponent: () =>
+      import('./features/instructor-list/instructor-list.component').then(
+        (m) => m.InstructorListComponent
+      ),
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'instructorDetails/:id',
+    loadComponent: () =>
+      import(
+        './features/instructor-list/instructor-details/instructor-details.component'
+      ).then((c) => c.InstructorDetailsComponent),
+    canActivate: [AuthGuard, ProfileGuard],
+  },
+  {
+    path: 'courses/:id',
+    loadComponent: () =>
+      import('./features/courses/course-details/course-details.component').then(
+        (c) => c.CourseDetailsComponent
+      ),
+    canActivate: [AuthGuard, ProfileGuard],
   },
 ];
