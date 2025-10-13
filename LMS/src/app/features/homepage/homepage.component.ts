@@ -13,21 +13,11 @@ import { SerachBarComponent } from './search-bar/serach-bar.component';
 import { CourseCategoryComponent } from './course-category/course-category.component';
 import { CourseLevelComponent } from './course-level/course-level.component';
 import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
-import { Subject, of, BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import {
-  debounceTime,
-  catchError,
-  switchMap,
-  distinctUntilChanged,
-  map,
-  startWith,
-} from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { HomePageService } from '../courses/services/home-page.service';
-import { Course, CourseFilter } from '../courses/model/course.model';
-import {
-  EnrollmentService,
-  Enrollment,
-} from '../courses/services/enrollment.service';
+import { Course } from '../courses/model/course.model';
+import { EnrollmentService } from '../courses/services/enrollment.service';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
 import { ProfileService } from '../profile/profile.service';
 import { HttpClient } from '@angular/common/http';
@@ -54,9 +44,9 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   private http = inject(HttpClient);
 
   // User name properties
-  userFullName: string = '';
-  userFirstName: string = '';
-  userLastName: string = '';
+  userFullName = '';
+  userFirstName = '';
+  userLastName = '';
 
   // All courses from API
   allCourses: Course[] = [];
@@ -80,7 +70,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   filteredCourses$: Observable<Course[]>;
 
   // Pagination
-  pageSize = 6;
+  pageSize = 10;
   currentPage = 1;
   totalPages = 1;
   totalCourses = 0;
@@ -99,32 +89,16 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   @ViewChild('instructorComponentSidebar') instructorComponentSidebar!: any;
 
   constructor(private router: Router) {
-    // Setup filtered courses observable
+    // Setup filtered courses observable - now just returns the current courses
     this.filteredCourses$ = combineLatest([
       this.searchSubject$.pipe(startWith('')),
       this.categoriesSubject$.pipe(startWith([])),
       this.levelsSubject$.pipe(startWith([])),
       this.instructorsSubject$.pipe(startWith([])),
     ]).pipe(
-      map(([searchTerm, categories, levels, instructors]) => {
-        const filtered = this.filterCourses(
-          this.allCourses,
-          searchTerm,
-          categories,
-          levels,
-          instructors
-        );
-
-        // Update pagination info
-        this.totalCourses = filtered.length;
-        this.totalPages = Math.ceil(this.totalCourses / this.pageSize);
-
-        // Reset to first page if current page exceeds total pages
-        if (this.currentPage > this.totalPages && this.totalPages > 0) {
-          this.currentPage = 1;
-        }
-
-        return this.getPaginatedCourses(filtered);
+      map(() => {
+        // Simply return the current courses from API
+        return this.allCourses;
       })
     );
   }
@@ -172,7 +146,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
           console.log('User name loaded from profile service:', fullName);
         }
       },
-      error: (error) => {
+      error: () => {
         console.log('No user name found in localStorage or profile service');
       },
     });
@@ -208,22 +182,20 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Load all courses from API
+   * Load all courses from API with pagination
    */
   loadAllCourses(): void {
     this.loading = true;
     this.error = false;
 
-    const apiUrlAr =
-      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar';
-    const apiUrlEn =
-      'https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=en';
+    const apiUrlAr = `https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar&page=${this.currentPage}&pageSize=${this.pageSize}`;
+    const apiUrlEn = `https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=en&page=${this.currentPage}&pageSize=${this.pageSize}`;
 
     // Load both Arabic and English courses
     const arabicCourses$ = this.http.get<{
       data: Course[];
       count: number;
-      pageNumber: number;
+      page: number;
       pageSize: number;
       totalPages: number;
     }>(apiUrlAr);
@@ -231,7 +203,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     const englishCourses$ = this.http.get<{
       data: Course[];
       count: number;
-      pageNumber: number;
+      page: number;
       pageSize: number;
       totalPages: number;
     }>(apiUrlEn);
@@ -247,8 +219,18 @@ export class HomepageComponent implements OnInit, AfterViewInit {
           arabicCourses,
           englishCourses
         );
+
+        // Update pagination info from API response
+        this.totalCourses = arabicResponse.count || 0;
+        this.totalPages = arabicResponse.totalPages || 1;
+
         this.loading = false;
-        console.log('All courses loaded with both languages:', this.allCourses);
+        console.log(
+          'Courses loaded - Page:',
+          this.currentPage,
+          'Total:',
+          this.totalCourses
+        );
       },
       error: (error) => {
         console.error('Error loading courses:', error);
@@ -358,18 +340,21 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // AfterViewInit implementation for future use
+    // View initialization complete
+    console.log('View initialized');
   }
 
   onSearchSectionChange(term: string) {
     this.searchTerm = term;
     this.currentPage = 1; // Reset to first page when searching
+    this.loadAllCourses(); // Reload with new search term
     this.searchSubject$.next(term);
   }
 
   onCategoryChange(selected: number[]) {
     this.selectedCategories = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.loadAllCourses(); // Reload with new filter
     this.categoriesSubject$.next(selected);
     console.log('Category filter changed:', selected);
   }
@@ -382,6 +367,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   onLevelChange(selected: string[]) {
     this.selectedLevels = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.loadAllCourses(); // Reload with new filter
     this.levelsSubject$.next(selected);
     console.log('Level filter changed:', selected);
   }
@@ -389,6 +375,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   onInstructorChange(selected: string[]) {
     this.selectedInstructors = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.loadAllCourses(); // Reload with new filter
     this.instructorsSubject$.next(selected);
     console.log('Instructor filter changed:', selected);
   }
@@ -430,6 +417,9 @@ export class HomepageComponent implements OnInit, AfterViewInit {
 
     // Clear UI component selections first
     this.clearComponentSelections();
+
+    // Reload courses from API
+    this.loadAllCourses();
 
     // Update subjects after a small delay to ensure UI updates
     setTimeout(() => {
@@ -489,7 +479,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.refreshPagination();
+      this.loadAllCourses();
     }
   }
 
@@ -499,7 +489,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.refreshPagination();
+      this.loadAllCourses();
     }
   }
 
@@ -509,7 +499,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.refreshPagination();
+      this.loadAllCourses();
     }
   }
 
@@ -518,7 +508,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    */
   goToFirstPage(): void {
     this.currentPage = 1;
-    this.refreshPagination();
+    this.loadAllCourses();
   }
 
   /**
@@ -526,15 +516,15 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    */
   goToLastPage(): void {
     this.currentPage = this.totalPages;
-    this.refreshPagination();
+    this.loadAllCourses();
   }
 
   /**
    * Refresh pagination after page change
    */
   private refreshPagination(): void {
-    // Trigger a refresh of the filtered courses observable
-    this.searchSubject$.next(this.searchTerm);
+    // Load courses for current page
+    this.loadAllCourses();
   }
 
   /**
