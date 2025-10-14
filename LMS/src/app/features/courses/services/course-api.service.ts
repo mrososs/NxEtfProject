@@ -28,13 +28,19 @@ export class CourseApiService {
     // Add language parameter
     httpParams = httpParams.set('lang', lang);
 
+    // Add pagination parameters
+    httpParams = httpParams.set('page', '1');
+    httpParams = httpParams.set('pageSize', '10');
+    httpParams = httpParams.set('sortBy', 'Id');
+    httpParams = httpParams.set('sortDir', 'desc');
+
     // Add filter parameter as JSON object
     if (filter) {
       const filterObj: any = {};
 
-      // Text search
+      // Text search - use Title filter format
       if (filter.search) {
-        filterObj.search = filter.search;
+        filterObj.filter = `Title = "${filter.search}"`;
       }
 
       // Category filter
@@ -94,9 +100,16 @@ export class CourseApiService {
 
       // Only add filter parameter if there are actual filters
       if (Object.keys(filterObj).length > 0) {
-        const filterString = JSON.stringify(filterObj);
-        httpParams = httpParams.set('filter', filterString);
-        console.log('Sending filter object to API:', filterString);
+        // Use the filter string directly for Title searches
+        if (filterObj.filter) {
+          httpParams = httpParams.set('filter', filterObj.filter);
+          console.log('Sending filter string to API:', filterObj.filter);
+        } else {
+          // For other filters, use JSON format
+          const filterString = JSON.stringify(filterObj);
+          httpParams = httpParams.set('filter', filterString);
+          console.log('Sending filter object to API:', filterString);
+        }
       }
     }
 
@@ -127,6 +140,69 @@ export class CourseApiService {
           } else {
             console.warn(
               'Unknown API response structure for courses:',
+              response
+            );
+            return [];
+          }
+        })
+      );
+  }
+
+  /**
+   * Get courses by ID using filter parameter
+   * @param id Course ID
+   * @param lang Language parameter (default: 'ar')
+   * @param page Page number (default: 1)
+   * @param pageSize Page size (default: 10)
+   * @returns Observable of ApiCourse array
+   */
+  getCoursesByIdFilter(
+    id: number,
+    lang = 'ar',
+    page = 1,
+    pageSize = 10
+  ): Observable<ApiCourse[]> {
+    let httpParams = new HttpParams();
+
+    // Add language parameter
+    httpParams = httpParams.set('lang', lang);
+
+    // Add pagination parameters
+    httpParams = httpParams.set('page', page.toString());
+    httpParams = httpParams.set('pageSize', pageSize.toString());
+    httpParams = httpParams.set('sortBy', 'Id');
+    httpParams = httpParams.set('sortDir', 'desc');
+
+    // Add ID filter
+    httpParams = httpParams.set('filter', `id = ${id}`);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+
+    console.log('Course API request with ID filter:', httpParams.toString());
+    console.log('Full URL will be:', `api/Course?${httpParams.toString()}`);
+
+    return this._http
+      .get<any>(`api/Course`, {
+        headers,
+        params: httpParams,
+      })
+      .pipe(
+        map((response: any) => {
+          console.log('Raw courses API response with ID filter:', response);
+
+          // Handle different API response structures
+          if (Array.isArray(response)) {
+            return response;
+          } else if (response && Array.isArray(response.data)) {
+            return response.data;
+          } else if (response && Array.isArray(response.courses)) {
+            return response.courses;
+          } else {
+            console.warn(
+              'Unknown API response structure for courses with ID filter:',
               response
             );
             return [];

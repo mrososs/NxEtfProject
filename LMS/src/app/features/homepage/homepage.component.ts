@@ -5,6 +5,7 @@ import {
   inject,
   ViewChild,
   OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -13,14 +14,17 @@ import { SerachBarComponent } from './search-bar/serach-bar.component';
 import { CourseCategoryComponent } from './course-category/course-category.component';
 import { CourseLevelComponent } from './course-level/course-level.component';
 import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, Subject } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { HomePageService } from '../courses/services/home-page.service';
 import { Course } from '../courses/model/course.model';
 import { EnrollmentService } from '../courses/services/enrollment.service';
 import { ProfileRequiredService } from '../../shared/services/profile-required.service';
 import { ProfileService } from '../profile/profile.service';
-import { HttpClient } from '@angular/common/http';
+import {
+  SearchService,
+  SearchResult,
+} from '../courses/services/search.service';
 
 @Component({
   selector: 'app-homepage',
@@ -36,12 +40,12 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.scss',
 })
-export class HomepageComponent implements OnInit, AfterViewInit {
+export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   private homepageService = inject(HomePageService);
   private enrollmentService = inject(EnrollmentService);
   private profileRequiredService = inject(ProfileRequiredService);
   private profileService = inject(ProfileService);
-  private http = inject(HttpClient);
+  private searchService = inject(SearchService);
 
   // User name properties
   userFullName = '';
@@ -66,6 +70,8 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   private levelsSubject$ = new BehaviorSubject<string[]>([]);
   private instructorsSubject$ = new BehaviorSubject<string[]>([]);
 
+  private destroy$ = new Subject<void>();
+
   // Filtered courses observable
   filteredCourses$: Observable<Course[]>;
 
@@ -79,14 +85,18 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   @ViewChild('searchSection') searchSectionRef!: ElementRef;
 
   // Mobile filter components
-  @ViewChild('categoryComponent') categoryComponent!: any;
-  @ViewChild('levelComponent') levelComponent!: any;
-  @ViewChild('instructorComponent') instructorComponent!: any;
+  @ViewChild('categoryComponent') categoryComponent!: CourseCategoryComponent;
+  @ViewChild('levelComponent') levelComponent!: CourseLevelComponent;
+  @ViewChild('instructorComponent')
+  instructorComponent!: CourseInstructorComponent;
 
   // Desktop sidebar filter components
-  @ViewChild('categoryComponentSidebar') categoryComponentSidebar!: any;
-  @ViewChild('levelComponentSidebar') levelComponentSidebar!: any;
-  @ViewChild('instructorComponentSidebar') instructorComponentSidebar!: any;
+  @ViewChild('categoryComponentSidebar')
+  categoryComponentSidebar!: CourseCategoryComponent;
+  @ViewChild('levelComponentSidebar')
+  levelComponentSidebar!: CourseLevelComponent;
+  @ViewChild('instructorComponentSidebar')
+  instructorComponentSidebar!: CourseInstructorComponent;
 
   constructor(private router: Router) {
     // Setup filtered courses observable - now just returns the current courses
@@ -101,14 +111,59 @@ export class HomepageComponent implements OnInit, AfterViewInit {
         return this.allCourses;
       })
     );
+
+    // Search is now handled directly in onSearchSectionChange
   }
 
   ngOnInit(): void {
     // Load user name from localStorage
     this.loadUserName();
 
-    // Load all courses from API
+    // Load all courses using search service
     this.loadAllCourses();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Perform search using search service
+   */
+  private performSearch(searchTerm: string): void {
+    this.loading = true;
+    this.error = false;
+
+    const searchParams = {
+      searchTerm: searchTerm.trim(),
+      page: this.currentPage,
+      pageSize: this.pageSize,
+      lang: 'ar',
+    };
+
+    this.searchService.searchCourses(searchParams).subscribe({
+      next: (result: SearchResult) => {
+        this.allCourses = result.courses;
+        this.totalCourses = result.totalCourses;
+        this.totalPages = result.totalPages;
+        this.currentPage = result.currentPage;
+        this.loading = false;
+
+        console.log('Search completed:', {
+          searchTerm,
+          resultsCount: result.courses.length,
+          totalCourses: result.totalCourses,
+          currentPage: result.currentPage,
+        });
+      },
+      error: (error) => {
+        console.error('Search error:', error);
+        this.error = true;
+        this.loading = false;
+        this.allCourses = [];
+      },
+    });
   }
 
   /**
@@ -182,95 +237,35 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Load all courses from API with pagination
+   * Load all courses using search service
    */
   loadAllCourses(): void {
     this.loading = true;
     this.error = false;
 
-    const apiUrlAr = `https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=ar&page=${this.currentPage}&pageSize=${this.pageSize}`;
-    const apiUrlEn = `https://etf-gtfrcrf9gaaceacg.centralus-01.azurewebsites.net/api/Course?lang=en&page=${this.currentPage}&pageSize=${this.pageSize}`;
+    this.searchService
+      .getAllCourses(this.currentPage, this.pageSize)
+      .subscribe({
+        next: (result: SearchResult) => {
+          this.allCourses = result.courses;
+          this.totalCourses = result.totalCourses;
+          this.totalPages = result.totalPages;
+          this.currentPage = result.currentPage;
+          this.loading = false;
 
-    // Load both Arabic and English courses
-    const arabicCourses$ = this.http.get<{
-      data: Course[];
-      count: number;
-      page: number;
-      pageSize: number;
-      totalPages: number;
-    }>(apiUrlAr);
-
-    const englishCourses$ = this.http.get<{
-      data: Course[];
-      count: number;
-      page: number;
-      pageSize: number;
-      totalPages: number;
-    }>(apiUrlEn);
-
-    // Combine both API calls
-    combineLatest([arabicCourses$, englishCourses$]).subscribe({
-      next: ([arabicResponse, englishResponse]) => {
-        const arabicCourses = arabicResponse.data || [];
-        const englishCourses = englishResponse.data || [];
-
-        // Merge courses by ID, keeping Arabic as primary and adding English title
-        this.allCourses = this.mergeCoursesWithBothLanguages(
-          arabicCourses,
-          englishCourses
-        );
-
-        // Update pagination info from API response
-        this.totalCourses = arabicResponse.count || 0;
-        this.totalPages = arabicResponse.totalPages || 1;
-
-        this.loading = false;
-        console.log(
-          'Courses loaded - Page:',
-          this.currentPage,
-          'Total:',
-          this.totalCourses
-        );
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        this.error = true;
-        this.loading = false;
-        this.allCourses = [];
-      },
-    });
-  }
-
-  /**
-   * Merge Arabic and English courses by ID
-   */
-  private mergeCoursesWithBothLanguages(
-    arabicCourses: Course[],
-    englishCourses: Course[]
-  ): Course[] {
-    const mergedCourses: Course[] = [];
-
-    // Create a map of English courses by ID for quick lookup
-    const englishCoursesMap = new Map<number, Course>();
-    englishCourses.forEach((course) => {
-      englishCoursesMap.set(course.id, course);
-    });
-
-    // Process Arabic courses and add English titles
-    arabicCourses.forEach((arabicCourse) => {
-      const englishCourse = englishCoursesMap.get(arabicCourse.id);
-
-      // Create a new course object with both titles
-      const mergedCourse: Course = {
-        ...arabicCourse,
-        titleAr: arabicCourse.title, // Keep Arabic title
-        titleEn: englishCourse?.title || '', // Add English title
-      };
-
-      mergedCourses.push(mergedCourse);
-    });
-
-    return mergedCourses;
+          console.log('All courses loaded:', {
+            resultsCount: result.courses.length,
+            totalCourses: result.totalCourses,
+            currentPage: result.currentPage,
+          });
+        },
+        error: (error) => {
+          console.error('Error loading all courses:', error);
+          this.error = true;
+          this.loading = false;
+          this.allCourses = [];
+        },
+      });
   }
 
   /**
@@ -347,19 +342,26 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   onSearchSectionChange(term: string) {
     this.searchTerm = term;
     this.currentPage = 1; // Reset to first page when searching
-    this.loadAllCourses(); // Reload with new search term
+
+    // Show loading state immediately for better UX
+    if (term && term.trim()) {
+      this.loading = true;
+    }
+
+    // Perform search immediately since search-bar already has debounce
+    this.performSearch(term);
     this.searchSubject$.next(term);
   }
 
   onCategoryChange(selected: number[]) {
     this.selectedCategories = selected;
     this.currentPage = 1; // Reset to first page when filtering
-    this.loadAllCourses(); // Reload with new filter
+    this.performSearch(this.searchTerm); // Reload with new filter
     this.categoriesSubject$.next(selected);
     console.log('Category filter changed:', selected);
   }
 
-  onSelectedCoursesChange(selectedCourses: any[]) {
+  onSelectedCoursesChange(selectedCourses: Course[]) {
     // This method is called by course-category component
     console.log('Selected courses from categories:', selectedCourses);
   }
@@ -367,7 +369,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   onLevelChange(selected: string[]) {
     this.selectedLevels = selected;
     this.currentPage = 1; // Reset to first page when filtering
-    this.loadAllCourses(); // Reload with new filter
+    this.performSearch(this.searchTerm); // Reload with new filter
     this.levelsSubject$.next(selected);
     console.log('Level filter changed:', selected);
   }
@@ -375,7 +377,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   onInstructorChange(selected: string[]) {
     this.selectedInstructors = selected;
     this.currentPage = 1; // Reset to first page when filtering
-    this.loadAllCourses(); // Reload with new filter
+    this.performSearch(this.searchTerm); // Reload with new filter
     this.instructorsSubject$.next(selected);
     console.log('Instructor filter changed:', selected);
   }
@@ -418,8 +420,11 @@ export class HomepageComponent implements OnInit, AfterViewInit {
     // Clear UI component selections first
     this.clearComponentSelections();
 
-    // Reload courses from API
-    this.loadAllCourses();
+    // Clear search cache
+    this.searchService.clearCache();
+
+    // Reload all courses
+    this.performSearch('');
 
     // Update subjects after a small delay to ensure UI updates
     setTimeout(() => {
@@ -479,7 +484,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.loadAllCourses();
+      this.performSearch(this.searchTerm);
     }
   }
 
@@ -489,7 +494,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.loadAllCourses();
+      this.performSearch(this.searchTerm);
     }
   }
 
@@ -499,7 +504,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadAllCourses();
+      this.performSearch(this.searchTerm);
     }
   }
 
@@ -508,7 +513,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    */
   goToFirstPage(): void {
     this.currentPage = 1;
-    this.loadAllCourses();
+    this.performSearch(this.searchTerm);
   }
 
   /**
@@ -516,15 +521,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    */
   goToLastPage(): void {
     this.currentPage = this.totalPages;
-    this.loadAllCourses();
-  }
-
-  /**
-   * Refresh pagination after page change
-   */
-  private refreshPagination(): void {
-    // Load courses for current page
-    this.loadAllCourses();
+    this.performSearch(this.searchTerm);
   }
 
   /**
@@ -600,5 +597,20 @@ export class HomepageComponent implements OnInit, AfterViewInit {
    */
   isEnrolledInCourse(courseId: number): boolean {
     return this.enrollmentService.isEnrolledInCourse(courseId);
+  }
+
+  /**
+   * Get cache statistics for debugging
+   */
+  getCacheStats() {
+    return this.searchService.getCacheStats();
+  }
+
+  /**
+   * Clear search cache (for debugging)
+   */
+  clearSearchCache() {
+    this.searchService.clearCache();
+    console.log('Search cache cleared');
   }
 }

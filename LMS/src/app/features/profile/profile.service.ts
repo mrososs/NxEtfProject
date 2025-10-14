@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { ErrorStateService } from '../../shared/services/error-state.service';
+import { SessionExpiryService } from '../../core/services/session-expiry.service';
 
 export interface UserProfile {
   id?: number;
@@ -32,7 +33,10 @@ export class ProfileService {
   private profileCache$: Observable<UserProfile | null> | null = null;
   private refreshProfileSubject = new BehaviorSubject<void>(undefined);
 
-  constructor(private errorStateService: ErrorStateService) {}
+  constructor(
+    private errorStateService: ErrorStateService,
+    private sessionExpiryService: SessionExpiryService
+  ) {}
 
   /**
    * Get user profile from API with caching
@@ -375,6 +379,9 @@ export class ProfileService {
   logout(): void {
     // Clear profile cache
     this.clearProfileCache();
+
+    // Clear session expiry timestamp
+    this.sessionExpiryService.clearLoginTimestamp();
 
     // Clear localStorage authentication data
     localStorage.removeItem('authToken');

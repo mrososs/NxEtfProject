@@ -8,6 +8,7 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { ErrorStateService } from './shared/services/error-state.service';
 import { AiAssistantComponent } from './shared/components/ai-assistant/ai-assistant.component';
 import { FooterComponent } from './features/footer/footer.component';
+import { SessionExpiryService } from './core/services/session-expiry.service';
 
 @Component({
   selector: 'app-root',
@@ -32,13 +33,20 @@ export class AppComponent implements OnInit {
     private profileService: ProfileService,
     private profileRequiredService: ProfileRequiredService,
     private router: Router,
-    private errorStateService: ErrorStateService
+    private errorStateService: ErrorStateService,
+    private sessionExpiryService: SessionExpiryService
   ) {
     // Check if we're on error page to hide navbar
     this.checkIfOnErrorPage();
   }
 
   ngOnInit(): void {
+    // Check session expiry first - if expired, user will be redirected to login
+    if (this.sessionExpiryService.isSessionExpired()) {
+      this.sessionExpiryService.handleExpiredSession();
+      return;
+    }
+
     // Skip authentication check if we're on error page, already checked, or on courses page
     if (
       this.errorStateService.shouldSkipApiCalls() ||
@@ -101,6 +109,9 @@ export class AppComponent implements OnInit {
       localStorage.setItem('token', tokenFromUrl);
       localStorage.setItem('accessToken', tokenFromUrl);
       localStorage.setItem('auth_token', tokenFromUrl); // Match the key used by external app
+
+      // Save login timestamp for session expiry tracking
+      this.sessionExpiryService.saveLoginTimestamp();
 
       // Clean up URL by removing token parameter
       // This prevents the token from being visible in browser history

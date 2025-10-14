@@ -1,10 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { SessionExpiryService } from '../services/session-expiry.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const sessionExpiryService = inject(SessionExpiryService);
+
   // Check if we're in a browser environment
   if (typeof window !== 'undefined') {
     // Handle token from URL parameters on app startup
-    handleTokenFromUrl();
+    handleTokenFromUrl(sessionExpiryService);
   }
 
   // Get token from localStorage
@@ -24,7 +28,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
  * Handle token from URL parameters when application starts
  * This function checks for token in URL params and saves it to localStorage
  */
-function handleTokenFromUrl(): void {
+function handleTokenFromUrl(sessionExpiryService: SessionExpiryService): void {
   // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const tokenFromUrl =
@@ -40,6 +44,9 @@ function handleTokenFromUrl(): void {
     localStorage.setItem('token', tokenFromUrl);
     localStorage.setItem('accessToken', tokenFromUrl);
     localStorage.setItem('auth_token', tokenFromUrl); // Match external app key
+
+    // Save login timestamp for session expiry tracking
+    sessionExpiryService.saveLoginTimestamp();
 
     // Clean up URL by removing token parameter
     // This prevents the token from being visible in browser history
