@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -9,4 +9,9 @@ import { RouterModule } from '@angular/router';
   templateUrl: './dreams.component.html',
   styleUrl: './dreams.component.scss',
 })
-export class DreamsComponent {}
+export class DreamsComponent {
+  dreamText = input<string>();
+  missionText = input<string>();
+  visionText = input<string>();
+  
+}

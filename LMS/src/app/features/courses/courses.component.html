@@ -1,6 +1,12 @@
 <app-top-banner></app-top-banner>
 <app-logo-banner></app-logo-banner>
 <app-types></app-types>
-<app-training-course></app-training-course>
-<app-dreams></app-dreams>
+<app-training-course
+  [subTitleText]="missionVision()?.subtitle"
+></app-training-course>
+<app-dreams
+  [missionText]="missionVision()?.mission"
+  [visionText]="missionVision()?.vision"
+  [dreamText]="missionVision()?.dream"
+></app-dreams>
 <app-instructors></app-instructors>

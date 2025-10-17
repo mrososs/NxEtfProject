@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { catchError, of } from 'rxjs';
   styleUrl: './Training-course.component.scss',
 })
 export class TrainingCourseComponent implements OnInit {
+  subTitleText = input<string>();
   private _homePageService = inject(HomePageService);
   coursesData: Course[] = [];
   loading = true;
