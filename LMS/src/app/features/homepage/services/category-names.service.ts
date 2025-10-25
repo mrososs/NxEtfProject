@@ -25,10 +25,6 @@ export class CategoryNamesService {
           // Use Arabic name if available, otherwise use English name
           categoryNames[cat.id] = cat.nameAr || cat.name;
         });
-        console.log(
-          'Category names loaded from /api/Categories:',
-          categoryNames
-        );
         return categoryNames;
       }),
       catchError((error) => {

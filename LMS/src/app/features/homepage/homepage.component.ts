@@ -152,13 +152,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalPages = result.totalPages;
         this.currentPage = result.currentPage;
         this.loading = false;
-
-        console.log('Search completed:', {
-          searchTerm,
-          resultsCount: result.courses.length,
-          totalCourses: result.totalCourses,
-          currentPage: result.currentPage,
-        });
       },
       error: (error) => {
         console.error('Search error:', error);
@@ -189,7 +182,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadUserNameFromProfile(): void {
     // Skip profile call if we're in 500 error mode
     if (this.profileService.isIn500ErrorMode()) {
-      console.log('Skipping profile call due to 500 error mode');
       return;
     }
 
@@ -201,12 +193,9 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.userFullName = fullName;
           this.userFirstName = profile.firstName;
           this.userLastName = profile.lastName;
-          console.log('User name loaded from profile service:', fullName);
         }
       },
-      error: () => {
-        console.log('No user name found in localStorage or profile service');
-      },
+      error: () => {},
     });
   }
 
@@ -230,7 +219,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.userFullName = fullName;
           this.userFirstName = profile.firstName;
           this.userLastName = profile.lastName;
-          console.log('User name refreshed from profile service:', fullName);
         }
       },
       error: (error) => {
@@ -261,12 +249,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.totalPages = result.totalPages;
           this.currentPage = result.currentPage;
           this.loading = false;
-
-          console.log('All courses loaded:', {
-            resultsCount: result.courses.length,
-            totalCourses: result.totalCourses,
-            currentPage: result.currentPage,
-          });
         },
         error: (error) => {
           console.error('Error loading all courses:', error);
@@ -279,7 +261,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     // View initialization complete
-    console.log('View initialized');
   }
 
   onSearchSectionChange(term: string) {
@@ -301,12 +282,10 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentPage = 1; // Reset to first page when filtering
     this.performSearch(this.searchTerm); // Reload with new filter
     this.categoriesSubject$.next(selected);
-    console.log('Category filter changed:', selected);
   }
 
   onSelectedCoursesChange(selectedCourses: Course[]) {
     // This method is called by course-category component
-    console.log('Selected courses from categories:', selectedCourses);
   }
 
   onLevelChange(selected: string[]) {
@@ -314,7 +293,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentPage = 1; // Reset to first page when filtering
     this.performSearch(this.searchTerm); // Reload with new filter
     this.levelsSubject$.next(selected);
-    console.log('Level filter changed:', selected);
   }
 
   onInstructorChange(selected: string[]) {
@@ -322,7 +300,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentPage = 1; // Reset to first page when filtering
     this.performSearch(this.searchTerm); // Reload with new filter
     this.instructorsSubject$.next(selected);
-    console.log('Instructor filter changed:', selected);
   }
 
   // Check profile before accessing protected features
@@ -339,14 +316,12 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   // Protected actions that require profile
   onCourseClick(courseId: number): void {
     this.checkProfileBeforeAction(() => {
-      console.log('Navigating to course:', courseId);
       // Navigate to course details
     });
   }
 
   onInstructorClick(instructorId: number): void {
     this.checkProfileBeforeAction(() => {
-      console.log('Navigating to instructor:', instructorId);
       // Navigate to instructor details
     });
   }
@@ -531,7 +506,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
       // Navigate to course details page
       this.router.navigate(['/courses', courseId]);
     } else {
-      console.warn('No course ID available for navigation');
     }
   }
 
@@ -554,6 +528,5 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   clearSearchCache() {
     this.searchService.clearCache();
-    console.log('Search cache cleared');
   }
 }

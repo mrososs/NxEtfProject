@@ -36,7 +36,6 @@ export class SerachBarComponent implements OnChanges, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe((searchTerm) => {
-        console.log('Search bar debounced value:', searchTerm);
         this.searchTermChange.emit(searchTerm);
       });
   }

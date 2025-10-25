@@ -57,7 +57,6 @@ export class CategoryService {
           }
         });
 
-        console.log('Courses count by category:', categoryCounts);
         return categoryCounts;
       })
     );

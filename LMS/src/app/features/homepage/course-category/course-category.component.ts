@@ -44,7 +44,6 @@ export class CourseCategoryComponent implements OnInit {
     this.categoryService.getCategoryNames().subscribe({
       next: (names) => {
         this.categoryNames = names;
-        console.log('Category names loaded from /api/Categories:', names);
       },
       error: (error) => {
         console.error('Error loading category names:', error);
@@ -57,18 +56,6 @@ export class CourseCategoryComponent implements OnInit {
     this.categoryNamesService.getCategoryNamesFromCourses().subscribe({
       next: (names) => {
         this.categoryNames = names;
-        console.log('Category names loaded from courses API:', names);
-
-        // Log which names came from API vs generic
-        Object.entries(names).forEach(([id, name]) => {
-          if (name.startsWith('فئة ')) {
-            console.log(
-              `Category ${id}: Using generic name "${name}" (API returned null)`
-            );
-          } else {
-            console.log(`Category ${id}: Using API name "${name}"`);
-          }
-        });
       },
       error: (error) => {
         console.error('Error loading category names from courses:', error);
@@ -83,10 +70,6 @@ export class CourseCategoryComponent implements OnInit {
     this.categoryService.getCoursesCountByCategory().subscribe({
       next: (counts) => {
         this.categoryCounts = counts;
-        console.log(
-          'Courses count loaded from /api/Course/categories:',
-          counts
-        );
       },
       error: (error) => {
         console.error('Error loading courses count:', error);
@@ -122,24 +105,11 @@ export class CourseCategoryComponent implements OnInit {
       checked: false,
       courseCount: this.categoryCounts[categoryId] || 0,
     }));
-
-    console.log('Processed categories:', this.categories);
   }
 
   private getCategoryLabel(categoryId: number): string {
     // Use the category names from /api/Categories
     const name = this.categoryNames[categoryId] || `فئة ${categoryId}`;
-
-    // Log the source of the name for debugging
-    if (this.categoryNames[categoryId]) {
-      console.log(
-        `Category ${categoryId}: Using name from /api/Categories: "${name}"`
-      );
-    } else {
-      console.log(
-        `Category ${categoryId}: No name from /api/Categories, using fallback "${name}"`
-      );
-    }
 
     return name;
   }
@@ -167,7 +137,7 @@ export class CourseCategoryComponent implements OnInit {
    * Clear all selected categories
    */
   clearSelection() {
-    this.categories.forEach(cat => cat.checked = false);
+    this.categories.forEach((cat) => (cat.checked = false));
     this.selectedCategoriesChange.emit([]);
     this.selectedCoursesChange.emit([]);
   }
