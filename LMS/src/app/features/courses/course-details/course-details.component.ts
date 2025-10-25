@@ -27,6 +27,9 @@ interface Review {
   courseId?: number;
   userId?: string;
   reactions?: any;
+  userName?: string;
+  userImage?: string;
+  isEditable?: boolean;
 }
 
 interface LearningObjective {
@@ -177,6 +180,13 @@ export class CourseDetailsComponent implements OnInit {
     text: '',
   };
 
+  // Edit review properties
+  editingReview: Review | null = null;
+  editReview = {
+    rating: 0,
+    text: '',
+  };
+
   ngOnInit(): void {
     this._route.params.subscribe((params) => {
       this.courseId = +params['id'];
@@ -260,8 +270,11 @@ export class CourseDetailsComponent implements OnInit {
         comment: review.comment || '',
         reviewRating: Math.round(review.reviewRating) || 0, // Round to integer
         courseId: review.courseId,
-        userId: review.userId,
+        userId: review.user?.userId || review.userId,
         reactions: review.reactions,
+        userName: this.getUserNameForReview(review),
+        userImage: this.getUserImageForReview(review),
+        isEditable: this.isReviewEditable(review),
       }));
       console.log('Reviews loaded from course data:', this.reviews);
     } else {
@@ -375,7 +388,7 @@ export class CourseDetailsComponent implements OnInit {
    */
   private formatDuration(duration: string): string {
     const minutes = this.parseDuration(duration);
-    if (minutes === 0) return '0 دقيقة';
+    if (minutes === 0) return ''; // Return empty string for 0 duration
     if (minutes === 1) return '1 دقيقة';
     if (minutes < 60) return `${minutes} دقيقة`;
 
@@ -393,7 +406,7 @@ export class CourseDetailsComponent implements OnInit {
    * Format total duration
    */
   private formatTotalDuration(totalMinutes: number): string {
-    if (totalMinutes === 0) return '0 دقيقة';
+    if (totalMinutes === 0) return ''; // Return empty string for 0 total duration
     if (totalMinutes === 1) return '1 دقيقة';
     if (totalMinutes < 60) return `${totalMinutes} دقيقة`;
 
@@ -444,6 +457,11 @@ export class CourseDetailsComponent implements OnInit {
               courseId: this.courseId,
               userId: response.userId,
               reactions: response.reactions,
+              userName: this.userName,
+              userImage:
+                localStorage.getItem('userProfileImage') ||
+                'assets/img/default-avatar.png',
+              isEditable: true,
             };
             this.reviews.unshift(newReview);
             this.newReview = { rating: 0, text: '' };
@@ -510,6 +528,81 @@ export class CourseDetailsComponent implements OnInit {
    */
   trackByReviewId(index: number, review: Review): any {
     return review.id || index;
+  }
+
+  /**
+   * Start editing a review
+   */
+  startEditReview(review: Review): void {
+    this.editingReview = review;
+    this.editReview = {
+      rating: review.reviewRating,
+      text: review.comment,
+    };
+  }
+
+  /**
+   * Cancel editing review
+   */
+  cancelEditReview(): void {
+    this.editingReview = null;
+    this.editReview = { rating: 0, text: '' };
+  }
+
+  /**
+   * Save edited review
+   */
+  saveEditReview(): void {
+    if (
+      !this.editingReview ||
+      this.editReview.rating <= 0 ||
+      !this.editReview.text.trim()
+    ) {
+      this._messageService.add({
+        severity: 'warning',
+        summary: 'تحذير',
+        detail: 'يرجى إدخال التقييم والتعليق',
+        life: 3000,
+      });
+      return;
+    }
+
+    // Update the review in the local list
+    const reviewIndex = this.reviews.findIndex(
+      (r) => r.id === this.editingReview!.id
+    );
+    if (reviewIndex !== -1) {
+      this.reviews[reviewIndex].reviewRating = this.editReview.rating;
+      this.reviews[reviewIndex].comment = this.editReview.text.trim();
+    }
+
+    // Reset editing state
+    this.editingReview = null;
+    this.editReview = { rating: 0, text: '' };
+
+    this._messageService.add({
+      severity: 'success',
+      summary: 'تم التحديث',
+      detail: 'تم تحديث التقييم بنجاح',
+      life: 3000,
+    });
+  }
+
+  /**
+   * Delete a review
+   */
+  deleteReview(review: Review): void {
+    const reviewIndex = this.reviews.findIndex((r) => r.id === review.id);
+    if (reviewIndex !== -1) {
+      this.reviews.splice(reviewIndex, 1);
+
+      this._messageService.add({
+        severity: 'success',
+        summary: 'تم الحذف',
+        detail: 'تم حذف التقييم بنجاح',
+        life: 3000,
+      });
+    }
   }
 
   /**
@@ -909,7 +1002,7 @@ export class CourseDetailsComponent implements OnInit {
    */
   getTotalCourseDuration(): string {
     if (!this.course?.lessons || this.course.lessons.length === 0) {
-      return '0 دقيقة';
+      return '';
     }
 
     return this.calculateTotalDuration(this.course.lessons);
@@ -939,6 +1032,85 @@ export class CourseDetailsComponent implements OnInit {
 
     // Fallback to a default name
     this.userName = 'المستخدم';
+  }
+
+  /**
+   * Get user name for review
+   */
+  private getUserNameForReview(review: any): string {
+    // If review has user object with name information
+    if (review.user && review.user.firstName) {
+      const firstName = review.user.firstName || '';
+      const lastName = review.user.lastName || '';
+      const middleName = review.user.middleName || '';
+
+      // Build full name
+      let fullName = firstName;
+      if (middleName) {
+        fullName += ` ${middleName}`;
+      }
+      if (lastName) {
+        fullName += ` ${lastName}`;
+      }
+
+      return fullName.trim() || 'المستخدم';
+    }
+
+    // If it's a new review (no userId or matches current user), use current user name
+    if (!review.userId || this.isCurrentUserReview(review)) {
+      return this.userName || 'المستخدم';
+    }
+
+    // For other users, use default
+    return 'مستخدم آخر';
+  }
+
+  /**
+   * Get user image for review
+   */
+  private getUserImageForReview(review: any): string {
+    // If review has user object with image information
+    if (review.user && review.user.image) {
+      return review.user.image;
+    }
+
+    // If it's a new review (no userId or matches current user), use current user image
+    if (!review.userId || this.isCurrentUserReview(review)) {
+      return (
+        localStorage.getItem('userProfileImage') ||
+        'assets/img/default-avatar.png'
+      );
+    }
+
+    // For other users, use default image
+    return 'assets/img/default-avatar.png';
+  }
+
+  /**
+   * Check if review is editable by current user
+   */
+  private isReviewEditable(review: any): boolean {
+    // Check if this review belongs to current user
+    return this.isCurrentUserReview(review);
+  }
+
+  /**
+   * Check if review belongs to current user
+   */
+  private isCurrentUserReview(review: any): boolean {
+    const currentUserId = localStorage.getItem('userId');
+
+    // Check if review has user object with userId
+    if (review.user && review.user.userId) {
+      return !!(currentUserId && currentUserId === review.user.userId);
+    }
+
+    // Fallback to old userId field
+    return !!(
+      currentUserId &&
+      review.userId &&
+      currentUserId === review.userId
+    );
   }
 
   /**

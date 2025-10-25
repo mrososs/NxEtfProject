@@ -1,4 +1,35 @@
 // Course Details Component - Enhanced Modern Styling
+
+// Review styles
+.reviewer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 10px;
+  border: 2px solid #e9ecef;
+}
+
+.review-actions {
+  display: flex;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.edit-review-form {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .course-details-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f6f3f3 0%, #fbf9f6 100%);

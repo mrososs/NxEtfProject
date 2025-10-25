@@ -9,6 +9,9 @@ export interface SearchParams {
   page?: number;
   pageSize?: number;
   lang?: string;
+  categories?: number[];
+  levels?: string[];
+  instructors?: string[];
 }
 
 export interface SearchResult {
@@ -50,13 +53,6 @@ export class SearchService {
     courses: Course[]
   ): number | null {
     const searchTerm = arabicTitle.toLowerCase().trim();
-    console.log(
-      'Searching for Arabic title:',
-      searchTerm,
-      'in',
-      courses.length,
-      'courses'
-    );
 
     const course = courses.find((c) => {
       const titleMatch = c.title?.toLowerCase().includes(searchTerm);
@@ -64,13 +60,6 @@ export class SearchService {
       const titleEnMatch = c.titleEn?.toLowerCase().includes(searchTerm);
 
       if (titleMatch || titleArMatch || titleEnMatch) {
-        console.log('Found matching course:', {
-          id: c.id,
-          title: c.title,
-          titleAr: c.titleAr,
-          titleEn: c.titleEn,
-          match: { titleMatch, titleArMatch, titleEnMatch },
-        });
         return true;
       }
       return false;
@@ -87,12 +76,18 @@ export class SearchService {
     page: number;
     pageSize: number;
     filter?: string;
+    categories?: number[];
+    levels?: string[];
+    instructors?: string[];
   }): string {
     let url = `${this.baseUrl}?lang=${params.lang}&page=${params.page}&pageSize=${params.pageSize}&sortBy=Id&sortDir=desc`;
 
     if (params.filter) {
       url += `&filter=${encodeURIComponent(params.filter)}`;
     }
+
+    // Note: API doesn't support advanced filtering, so we'll filter on client-side
+    // The categories, levels, and instructors will be handled in the filtering logic
 
     return url;
   }
@@ -105,6 +100,9 @@ export class SearchService {
     page: number;
     pageSize: number;
     filter?: string;
+    categories?: number[];
+    levels?: string[];
+    instructors?: string[];
   }): Observable<SearchResult> {
     const apiUrlAr = this.buildApiUrl({ ...params, lang: 'ar' });
     const apiUrlEn = this.buildApiUrl({ ...params, lang: 'en' });
@@ -136,10 +134,18 @@ export class SearchService {
           englishCourses
         );
 
+        // Apply client-side filtering
+        const filteredCourses = this.applyClientSideFilters(
+          mergedCourses,
+          params.categories,
+          params.levels,
+          params.instructors
+        );
+
         return {
-          courses: mergedCourses,
-          totalCourses: arabicResponse.count || 0,
-          totalPages: arabicResponse.totalPages || 1,
+          courses: filteredCourses,
+          totalCourses: filteredCourses.length,
+          totalPages: Math.ceil(filteredCourses.length / params.pageSize),
           currentPage: params.page,
         };
       }),
@@ -188,10 +194,80 @@ export class SearchService {
   }
 
   /**
+   * Apply client-side filtering to courses
+   */
+  private applyClientSideFilters(
+    courses: Course[],
+    categories?: number[],
+    levels?: string[],
+    instructors?: string[]
+  ): Course[] {
+    if (!courses || courses.length === 0) {
+      return [];
+    }
+
+    return courses.filter((course) => {
+      // Category filter
+      if (categories && categories.length > 0) {
+        // Only filter by categories if the course has categories
+        if (course.categories && course.categories.length > 0) {
+          const hasMatchingCategory = categories.some((categoryId) =>
+            course.categories?.includes(categoryId.toString())
+          );
+          if (!hasMatchingCategory) {
+            return false;
+          }
+        } else {
+          // If course has no categories, exclude it from category-filtered results
+          return false;
+        }
+      }
+
+      // Level filter
+      if (levels && levels.length > 0) {
+        // Check if course has a valid level (not empty, null, or undefined)
+        if (course.courseLevel && course.courseLevel.trim() !== '') {
+          const hasMatchingLevel = levels.some(
+            (level) => course.courseLevel?.toLowerCase() === level.toLowerCase()
+          );
+          if (!hasMatchingLevel) {
+            return false;
+          }
+        } else {
+          // If course has no level, empty level, or null/undefined, exclude it from level-filtered results
+          return false;
+        }
+      }
+
+      // Instructor filter
+      if (instructors && instructors.length > 0) {
+        if (!course.trainerName) {
+          return false;
+        }
+        const hasMatchingInstructor = instructors.some((instructor) =>
+          course.trainerName?.toLowerCase().includes(instructor.toLowerCase())
+        );
+        if (!hasMatchingInstructor) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  /**
    * Get cache key for search
    */
   private getCacheKey(params: SearchParams): string {
-    return `${params.searchTerm}-${params.page}-${params.pageSize}-${params.lang}`;
+    const categoriesKey = params.categories
+      ? params.categories.sort().join(',')
+      : '';
+    const levelsKey = params.levels ? params.levels.sort().join(',') : '';
+    const instructorsKey = params.instructors
+      ? params.instructors.sort().join(',')
+      : '';
+    return `${params.searchTerm}-${params.page}-${params.pageSize}-${params.lang}-${categoriesKey}-${levelsKey}-${instructorsKey}`;
   }
 
   /**
@@ -205,52 +281,64 @@ export class SearchService {
    * Search courses with smart caching and Arabic/English handling
    */
   searchCourses(params: SearchParams): Observable<SearchResult> {
-    const { searchTerm, page = 1, pageSize = 10, lang = 'ar' } = params;
+    const {
+      searchTerm,
+      page = 1,
+      pageSize = 10,
+      lang = 'ar',
+      categories,
+      levels,
+      instructors,
+    } = params;
 
     // Check cache first
     const cacheKey = this.getCacheKey(params);
     const cachedResult = this.searchCache.get(cacheKey);
     if (cachedResult) {
-      console.log('Returning cached search result for:', searchTerm);
       return of(cachedResult);
     }
 
     // Handle empty search term - return all courses
     if (!searchTerm || searchTerm.trim() === '') {
-      return this.getAllCourses(page, pageSize);
+      return this.getAllCourses(
+        page,
+        pageSize,
+        categories,
+        levels,
+        instructors
+      );
     }
 
     // Check if search term contains Arabic characters
     if (this.isArabicText(searchTerm)) {
-      console.log('Arabic text detected:', searchTerm);
-
       // For Arabic text, first try to find course ID from cached courses
       if (
         this.allCoursesCache &&
         this.isCacheValid(this.allCoursesCacheTimestamp)
       ) {
-        console.log('Searching in cached courses for Arabic text');
         const courseId = this.findCourseIdByArabicTitle(
           searchTerm,
           this.allCoursesCache
         );
         if (courseId) {
-          console.log(
-            'Found Arabic course ID:',
+          return this.searchCoursesById(
             courseId,
-            'for search term:',
-            searchTerm
-          );
-          return this.searchCoursesById(courseId, page, pageSize);
-        } else {
-          console.log(
-            'No matching course ID found in cache, trying title search'
+            page,
+            pageSize,
+            categories,
+            levels,
+            instructors
           );
         }
       } else {
-        console.log('No cached courses available, loading all courses first');
         // Load all courses first to get the cache, then search
-        return this.getAllCourses(1, 1000).pipe(
+        return this.getAllCourses(
+          1,
+          1000,
+          categories,
+          levels,
+          instructors
+        ).pipe(
           switchMap(() => {
             // After loading all courses, try to find the course ID
             if (this.allCoursesCache) {
@@ -259,25 +347,41 @@ export class SearchService {
                 this.allCoursesCache
               );
               if (courseId) {
-                console.log(
-                  'Found Arabic course ID after loading cache:',
+                return this.searchCoursesById(
                   courseId,
-                  'for search term:',
-                  searchTerm
+                  page,
+                  pageSize,
+                  categories,
+                  levels,
+                  instructors
                 );
-                return this.searchCoursesById(courseId, page, pageSize);
               }
             }
             // Fallback to title search
-            return this.searchCoursesByTitle(searchTerm, page, pageSize, lang);
+            return this.searchCoursesByTitle(
+              searchTerm,
+              page,
+              pageSize,
+              lang,
+              categories,
+              levels,
+              instructors
+            );
           })
         );
       }
     }
 
     // Default title search for English text
-    console.log('Performing title search for:', searchTerm);
-    return this.searchCoursesByTitle(searchTerm, page, pageSize, lang);
+    return this.searchCoursesByTitle(
+      searchTerm,
+      page,
+      pageSize,
+      lang,
+      categories,
+      levels,
+      instructors
+    );
   }
 
   /**
@@ -287,12 +391,21 @@ export class SearchService {
     title: string,
     page = 1,
     pageSize = 10,
-    lang = 'ar'
+    lang = 'ar',
+    categories?: number[],
+    levels?: string[],
+    instructors?: string[]
   ): Observable<SearchResult> {
-    console.log('Searching by title:', title);
-
     const filter = `Title = "${title}"`;
-    return this.loadCoursesFromApi({ lang, page, pageSize, filter }).pipe(
+    return this.loadCoursesFromApi({
+      lang,
+      page,
+      pageSize,
+      filter,
+      categories,
+      levels,
+      instructors,
+    }).pipe(
       tap((result) => {
         // Cache the result
         const cacheKey = this.getCacheKey({
@@ -312,12 +425,21 @@ export class SearchService {
   searchCoursesById(
     courseId: number,
     page = 1,
-    pageSize = 10
+    pageSize = 10,
+    categories?: number[],
+    levels?: string[],
+    instructors?: string[]
   ): Observable<SearchResult> {
-    console.log('Searching by ID:', courseId);
-
     const filter = `id = ${courseId}`;
-    return this.loadCoursesFromApi({ lang: 'ar', page, pageSize, filter }).pipe(
+    return this.loadCoursesFromApi({
+      lang: 'ar',
+      page,
+      pageSize,
+      filter,
+      categories,
+      levels,
+      instructors,
+    }).pipe(
       tap((result) => {
         // Cache the result
         const cacheKey = this.getCacheKey({
@@ -333,23 +455,37 @@ export class SearchService {
   /**
    * Get all courses with caching
    */
-  getAllCourses(page = 1, pageSize = 10): Observable<SearchResult> {
-    console.log('Loading all courses');
-
+  getAllCourses(
+    page = 1,
+    pageSize = 10,
+    categories?: number[],
+    levels?: string[],
+    instructors?: string[]
+  ): Observable<SearchResult> {
     // Check if we have valid cached data
     if (
       this.allCoursesCache &&
       this.isCacheValid(this.allCoursesCacheTimestamp)
     ) {
-      console.log('Returning cached all courses');
+      // Apply client-side filtering to cached data
+      const filteredCachedCourses = this.applyClientSideFilters(
+        this.allCoursesCache,
+        categories,
+        levels,
+        instructors
+      );
+
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
-      const paginatedCourses = this.allCoursesCache.slice(startIndex, endIndex);
+      const paginatedCourses = filteredCachedCourses.slice(
+        startIndex,
+        endIndex
+      );
 
       return of({
         courses: paginatedCourses,
-        totalCourses: this.allCoursesCache.length,
-        totalPages: Math.ceil(this.allCoursesCache.length / pageSize),
+        totalCourses: filteredCachedCourses.length,
+        totalPages: Math.ceil(filteredCachedCourses.length / pageSize),
         currentPage: page,
       });
     }
@@ -361,12 +497,14 @@ export class SearchService {
       lang: 'ar',
       page: 1,
       pageSize: loadPageSize,
+      categories,
+      levels,
+      instructors,
     }).pipe(
       tap((result) => {
         // Cache all courses for future use
         this.allCoursesCache = result.courses;
         this.allCoursesCacheTimestamp = Date.now();
-        console.log('Cached all courses:', result.courses.length);
       }),
       map((result) => {
         // Return paginated results for the requested page
@@ -391,7 +529,6 @@ export class SearchService {
     this.searchCache.clear();
     this.allCoursesCache = null;
     this.allCoursesCacheTimestamp = 0;
-    console.log('Search cache cleared');
   }
 
   /**

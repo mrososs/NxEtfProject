@@ -140,6 +140,9 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
       page: this.currentPage,
       pageSize: this.pageSize,
       lang: 'ar',
+      categories: this.selectedCategories,
+      levels: this.selectedLevels,
+      instructors: this.selectedInstructors,
     };
 
     this.searchService.searchCourses(searchParams).subscribe({
@@ -244,7 +247,13 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.error = false;
 
     this.searchService
-      .getAllCourses(this.currentPage, this.pageSize)
+      .getAllCourses(
+        this.currentPage,
+        this.pageSize,
+        this.selectedCategories,
+        this.selectedLevels,
+        this.selectedInstructors
+      )
       .subscribe({
         next: (result: SearchResult) => {
           this.allCourses = result.courses;
@@ -266,72 +275,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.allCourses = [];
         },
       });
-  }
-
-  /**
-   * Filter courses based on search term, categories, levels, and instructors
-   */
-  private filterCourses(
-    courses: Course[],
-    searchTerm: string,
-    categories: number[],
-    levels: string[],
-    instructors: string[]
-  ): Course[] {
-    if (!courses || courses.length === 0) {
-      return [];
-    }
-
-    return courses.filter((course) => {
-      // Search filter
-      if (searchTerm && searchTerm.trim()) {
-        const searchLower = searchTerm.toLowerCase().trim();
-        const titleMatch = course.title.toLowerCase().includes(searchLower);
-        const descriptionMatch = course.description
-          ?.toLowerCase()
-          .includes(searchLower);
-        const trainerMatch = course.trainerName
-          ?.toLowerCase()
-          .includes(searchLower);
-
-        if (!titleMatch && !descriptionMatch && !trainerMatch) {
-          return false;
-        }
-      }
-
-      // Category filter
-      if (categories && categories.length > 0) {
-        // This would be implemented when we have category API integration
-        // For now, we'll skip category filtering
-      }
-
-      // Level filter
-      if (levels && levels.length > 0) {
-        if (
-          !course.courseLevel ||
-          !levels.includes(course.courseLevel.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-
-      // Instructor filter
-      if (instructors && instructors.length > 0) {
-        if (!course.trainerName) {
-          return false;
-        }
-
-        const trainerMatch = instructors.some((instructor) =>
-          course.trainerName?.toLowerCase().includes(instructor.toLowerCase())
-        );
-
-        if (!trainerMatch) {
-          return false;
-        }
-      }
-
-      return true;
-    });
   }
 
   ngAfterViewInit() {

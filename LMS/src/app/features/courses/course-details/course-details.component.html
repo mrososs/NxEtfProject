@@ -314,8 +314,14 @@
                   >
                     <div class="review-header">
                       <div class="reviewer-info">
+                        <img
+                          [src]="review.userImage"
+                          [alt]="review.userName"
+                          class="reviewer-avatar"
+                          onerror="this.src='assets/img/default-avatar.png'"
+                        />
                         <div class="reviewer-details">
-                          <h4 class="reviewer-name">مستخدم</h4>
+                          <h4 class="reviewer-name">{{ review.userName }}</h4>
                           <div class="review-rating">
                             <i
                               class="pi pi-star-fill"
@@ -325,8 +331,71 @@
                           </div>
                         </div>
                       </div>
+                      <div class="review-actions" *ngIf="review.isEditable">
+                        <button
+                          class="btn btn-sm btn-outline-primary me-2"
+                          (click)="startEditReview(review)"
+                          *ngIf="editingReview?.id !== review.id"
+                        >
+                          <i class="pi pi-pencil"></i> تعديل
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="deleteReview(review)"
+                          *ngIf="editingReview?.id !== review.id"
+                        >
+                          <i class="pi pi-trash"></i> حذف
+                        </button>
+                      </div>
                     </div>
-                    <p class="review-text">{{ review.comment }}</p>
+
+                    <!-- Edit form -->
+                    <div
+                      class="edit-review-form"
+                      *ngIf="editingReview?.id === review.id"
+                    >
+                      <div class="rating-input">
+                        <label>التقييم:</label>
+                        <div class="star-rating">
+                          <button
+                            type="button"
+                            class="star-btn"
+                            *ngFor="let star of [1, 2, 3, 4, 5]"
+                            [class.filled]="star <= editReview.rating"
+                            (click)="editReview.rating = star"
+                          >
+                            <i class="pi pi-star"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="review-text-input">
+                        <label>التعليق:</label>
+                        <textarea
+                          [(ngModel)]="editReview.text"
+                          placeholder="اكتب تعليقك هنا..."
+                          rows="3"
+                        ></textarea>
+                      </div>
+                      <div class="edit-actions">
+                        <button
+                          class="btn btn-primary me-2"
+                          (click)="saveEditReview()"
+                        >
+                          حفظ التغييرات
+                        </button>
+                        <button
+                          class="btn btn-secondary"
+                          (click)="cancelEditReview()"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Review content -->
+                    <div *ngIf="editingReview?.id !== review.id">
+                      <p class="review-text">{{ review.comment }}</p>
+                    </div>
                   </div>
 
                   <!-- No reviews message -->

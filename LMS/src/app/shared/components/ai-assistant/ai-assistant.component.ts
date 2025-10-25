@@ -1,12 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked,
-  inject,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -15,12 +7,13 @@ import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { AvatarModule } from 'primeng/avatar';
 import { BadgeModule } from 'primeng/badge';
-import {
-  AiAssistantService,
-  ChatMessage,
-} from '../../services/ai-assistant.service';
+import { AiAssistantService } from '../../services/ai-assistant.service';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
 
 @Component({
   selector: 'app-ai-assistant',
@@ -36,113 +29,78 @@ import { takeUntil } from 'rxjs/operators';
     BadgeModule,
   ],
   template: `
-    <div class="ai-assistant-container">
-      <!-- Chat Toggle Button -->
+    <div class="faq-container">
+      <!-- FAQ Toggle Button -->
       <button
-        class="chat-toggle-btn"
-        (click)="toggleChat()"
+        class="faq-toggle-btn"
+        (click)="toggleFaq()"
         [class.open]="isOpen$ | async"
-        title="مساعد ذكي - اسأل أي سؤال!"
+        title="الأسئلة الشائعة"
       >
-        <i class="pi pi-comment" *ngIf="!(isOpen$ | async)"></i>
+        <i
+          class="pi pi-question-circle"
+          *ngIf="(isOpen$ | async) === false"
+        ></i>
         <i class="pi pi-times" *ngIf="isOpen$ | async"></i>
-        <span class="chat-badge" *ngIf="hasNewMessages && !(isOpen$ | async)"
-          >جديد</span
-        >
       </button>
 
-      <!-- Chat Window -->
-      <div class="chat-window" [class.show]="isOpen$ | async">
-        <!-- Chat Header -->
-        <div class="chat-header">
+      <!-- FAQ Window -->
+      <div class="faq-window" [class.show]="isOpen$ | async">
+        <!-- FAQ Header -->
+        <div class="faq-header">
           <div class="header-content">
             <p-avatar
-              icon="pi pi-robot"
+              icon="pi pi-question-circle"
               shape="circle"
               size="normal"
-              styleClass="ai-avatar"
+              styleClass="faq-avatar"
             >
             </p-avatar>
             <div class="header-text">
-              <h4>المساعد الذكي</h4>
-              <span class="status">متاح الآن</span>
+              <h4>الأسئلة الشائعة</h4>
+              <span class="status">اختر سؤالاً للحصول على الإجابة</span>
             </div>
           </div>
-          <button class="close-btn" (click)="closeChat()" title="إغلاق">
+          <button class="close-btn" (click)="closeFaq()" title="إغلاق">
             <i class="pi pi-minus"></i>
           </button>
         </div>
 
-        <!-- Chat Messages -->
-        <div class="chat-messages" #messagesContainer>
-          <div
-            *ngFor="let message of messages$ | async; trackBy: trackByMessageId"
-            class="message-wrapper"
-            [class.user]="message.isUser"
-            [class.bot]="!message.isUser"
-            [class.typing]="message.isTyping"
-          >
-            <div class="message">
-              <p-avatar
-                *ngIf="!message.isUser"
-                icon="pi pi-robot"
-                shape="circle"
-                size="normal"
-                styleClass="message-avatar"
-              >
-              </p-avatar>
+        <!-- FAQ Questions -->
+        <div class="faq-questions">
+          <div class="questions-list">
+            <div
+              *ngFor="let faq of faqList; let i = index"
+              class="faq-item"
+              [class.active]="selectedFaqIndex === i"
+              (click)="selectFaq(i)"
+              (keydown.enter)="selectFaq(i)"
+              (keydown.space)="selectFaq(i)"
+              tabindex="0"
+            >
+              <div class="faq-question">
+                <i class="pi pi-question-circle"></i>
+                <span>{{ faq.question }}</span>
+                <i
+                  class="pi pi-chevron-down expand-icon"
+                  [class.rotated]="selectedFaqIndex === i"
+                ></i>
+              </div>
 
+              <!-- FAQ Answer -->
               <div
-                class="message-content"
-                [innerHTML]="formatMessage(message.content)"
+                class="faq-answer"
+                *ngIf="selectedFaqIndex === i"
+                [innerHTML]="formatAnswer(faq.answer)"
               ></div>
-
-              <span class="message-time">{{
-                formatTime(message.timestamp)
-              }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Suggested Questions -->
-        <div class="suggested-questions" *ngIf="showSuggestions">
-          <h5>أسئلة مقترحة:</h5>
-          <button
-            *ngFor="let question of suggestedQuestions"
-            class="suggestion-btn"
-            (click)="sendSuggestedQuestion(question)"
-          >
-            {{ question }}
-          </button>
-        </div>
-
-        <!-- Chat Input -->
-        <div class="chat-input">
-          <div class="input-container">
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="newMessage"
-              (keyup.enter)="sendMessage()"
-              (keyup)="onInputKeyup()"
-              placeholder="اكتب سؤالك هنا..."
-              [disabled]="isTyping"
-              #messageInput
-              class="message-input"
-            />
-            <button
-              pButton
-              icon="pi pi-send"
-              class="send-btn"
-              (click)="sendMessage()"
-              [disabled]="!newMessage.trim() || isTyping"
-            ></button>
-          </div>
-        </div>
-
-        <!-- Contact Info (when no answer found) -->
-        <div class="contact-info" *ngIf="showContactInfo">
-          <h5>تواصل معنا مباشرة:</h5>
+        <!-- Contact Info -->
+        <div class="contact-info">
+          <h5>لم تجد إجابة لسؤالك؟</h5>
+          <p>تواصل معنا مباشرة:</p>
           <div class="contact-buttons">
             <a [href]="'tel:' + contactInfo.phone" class="contact-btn phone">
               <i class="pi pi-phone"></i>
@@ -167,174 +125,97 @@ import { takeUntil } from 'rxjs/operators';
   `,
   styleUrls: ['./ai-assistant.component.scss'],
 })
-export class AiAssistantComponent
-  implements OnInit, OnDestroy, AfterViewChecked
-{
-  @ViewChild('messagesContainer') messagesContainer!: ElementRef;
-  @ViewChild('messageInput') messageInput!: ElementRef;
-
+export class AiAssistantComponent implements OnInit, OnDestroy {
   private aiService = inject(AiAssistantService);
   private destroy$ = new Subject<void>();
 
-  messages$: Observable<ChatMessage[]> = this.aiService.messages$;
   isOpen$: Observable<boolean> = this.aiService.isOpen$;
 
-  newMessage = '';
-  isTyping = false;
-  hasNewMessages = false;
-  showSuggestions = true;
-  showContactInfo = false;
-
-  suggestedQuestions: string[] = [];
+  selectedFaqIndex: number | null = null;
+  faqList: FAQItem[] = [];
   contactInfo = this.aiService.getContactInfo();
 
-  private inactivityTimer: any;
-  private readonly INACTIVITY_TIMEOUT = 20000; // 20 seconds
-
   ngOnInit(): void {
-    this.suggestedQuestions = this.aiService.getSuggestedQuestions();
-
-    // متابعة الرسائل الجديدة
-    this.messages$.pipe(takeUntil(this.destroy$)).subscribe((messages) => {
-      if (messages.length > 1) {
-        // أكثر من رسالة الترحيب
-        this.hasNewMessages = true;
-        this.showSuggestions = false;
-        // بدء timer للخمول بعد إخفاء الأسئلة
-        this.startInactivityTimer();
-      }
-
-      // التحقق من وجود رسالة "لا يوجد جواب"
-      const lastMessage = messages[messages.length - 1];
-      if (
-        lastMessage &&
-        !lastMessage.isUser &&
-        lastMessage.content.includes('لم أستطع فهم')
-      ) {
-        this.showContactInfo = true;
-      }
-    });
-
-    // إخفاء badge عند فتح الشات
-    this.isOpen$.pipe(takeUntil(this.destroy$)).subscribe((isOpen) => {
-      if (isOpen) {
-        this.hasNewMessages = false;
-      }
-    });
-  }
-
-  ngAfterViewChecked(): void {
-    this.scrollToBottom();
+    this.loadFAQList();
   }
 
   ngOnDestroy(): void {
-    this.clearInactivityTimer();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  sendMessage(): void {
-    if (!this.newMessage.trim()) return;
-
-    const message = this.newMessage.trim();
-    this.newMessage = '';
-    this.isTyping = true;
-    this.showContactInfo = false;
-
-    // إعادة تعيين timer الخمول عند إرسال رسالة
-    this.resetInactivityTimer();
-
-    this.aiService
-      .sendMessage(message)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.isTyping = false;
-          // بدء timer جديد بعد الانتهاء من الرد
-          this.startInactivityTimer();
-        },
-        error: () => {
-          this.isTyping = false;
-          this.startInactivityTimer();
-        },
-      });
+  loadFAQList(): void {
+    this.faqList = [
+      {
+        question: 'كيف يمكنني التسجيل في الدورة؟',
+        answer:
+          'يمكنك التسجيل في الدورة من خلال النقر على زر "سجل في الدورة" في صفحة تفاصيل الدورة. ستحتاج إلى إنشاء حساب أولاً إذا لم تكن مسجلاً.',
+      },
+      {
+        question: 'هل يمكنني الوصول للدورة بعد الانتهاء منها؟',
+        answer:
+          'نعم، يمكنك الوصول للدورة ومحتواها في أي وقت بعد التسجيل. ستحتفظ بحق الوصول الدائم للمحتوى.',
+      },
+      {
+        question: 'هل توجد شهادة إتمام للدورة؟',
+        answer:
+          'نعم، ستحصل على شهادة إتمام معتمدة بعد الانتهاء من جميع الوحدات والدروس بنجاح.',
+      },
+      {
+        question: 'كيف يمكنني التواصل مع المدرب؟',
+        answer:
+          'يمكنك التواصل مع المدرب من خلال منصة التعلم أو عبر البريد الإلكتروني. ستجد معلومات التواصل في صفحة الدورة.',
+      },
+      {
+        question: 'ما هي متطلبات النظام للدورة؟',
+        answer:
+          'تحتاج إلى اتصال بالإنترنت وجهاز كمبيوتر أو هاتف ذكي. لا توجد متطلبات تقنية خاصة.',
+      },
+      {
+        question: 'هل يمكنني إلغاء التسجيل في الدورة؟',
+        answer:
+          'نعم، يمكنك إلغاء التسجيل خلال فترة محددة. يرجى التواصل معنا للحصول على مزيد من التفاصيل.',
+      },
+      {
+        question: 'كيف يمكنني دفع رسوم الدورة؟',
+        answer:
+          'يمكنك الدفع عبر البطاقة الائتمانية أو التحويل البنكي. جميع طرق الدفع آمنة ومشفرة.',
+      },
+      {
+        question: 'هل يمكنني الحصول على استرداد المبلغ؟',
+        answer:
+          'نعم، يمكنك الحصول على استرداد كامل خلال 30 يوماً من تاريخ التسجيل إذا لم تبدأ الدورة.',
+      },
+    ];
   }
 
-  sendSuggestedQuestion(question: string): void {
-    this.newMessage = question;
-    this.sendMessage();
+  selectFaq(index: number): void {
+    if (this.selectedFaqIndex === index) {
+      this.selectedFaqIndex = null; // إغلاق السؤال المفتوح
+    } else {
+      this.selectedFaqIndex = index; // فتح السؤال الجديد
+    }
   }
 
-  toggleChat(): void {
+  toggleFaq(): void {
     this.aiService.toggleChat();
   }
 
-  closeChat(): void {
+  closeFaq(): void {
     this.aiService.closeChat();
   }
 
-  formatMessage(content: string): string {
-    // تحويل النص إلى HTML مع دعم الرموز التعبيرية والتنسيق
+  formatAnswer(content: string): string {
+    // تحويل النص إلى HTML مع دعم التنسيق
     return content
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/•/g, '&bull;')
-      .replace(/(\d+)️⃣/g, '<span class="number-emoji">$1️⃣</span>')
+      .replace(/(\d+)\./g, '<strong>$1.</strong>')
       .replace(
-        /(📚|💼|🎨|💰|🎁|🏆|📜|💬|📞|🔧|📱|📊|📈)/g,
+        /(📚|💼|🎨|💰|🎁|🏆|📜|💬|📞|🔧|📱|📊|📈|✅|❌|⚠️|ℹ️)/g,
         '<span class="emoji">$1</span>'
       );
-  }
-
-  formatTime(timestamp: Date): string {
-    return timestamp.toLocaleTimeString('ar-EG', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  trackByMessageId(index: number, message: ChatMessage): string {
-    return message.id;
-  }
-
-  private scrollToBottom(): void {
-    if (this.messagesContainer) {
-      const element = this.messagesContainer.nativeElement;
-      element.scrollTop = element.scrollHeight;
-    }
-  }
-
-  // وظائف إدارة timer الخمول
-  private startInactivityTimer(): void {
-    this.clearInactivityTimer();
-    this.inactivityTimer = setTimeout(() => {
-      this.showSuggestions = true;
-      this.showContactInfo = false;
-    }, this.INACTIVITY_TIMEOUT);
-  }
-
-  private resetInactivityTimer(): void {
-    this.clearInactivityTimer();
-    this.showSuggestions = false;
-  }
-
-  private clearInactivityTimer(): void {
-    if (this.inactivityTimer) {
-      clearTimeout(this.inactivityTimer);
-      this.inactivityTimer = null;
-    }
-  }
-
-  // دالة للتعامل مع الكتابة في حقل الإدخال
-  onInputKeyup(): void {
-    this.resetInactivityTimer();
-    // إعادة بدء timer عند التوقف عن الكتابة
-    // تأخير بسيط للتأكد من انتهاء المستخدم من الكتابة
-    setTimeout(() => {
-      if (!this.newMessage.trim()) {
-        this.startInactivityTimer();
-      }
-    }, 1000);
   }
 }
