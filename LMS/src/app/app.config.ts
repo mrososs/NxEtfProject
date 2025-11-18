@@ -1,4 +1,8 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import {
   provideRouter,
   withInMemoryScrolling,
@@ -16,6 +20,26 @@ import { HttpClient } from '@angular/common/http';
 import { apiInterceptor } from './core/interceptors/api.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { AnalyticsRouterService } from './core/services/analytics-router.service';
+import { AnalyticsService } from './core/services/analytics.service';
+import { firstValueFrom } from 'rxjs';
+
+function analyticsRouterInitializer(analyticsRouter: AnalyticsRouterService) {
+  return () => analyticsRouter.init();
+}
+
+function analyticsSiteVisitorInitializer(analytics: AnalyticsService) {
+  return () => {
+    // Track site visitor on app startup
+    // Use firstValueFrom to convert Observable to Promise for APP_INITIALIZER
+    return firstValueFrom(analytics.trackSiteVisitor()).catch((error) => {
+      // Silently handle errors to not disrupt app startup
+      console.error('Error tracking site visitor:', error);
+      // Return void to allow app to continue even if tracking fails
+      return Promise.resolve();
+    });
+  };
+}
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, 'assets/i18n/', '.json');
@@ -42,5 +66,17 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top' })
     ),
     provideAnimations(),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: analyticsRouterInitializer,
+      deps: [AnalyticsRouterService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: analyticsSiteVisitorInitializer,
+      deps: [AnalyticsService],
+      multi: true,
+    },
   ],
 };

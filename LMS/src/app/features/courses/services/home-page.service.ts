@@ -425,8 +425,13 @@ export class HomePageService {
    * @returns Observable of course tracker data
    */
   getCourseTracker(courseId: number): Observable<CourseTracker> {
-    const url = `api/CourseTracker/${courseId}`;
-    return this._http.get<CourseTracker>(url).pipe(
+    const url = `api/CourseTracker`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    });
+    const body = { courseId };
+    return this._http.post<CourseTracker>(url, body, { headers }).pipe(
       catchError((error) => {
         console.error('Error fetching course tracker:', error);
         return throwError(() => error);

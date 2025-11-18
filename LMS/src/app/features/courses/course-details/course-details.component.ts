@@ -19,6 +19,10 @@ import {
   CertificateService,
   CertificateData,
 } from '../services/certificate.service';
+import {
+  AnalyticsService,
+  CourseType,
+} from '../../../core/services/analytics.service';
 
 interface Review {
   id: number;
@@ -87,6 +91,7 @@ export class CourseDetailsComponent implements OnInit {
   private _messageService = inject(MessageService);
   private _cdr = inject(ChangeDetectorRef);
   private _certificateService = inject(CertificateService);
+  private _analyticsService = inject(AnalyticsService);
 
   course!: Course;
   courseDetails!: CourseDetails;
@@ -439,6 +444,7 @@ export class CourseDetailsComponent implements OnInit {
    */
   submitReview(): void {
     if (this.newReview.rating > 0 && this.newReview.text.trim()) {
+      const ratingValue = this.newReview.rating;
       const reviewData: ReviewRequest = {
         courseId: this.courseId,
         comment: this.newReview.text.trim(),
@@ -474,6 +480,12 @@ export class CourseDetailsComponent implements OnInit {
             });
 
             console.log('Review posted successfully:', response);
+
+            this._analyticsService.trackCourseRated(
+              this.courseId.toString(),
+              this.course?.title || 'Unknown Course',
+              ratingValue
+            );
           } else {
             this._messageService.add({
               severity: 'error',
@@ -571,8 +583,9 @@ export class CourseDetailsComponent implements OnInit {
     const reviewIndex = this.reviews.findIndex(
       (r) => r.id === this.editingReview!.id
     );
+    const updatedRating = this.editReview.rating;
     if (reviewIndex !== -1) {
-      this.reviews[reviewIndex].reviewRating = this.editReview.rating;
+      this.reviews[reviewIndex].reviewRating = updatedRating;
       this.reviews[reviewIndex].comment = this.editReview.text.trim();
     }
 
@@ -586,6 +599,12 @@ export class CourseDetailsComponent implements OnInit {
       detail: 'تم تحديث التقييم بنجاح',
       life: 3000,
     });
+
+    this._analyticsService.trackCourseRated(
+      this.courseId.toString(),
+      this.course?.title || 'Unknown Course',
+      updatedRating
+    );
   }
 
   /**
@@ -757,6 +776,15 @@ export class CourseDetailsComponent implements OnInit {
             this.isEnrolled
           );
 
+          // Track enrollment event in Google Tag Manager
+          this._analyticsService.trackCourseEnrolled(
+            this.courseId.toString(),
+            this.course?.title || 'Unknown Course',
+            this.course?.courseLevel || this.course?.level || 'Unknown',
+            this.getCourseType(),
+            this.course?.rating
+          );
+
           // Force update the enrollment service (this will further update status)
           this.updateEnrollmentStatus();
 
@@ -788,6 +816,15 @@ export class CourseDetailsComponent implements OnInit {
           console.log(
             'Enrollment successful (via error handler), updating UI. isEnrolled:',
             this.isEnrolled
+          );
+
+          // Track enrollment event in Google Tag Manager
+          this._analyticsService.trackCourseEnrolled(
+            this.courseId.toString(),
+            this.course?.title || 'Unknown Course',
+            this.course?.courseLevel || this.course?.level || 'Unknown',
+            this.getCourseType(),
+            this.course?.rating
           );
 
           // Force update the enrollment service (this will further update status)
@@ -1141,6 +1178,31 @@ export class CourseDetailsComponent implements OnInit {
       .generateCertificate(certificateData)
       .then(() => {
         this.certificateLoading = false;
+
+        // Track course completion event in Google Tag Manager
+        this._analyticsService.trackCourseCompleted(
+          this.courseId.toString(),
+          this.course?.title || 'Unknown Course'
+        );
+
+        this._analyticsService.trackCertificatePrint(
+          this.courseId.toString(),
+          this.course?.title || 'Unknown Course'
+        );
+
+        // Track certificate download for API analytics
+        this._analyticsService
+          .trackCertificateDownload(this.courseId)
+          .subscribe({
+            next: () => {
+              // Successfully tracked
+            },
+            error: (error) => {
+              // Silently handle errors to not disrupt user experience
+              console.error('Error tracking certificate download:', error);
+            },
+          });
+
         this._messageService.add({
           severity: 'success',
           summary: 'تم تحميل الشهادة',
@@ -1197,5 +1259,32 @@ export class CourseDetailsComponent implements OnInit {
         life: 3000,
       });
     }
+  }
+
+  /**
+   * Derive course type for analytics tracking
+   */
+  private getCourseType(): CourseType {
+    const priceValue = this.course?.price;
+
+    if (typeof priceValue === 'number') {
+      return priceValue > 0 ? 'paid' : 'free';
+    }
+
+    const priceText = priceValue?.toLowerCase?.() ?? '';
+
+    if (
+      !priceText ||
+      priceText.includes('free') ||
+      priceText.includes('مجاني')
+    ) {
+      return 'free';
+    }
+
+    if (priceText.includes('premium')) {
+      return 'premium';
+    }
+
+    return 'paid';
   }
 }
