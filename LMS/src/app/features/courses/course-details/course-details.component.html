@@ -153,7 +153,7 @@
                 <div class="certificate-content">
                   <div class="certificate-info">
                     <div class="certificate-icon">
-                      <i class="pi pi-award"></i>
+                      <i class="pi pi-trophy"></i>
                     </div>
                     <div class="certificate-text">
                       <h3>تهانينا! لقد أتممت الدورة بنجاح</h3>
@@ -262,8 +262,24 @@
                   </div>
                 </div>
 
+                <!-- Already Reviewed Message -->
+                <div
+                  class="alert alert-info text-center p-4 mb-4"
+                  *ngIf="hasUserReviewed()"
+                >
+                  <i
+                    class="pi pi-info-circle text-info mb-3"
+                    style="font-size: 2rem"
+                  ></i>
+                  <h4 class="alert-heading">شكراً لتقييمك!</h4>
+                  <p class="mb-0">
+                    لا يمكنك إضافة أكثر من تعليق واحد لنفس الدورة. يمكنك تعديل
+                    تعليقك السابق إذا أردت.
+                  </p>
+                </div>
+
                 <!-- Add Review Form -->
-                <div class="add-review-form">
+                <div class="add-review-form" *ngIf="!hasUserReviewed()">
                   <h3>أضف تقييمك</h3>
                   <div class="rating-input">
                     <label for="star-rating">التقييم:</label>
@@ -318,7 +334,7 @@
                           [src]="review.userImage"
                           [alt]="review.userName"
                           class="reviewer-avatar"
-                          onerror="this.src='assets/img/default-avatar.png'"
+                          onerror="if(this.src!=='assets/img/default-avatar.png')this.src='assets/img/default-avatar.png'"
                         />
                         <div class="reviewer-details">
                           <h4 class="reviewer-name">{{ review.userName }}</h4>

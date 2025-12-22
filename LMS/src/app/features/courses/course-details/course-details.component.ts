@@ -443,6 +443,16 @@ export class CourseDetailsComponent implements OnInit {
    * Submit a new review
    */
   submitReview(): void {
+    if (this.hasUserReviewed()) {
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'تنبيه',
+        detail: 'لقد قمت بتقييم هذه الدورة مسبقاً. يمكنك تعديل تقييمك الحالي.',
+        life: 3000,
+      });
+      return;
+    }
+
     if (this.newReview.rating > 0 && this.newReview.text.trim()) {
       const ratingValue = this.newReview.rating;
       const reviewData: ReviewRequest = {
@@ -1143,11 +1153,25 @@ export class CourseDetailsComponent implements OnInit {
     }
 
     // Fallback to old userId field
-    return !!(
-      currentUserId &&
-      review.userId &&
-      currentUserId === review.userId
-    );
+    // Fallback to old userId field
+    if (currentUserId && review.userId && currentUserId === review.userId) {
+      return true;
+    }
+
+    // CHECK BY NAME as requested by user (since userId might be missing/unreliable)
+    // Note: This relies on unique names which might not be guaranteed, but is required per specific user request.
+    if (review.user && review.user.name && this.userName) {
+      return review.user.name.trim() === this.userName.trim();
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if current user has already reviewed the course
+   */
+  hasUserReviewed(): boolean {
+    return this.reviews.some((review) => !!review.isEditable);
   }
 
   /**

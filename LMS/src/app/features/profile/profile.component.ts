@@ -7,6 +7,9 @@ import {
   ReactiveFormsModule,
   FormArray,
   FormControl,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProfileService } from './services/profile.service';
@@ -82,22 +85,20 @@ export class ProfileComponent implements OnInit {
     private enrollmentDeleteService: EnrollmentDeleteService,
     private router: Router,
     private messageService: MessageService,
-    private route: ActivatedRoute,            
-
+    private route: ActivatedRoute
   ) {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       middleName: [''],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
-      educations: this.fb.array([]),
+      educations: this.fb.array([], this.minArrayLength(1)),
       experiences: this.fb.array([]),
       skills: this.fb.array([]),
       contacts: this.fb.array([]),
     });
   }
   private returnUrl: string | null = null;
-
 
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
@@ -147,14 +148,19 @@ export class ProfileComponent implements OnInit {
         if (this.isProfileValid(profile)) {
           this.currentProfile = profile;
           this.isEditMode = false;
-    
+
           if (profile.imageLink) {
             this.imagePreview = profile.imageLink; // أو this.getProfileImageUrl(...)
           }
-    
+
           // الكورسات والإنرولمنت زي ما هي...
-          this.userCourses = Array.isArray(profile.courses) ? profile.courses : [];
-          if (Array.isArray(profile.enrollements) && profile.enrollements.length) {
+          this.userCourses = Array.isArray(profile.courses)
+            ? profile.courses
+            : [];
+          if (
+            Array.isArray(profile.enrollements) &&
+            profile.enrollements.length
+          ) {
             this.enrolledCourses = profile.enrollements;
           } else {
             this.enrolledCourses = [];
@@ -167,7 +173,7 @@ export class ProfileComponent implements OnInit {
           this.profileForm.reset();
           this.userCourses = [];
           this.enrolledCourses = [];
-    
+
           // رسالة “أول مرة”
           this.messageService.add({
             severity: 'info',
@@ -187,7 +193,7 @@ export class ProfileComponent implements OnInit {
         this.enrolledCourses = [];
         this.isLoading = false;
         this.enrollmentLoading = false;
-    
+
         // لو 500 اعرض التحذير الإضافي
         this.messageService.add({
           severity: error.status === 500 ? 'warn' : 'info',
@@ -199,7 +205,6 @@ export class ProfileComponent implements OnInit {
         });
       },
     });
-    
   }
 
   onSubmit(): void {
@@ -345,13 +350,13 @@ export class ProfileComponent implements OnInit {
     if (response) {
       this.currentProfile = {
         ...(this.currentProfile || {}),
-        ...response
+        ...response,
       };
     }
-  
+
     // Save user name to localStorage for homepage display
     this.saveUserDataToLocalStorage();
-  
+
     this.messageService.add({
       severity: 'success',
       summary: 'نجح',
@@ -359,22 +364,23 @@ export class ProfileComponent implements OnInit {
         ? 'تم تحديث الملف الشخصي بنجاح'
         : 'تم إنشاء الملف الشخصي بنجاح',
     });
-  
+
     // Reset redirect flags to allow normal API calls again
     this.profileService.resetRedirectFlags();
-  
+
     // (اختياري) تجديد الداتا من السيرفر
     this.refreshProfileData();
-  
+
     // عرض وضع المشاهدة
     this.isEditMode = false;
     this.isLoading = false;
-  
+
     // ✅ توجيه بدون Reload:
-    const target = this.returnUrl && this.returnUrl !== '/profile'
-      ? this.returnUrl
-      : '/homepage';
-  
+    const target =
+      this.returnUrl && this.returnUrl !== '/profile'
+        ? this.returnUrl
+        : '/homepage';
+
     // مهلة بسيطة لعرض التوست
     setTimeout(() => {
       this.router.navigateByUrl(target);
@@ -499,6 +505,25 @@ export class ProfileComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  /**
+   * Validator to check minimum length of FormArray
+   */
+  minArrayLength(min: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (control instanceof FormArray) {
+        return control.length >= min
+          ? null
+          : {
+              minArrayLength: {
+                requiredLength: min,
+                actualLength: control.length,
+              },
+            };
+      }
+      return null;
+    };
   }
 
   /**

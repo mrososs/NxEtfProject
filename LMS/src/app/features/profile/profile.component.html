@@ -27,18 +27,18 @@
               </div>
               <!-- Show special message when in 500 error mode -->
               <!-- تنبيه: خطأ خادم -->
-            
+
               <!-- تنبيه: أول مرة/لا يوجد ملف شخصي -->
               <div
-              *ngIf="isEditMode && !hasValidProfile"
-              class="alert alert-info mb-4"
-              role="alert"
-            >
-              <i class="pi pi-info-circle me-2"></i>
-              <strong>ملاحظة:</strong>
-              يجب إدخال <u>الملف الشخصي</u> أولًا للمتابعة واستخدام جميع مزايا الموقع.
-            </div>
-            
+                *ngIf="isEditMode && !hasValidProfile"
+                class="alert alert-info mb-4"
+                role="alert"
+              >
+                <i class="pi pi-info-circle me-2"></i>
+                <strong>ملاحظة:</strong>
+                يجب إدخال <u>الملف الشخصي</u> أولًا للمتابعة واستخدام جميع مزايا
+                الموقع.
+              </div>
 
               <!-- Profile Form -->
               <form
@@ -195,7 +195,7 @@
                   >
                     <h5 class="mb-0">
                       <i class="pi pi-graduation-cap me-2"></i>
-                      التعليم
+                      التعليم <span class="text-danger">*</span>
                     </h5>
                     <button
                       type="button"
@@ -207,6 +207,17 @@
                   </div>
                   <div class="card-body">
                     <div formArrayName="educations">
+                      <div
+                        class="text-danger mb-3"
+                        *ngIf="
+                          profileForm
+                            .get('educations')
+                            ?.hasError('minArrayLength') &&
+                          profileForm.get('educations')?.touched
+                        "
+                      >
+                        يجب إضافة مؤهل تعليمي واحد على الأقل.
+                      </div>
                       <div
                         *ngFor="
                           let education of educationsArray.controls;
@@ -724,10 +735,7 @@
           </p-tabPanel>
 
           <!-- Enrolled Courses Tab -->
-          <p-tabPanel
-            header="الدورات المسجلة"
-            [disabled]="!hasValidProfile"
-          >
+          <p-tabPanel header="الدورات المسجلة" [disabled]="!hasValidProfile">
             <div class="enrolled-courses-content">
               <!-- Loading State -->
               <div *ngIf="enrollmentLoading" class="text-center py-4">
