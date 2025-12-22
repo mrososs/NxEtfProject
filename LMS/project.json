@@ -15,6 +15,7 @@
         "main": "LMS/src/main.ts",
         "polyfills": ["zone.js"],
         "tsConfig": "LMS/tsconfig.app.json",
+        "allowedCommonJsDependencies": ["jwt-decode"],
         "inlineStyleLanguage": "scss",
         "assets": [
           {

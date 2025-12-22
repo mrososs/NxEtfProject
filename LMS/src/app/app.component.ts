@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, Router } from '@angular/router';
+import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
 import { ProfileService } from './features/profile/profile.service';
 import { ProfileRequiredService } from './shared/services/profile-required.service';
 import { ProfileRequiredDialogComponent } from './shared/components/profile-required-dialog/profile-required-dialog.component';
@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
     private profileService: ProfileService,
     private profileRequiredService: ProfileRequiredService,
     private router: Router,
+    private route: ActivatedRoute,
     private errorStateService: ErrorStateService,
     private sessionExpiryService: SessionExpiryService
   ) {
@@ -57,8 +58,8 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    // Handle token from URL parameters first
-    this.handleTokenFromUrl();
+    // Subscribe to token updates from URL
+    this.subscribeToTokenUpdates();
 
     // Check if token exists in localStorage and extract role
     const storedToken = localStorage.getItem('token');
@@ -98,41 +99,40 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Handle token from URL parameters when application starts
-   * This is called when user comes from external app with token in URL
+   * Subscribe to query parameters to handle token updates reactively
+   * This ensures token is captured even during SPA navigation without refresh
    */
-  private handleTokenFromUrl(): void {
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+  private subscribeToTokenUpdates(): void {
+    this.route.queryParams.subscribe((params) => {
+      const tokenFromUrl = params['token'];
 
-    if (tokenFromUrl) {
-      console.log(
-        'Token found in URL parameters from external app, saving to localStorage'
-      );
+      if (tokenFromUrl) {
+        console.log('Token found in query params, saving to localStorage');
 
-      // Save token to localStorage
-      localStorage.setItem('authToken', tokenFromUrl);
-      localStorage.setItem('token', tokenFromUrl);
-      localStorage.setItem('accessToken', tokenFromUrl);
-      localStorage.setItem('auth_token', tokenFromUrl); // Match the key used by external app
+        // Save token to localStorage
+        localStorage.setItem('authToken', tokenFromUrl);
+        localStorage.setItem('token', tokenFromUrl);
+        localStorage.setItem('accessToken', tokenFromUrl);
+        localStorage.setItem('auth_token', tokenFromUrl);
 
-      // Save login timestamp for session expiry tracking
-      this.sessionExpiryService.saveLoginTimestamp();
+        // Save login timestamp
+        this.sessionExpiryService.saveLoginTimestamp();
 
-      // Clean up URL by removing token parameter
-      // This prevents the token from being visible in browser history
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('token');
+        // Clean up URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('token');
+        window.history.replaceState({}, document.title, newUrl.toString());
 
-      // Replace current URL without token parameters
-      window.history.replaceState({}, document.title, newUrl.toString());
+        console.log('Token saved and URL cleaned up');
 
-      console.log('Token saved and URL cleaned up');
+        // Decode token immediately
+        this.decodeAndSaveRole(tokenFromUrl);
 
-      // Decode token and extract role
-      this.decodeAndSaveRole(tokenFromUrl);
-    }
+        // Update auth state in UI
+        this.showNavbar = true;
+        this.checkUserProfile();
+      }
+    });
   }
 
   /**
