@@ -9,6 +9,7 @@ import { ErrorStateService } from './shared/services/error-state.service';
 import { AiAssistantComponent } from './shared/components/ai-assistant/ai-assistant.component';
 import { FooterComponent } from './features/footer/footer.component';
 import { SessionExpiryService } from './core/services/session-expiry.service';
+import { jwtDecode } from 'jwt-decode';
 
 @Component({
   selector: 'app-root',
@@ -58,6 +59,12 @@ export class AppComponent implements OnInit {
 
     // Handle token from URL parameters first
     this.handleTokenFromUrl();
+
+    // Check if token exists in localStorage and extract role
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      this.decodeAndSaveRole(storedToken);
+    }
 
     // Check authentication on app startup
     this.profileService.checkAuthenticationOnStartup().subscribe({
@@ -122,6 +129,36 @@ export class AppComponent implements OnInit {
       window.history.replaceState({}, document.title, newUrl.toString());
 
       console.log('Token saved and URL cleaned up');
+
+      // Decode token and extract role
+      this.decodeAndSaveRole(tokenFromUrl);
+    }
+  }
+
+  /**
+   * Decode token and save user role if LMSAdmin
+   */
+  private decodeAndSaveRole(token: string): void {
+    try {
+      const decoded: any = jwtDecode(token);
+      console.log('Decoded token:', decoded);
+
+      const roleClaim =
+        'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+      if (decoded && decoded[roleClaim]) {
+        const role = decoded[roleClaim];
+        console.log('User Role found:', role);
+
+        if (role === 'LMSAdmin') {
+          localStorage.setItem('role', role);
+          console.log('Role LMSAdmin saved to localStorage');
+        } else {
+          // Can clear or just set whatever role
+          localStorage.setItem('role', role);
+        }
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
     }
   }
 

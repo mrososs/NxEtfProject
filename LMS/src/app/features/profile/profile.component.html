@@ -228,24 +228,56 @@
                       >
                         <div class="row">
                           <div class="col-md-6 mb-2">
-                            <label class="form-label">المعهد/الجامعة</label>
+                            <label class="form-label"
+                              >المعهد/الجامعة
+                              <span class="text-danger">*</span></label
+                            >
                             <input
                               type="text"
                               pInputText
                               formControlName="institute"
                               class="form-control"
+                              [class.is-invalid]="
+                                education.get('institute')?.invalid &&
+                                education.get('institute')?.touched
+                              "
                               placeholder="اسم المعهد أو الجامعة"
                             />
+                            <div
+                              class="invalid-feedback"
+                              *ngIf="
+                                education.get('institute')?.invalid &&
+                                education.get('institute')?.touched
+                              "
+                            >
+                              هذا الحقل مطلوب
+                            </div>
                           </div>
                           <div class="col-md-6 mb-2">
-                            <label class="form-label">الدرجة العلمية</label>
+                            <label class="form-label"
+                              >الدرجة العلمية
+                              <span class="text-danger">*</span></label
+                            >
                             <input
                               type="text"
                               pInputText
                               formControlName="degree"
                               class="form-control"
+                              [class.is-invalid]="
+                                education.get('degree')?.invalid &&
+                                education.get('degree')?.touched
+                              "
                               placeholder="مثل: بكالوريوس، ماجستير"
                             />
+                            <div
+                              class="invalid-feedback"
+                              *ngIf="
+                                education.get('degree')?.invalid &&
+                                education.get('degree')?.touched
+                              "
+                            >
+                              هذا الحقل مطلوب
+                            </div>
                           </div>
                           <div class="col-md-6 mb-2">
                             <label class="form-label">التقدير</label>

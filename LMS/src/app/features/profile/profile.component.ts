@@ -742,6 +742,9 @@ export class ProfileComponent implements OnInit {
       this.currentProfile.educations.forEach((education) => {
         this.addEducation(education);
       });
+    } else {
+      // If no educations, add an empty one to force user to fill it
+      this.addEducation();
     }
 
     // Load experiences

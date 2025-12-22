@@ -22,7 +22,7 @@ import {
 import { CourseTracker } from '../model/course-tracker.model';
 import { CourseApiService } from './course-api.service';
 import { InstructorApiService } from './instructor-api.service';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpParams } from '@angular/common/http';
 
 export interface CourseDetails {
   id: number;
@@ -64,6 +64,14 @@ export interface ReviewResponse {
   user?: any;
   success?: boolean;
   message?: string;
+}
+
+export interface ReviewResponseWrapper {
+  data: ReviewResponse[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 @Injectable({
@@ -476,5 +484,47 @@ export class HomePageService {
           return throwError(() => error);
         })
       );
+  }
+
+  /**
+   * Get reviews for a course
+   * @param courseId The course ID
+   * @param pageNumber Page number (default 1)
+   * @param pageSize Page size (default 10)
+   * @returns Observable of reviews list
+   */
+  getCourseReviews(
+    courseId: number,
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ): Observable<ReviewResponseWrapper> {
+    const url = `api/CourseReview/${courseId}`;
+    let params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this._http.get<ReviewResponseWrapper>(url, { params }).pipe(
+      catchError((error) => {
+        console.error('Error fetching course reviews:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Delete a course review
+   * @param reviewId The review ID to delete
+   * @returns Observable of void
+   */
+  deleteReview(reviewId: number): Observable<void> {
+    const url = `api/CourseReview`;
+    let params = new HttpParams().set('reviewId', reviewId.toString());
+
+    return this._http.delete<void>(url, { params }).pipe(
+      catchError((error) => {
+        console.error('Error deleting review:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

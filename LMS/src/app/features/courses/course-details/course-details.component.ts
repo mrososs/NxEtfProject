@@ -12,6 +12,8 @@ import {
   ReviewRequest,
   ReviewResponse,
 } from '../services/home-page.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Course, Lesson } from '../model/course.model';
 import { CourseTracker } from '../model/course-tracker.model';
@@ -78,8 +80,15 @@ interface CourseLesson {
 @Component({
   selector: 'app-course-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, ToastModule],
-  providers: [MessageService],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    ToastModule,
+    ConfirmDialogModule,
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
 })
@@ -89,6 +98,7 @@ export class CourseDetailsComponent implements OnInit {
   private _homePageService = inject(HomePageService);
   private _enrollmentService = inject(EnrollmentService);
   private _messageService = inject(MessageService);
+  private _confirmationService = inject(ConfirmationService);
   private _cdr = inject(ChangeDetectorRef);
   private _certificateService = inject(CertificateService);
   private _analyticsService = inject(AnalyticsService);
@@ -185,13 +195,6 @@ export class CourseDetailsComponent implements OnInit {
     text: '',
   };
 
-  // Edit review properties
-  editingReview: Review | null = null;
-  editReview = {
-    rating: 0,
-    text: '',
-  };
-
   ngOnInit(): void {
     this._route.params.subscribe((params) => {
       this.courseId = +params['id'];
@@ -268,23 +271,78 @@ export class CourseDetailsComponent implements OnInit {
   /**
    * Load reviews from course data
    */
-  private loadReviewsFromCourse(): void {
-    if (this.course?.reviews && Array.isArray(this.course.reviews)) {
-      this.reviews = this.course.reviews.map((review: any) => ({
-        id: review.id || Math.random(), // Use random ID if id is 0
-        comment: review.comment || '',
-        reviewRating: Math.round(review.reviewRating) || 0, // Round to integer
-        courseId: review.courseId,
-        userId: review.user?.userId || review.userId,
-        reactions: review.reactions,
-        userName: this.getUserNameForReview(review),
-        userImage: this.getUserImageForReview(review),
-        isEditable: this.isReviewEditable(review),
-      }));
-      console.log('Reviews loaded from course data:', this.reviews);
-    } else {
-      this.reviews = [];
-      console.log('No reviews found in course data');
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 10;
+  hasMoreReviews = true;
+  totalPages = 0;
+
+  /**
+   * Load reviews from API
+   */
+  private loadReviewsFromCourse(page: number = 1): void {
+    this.loading = true; // Optional: Show loading state for reviews specifically if possible, but global loading is okay for now or separate variable
+    this._homePageService
+      .getCourseReviews(this.courseId, page, this.pageSize)
+      .subscribe({
+        next: (response) => {
+          if (response && Array.isArray(response.data)) {
+            console.log(`Reviews loaded for page ${page}:`, response);
+
+            this.reviews = response.data.map((review: any) => ({
+              id: review.id,
+              comment: review.comment || '',
+              reviewRating: Math.round(review.reviewRating) || 0,
+              courseId: review.courseId || this.courseId,
+              userId: review.user?.userId || review.userId,
+              reactions: review.reactions,
+              userName: review.user?.name || 'Unknown User',
+              userImage:
+                review.user?.imageUrl || 'assets/img/default-avatar.png',
+              isEditable: this.isReviewEditable(review),
+            }));
+
+            // Update pagination status
+            this.currentPage = response.pageNumber;
+            this.totalPages = response.totalPages;
+            // Calculate if there are more pages
+            this.hasMoreReviews = this.currentPage < response.totalPages;
+
+            console.log('Pagination info:', {
+              currentPage: this.currentPage,
+              totalPages: response.totalPages,
+              hasMore: this.hasMoreReviews,
+            });
+          } else {
+            this.reviews = [];
+            this.hasMoreReviews = false;
+          }
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading reviews from API:', error);
+          this.loading = false;
+          this.reviews = [];
+          this.hasMoreReviews = false;
+        },
+      });
+  }
+
+  /**
+   * Go to next page of reviews
+   */
+  nextPage(): void {
+    if (this.hasMoreReviews) {
+      this.loadReviewsFromCourse(this.currentPage + 1);
+    }
+  }
+
+  /**
+   * Go to previous page of reviews
+   */
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.loadReviewsFromCourse(this.currentPage - 1);
     }
   }
 
@@ -553,85 +611,46 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   /**
-   * Start editing a review
-   */
-  startEditReview(review: Review): void {
-    this.editingReview = review;
-    this.editReview = {
-      rating: review.reviewRating,
-      text: review.comment,
-    };
-  }
-
-  /**
-   * Cancel editing review
-   */
-  cancelEditReview(): void {
-    this.editingReview = null;
-    this.editReview = { rating: 0, text: '' };
-  }
-
-  /**
-   * Save edited review
-   */
-  saveEditReview(): void {
-    if (
-      !this.editingReview ||
-      this.editReview.rating <= 0 ||
-      !this.editReview.text.trim()
-    ) {
-      this._messageService.add({
-        severity: 'warning',
-        summary: 'تحذير',
-        detail: 'يرجى إدخال التقييم والتعليق',
-        life: 3000,
-      });
-      return;
-    }
-
-    // Update the review in the local list
-    const reviewIndex = this.reviews.findIndex(
-      (r) => r.id === this.editingReview!.id
-    );
-    const updatedRating = this.editReview.rating;
-    if (reviewIndex !== -1) {
-      this.reviews[reviewIndex].reviewRating = updatedRating;
-      this.reviews[reviewIndex].comment = this.editReview.text.trim();
-    }
-
-    // Reset editing state
-    this.editingReview = null;
-    this.editReview = { rating: 0, text: '' };
-
-    this._messageService.add({
-      severity: 'success',
-      summary: 'تم التحديث',
-      detail: 'تم تحديث التقييم بنجاح',
-      life: 3000,
-    });
-
-    this._analyticsService.trackCourseRated(
-      this.courseId.toString(),
-      this.course?.title || 'Unknown Course',
-      updatedRating
-    );
-  }
-
-  /**
    * Delete a review
    */
   deleteReview(review: Review): void {
-    const reviewIndex = this.reviews.findIndex((r) => r.id === review.id);
-    if (reviewIndex !== -1) {
-      this.reviews.splice(reviewIndex, 1);
+    this._confirmationService.confirm({
+      message: 'هل أنت متأكد من حذف هذا التقييم؟',
+      header: 'تأكيد الحذف',
+      icon: 'pi pi-info-circle',
+      acceptLabel: 'نعم',
+      rejectLabel: 'لا',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text p-button-text',
+      accept: () => {
+        this._homePageService.deleteReview(review.id).subscribe({
+          next: () => {
+            const reviewIndex = this.reviews.findIndex(
+              (r) => r.id === review.id
+            );
+            if (reviewIndex !== -1) {
+              this.reviews.splice(reviewIndex, 1);
 
-      this._messageService.add({
-        severity: 'success',
-        summary: 'تم الحذف',
-        detail: 'تم حذف التقييم بنجاح',
-        life: 3000,
-      });
-    }
+              this._messageService.add({
+                severity: 'success',
+                summary: 'تم الحذف',
+                detail: 'تم حذف التقييم بنجاح',
+                life: 3000,
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting review:', error);
+            this._messageService.add({
+              severity: 'error',
+              summary: 'خطأ',
+              detail: 'حدث خطأ أثناء حذف التقييم',
+              life: 3000,
+            });
+          },
+        });
+      },
+    });
   }
 
   /**
@@ -1113,9 +1132,16 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   /**
+   * Get review user name
+   */
+  getReviewUserName(review: Review): string {
+    return review.userName || 'مستخدم غير معروف';
+  }
+
+  /**
    * Get user image for review
    */
-  private getUserImageForReview(review: any): string {
+  public getUserImageForReview(review: any): string {
     // If review has user object with image information
     if (review.user && review.user.image) {
       return review.user.image;
@@ -1137,6 +1163,12 @@ export class CourseDetailsComponent implements OnInit {
    * Check if review is editable by current user
    */
   private isReviewEditable(review: any): boolean {
+    // Admins can edit/delete any review
+    const role = localStorage.getItem('role');
+    if (role === 'LMSAdmin') {
+      return true;
+    }
+
     // Check if this review belongs to current user
     return this.isCurrentUserReview(review);
   }

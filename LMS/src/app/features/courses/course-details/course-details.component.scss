@@ -1,33 +1,74 @@
 // Course Details Component - Enhanced Modern Styling
 
 // Review styles
-.reviewer-avatar {
-  width: 40px;
-  height: 40px;
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.review-item {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.review-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.review-user-avatar {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
   border-radius: 50%;
   object-fit: cover;
-  margin-left: 10px;
-  border: 2px solid #e9ecef;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-user-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.05rem;
+  margin-bottom: 0.2rem;
+}
+
+.review-rating {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.review-text {
+  color: #4a5568;
+  line-height: 1.6;
+  font-size: 1rem;
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 .review-actions {
   display: flex;
   gap: 8px;
   margin-right: auto;
-}
-
-.edit-review-form {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 10px;
-  border: 1px solid #e9ecef;
-}
-
-.edit-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
 }
 
 .course-details-page {

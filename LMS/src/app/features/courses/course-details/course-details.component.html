@@ -329,89 +329,76 @@
                     *ngFor="let review of reviews; trackBy: trackByReviewId"
                   >
                     <div class="review-header">
-                      <div class="reviewer-info">
+                      <div class="review-user-info">
                         <img
-                          [src]="review.userImage"
-                          [alt]="review.userName"
-                          class="reviewer-avatar"
-                          onerror="if(this.src!=='assets/img/default-avatar.png')this.src='assets/img/default-avatar.png'"
+                          [src]="getUserImageForReview(review)"
+                          alt="User"
+                          class="review-user-avatar"
                         />
-                        <div class="reviewer-details">
-                          <h4 class="reviewer-name">{{ review.userName }}</h4>
+                        <div>
+                          <div class="review-user-name">
+                            {{ getReviewUserName(review) }}
+                          </div>
                           <div class="review-rating">
                             <i
-                              class="pi pi-star-fill"
-                              *ngFor="let star of [1, 2, 3, 4, 5]"
-                              [class.filled]="star <= review.reviewRating"
+                              class="pi pi-star-fill text-warning me-1"
+                              *ngFor="
+                                let star of [1, 2, 3, 4, 5].slice(
+                                  0,
+                                  review.reviewRating
+                                )
+                              "
+                            ></i>
+                            <i
+                              class="pi pi-star text-muted me-1"
+                              *ngFor="
+                                let star of [1, 2, 3, 4, 5].slice(
+                                  review.reviewRating
+                                )
+                              "
                             ></i>
                           </div>
                         </div>
                       </div>
                       <div class="review-actions" *ngIf="review.isEditable">
                         <button
-                          class="btn btn-sm btn-outline-primary me-2"
-                          (click)="startEditReview(review)"
-                          *ngIf="editingReview?.id !== review.id"
-                        >
-                          <i class="pi pi-pencil"></i> تعديل
-                        </button>
-                        <button
-                          class="btn btn-sm btn-outline-danger"
+                          class="action-btn delete p-button-danger p-button-text"
                           (click)="deleteReview(review)"
-                          *ngIf="editingReview?.id !== review.id"
+                          title="حذف"
                         >
-                          <i class="pi pi-trash"></i> حذف
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Edit form -->
-                    <div
-                      class="edit-review-form"
-                      *ngIf="editingReview?.id === review.id"
-                    >
-                      <div class="rating-input">
-                        <label>التقييم:</label>
-                        <div class="star-rating">
-                          <button
-                            type="button"
-                            class="star-btn"
-                            *ngFor="let star of [1, 2, 3, 4, 5]"
-                            [class.filled]="star <= editReview.rating"
-                            (click)="editReview.rating = star"
-                          >
-                            <i class="pi pi-star"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="review-text-input">
-                        <label>التعليق:</label>
-                        <textarea
-                          [(ngModel)]="editReview.text"
-                          placeholder="اكتب تعليقك هنا..."
-                          rows="3"
-                        ></textarea>
-                      </div>
-                      <div class="edit-actions">
-                        <button
-                          class="btn btn-primary me-2"
-                          (click)="saveEditReview()"
-                        >
-                          حفظ التغييرات
-                        </button>
-                        <button
-                          class="btn btn-secondary"
-                          (click)="cancelEditReview()"
-                        >
-                          إلغاء
+                          <i class="pi pi-trash"></i>
                         </button>
                       </div>
                     </div>
 
                     <!-- Review content -->
-                    <div *ngIf="editingReview?.id !== review.id">
+                    <div>
                       <p class="review-text">{{ review.comment }}</p>
                     </div>
+                  </div>
+
+                  <!-- Pagination Controls -->
+                  <div
+                    class="pagination-controls d-flex justify-content-center align-items-center mt-4"
+                    *ngIf="totalPages > 1"
+                  >
+                    <button
+                      class="btn btn-outline-primary me-3"
+                      (click)="prevPage()"
+                      [disabled]="currentPage === 1"
+                    >
+                      <i class="pi pi-chevron-right me-1"></i> السابق
+                    </button>
+
+                    <span class="page-info mx-3">صفحة {{ currentPage }}</span>
+
+                    <button
+                      class="btn btn-outline-primary ms-3"
+                      (click)="nextPage()"
+                      [disabled]="!hasMoreReviews"
+                    >
+                      التالي <i class="pi pi-chevron-left ms-1"></i>
+                    </button>
                   </div>
 
                   <!-- No reviews message -->
@@ -553,4 +540,5 @@
 </div>
 
 <!-- Toast Messages -->
+<p-confirmDialog></p-confirmDialog>
 <p-toast position="bottom-right"></p-toast>
