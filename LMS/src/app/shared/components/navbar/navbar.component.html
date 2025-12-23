@@ -3,8 +3,14 @@
   [ngClass]="{ scrolled: isScrolled }"
 >
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
       <img src="../../../../assets/img/logoImg.png" alt="logo" />
+      <img
+        src="../../../../assets/img/trial-version.png"
+        class="trial-version"
+        alt="trial version"
+    
+      />
     </a>
     <button
       class="navbar-toggler"
@@ -95,7 +101,11 @@
 
           <!-- User Dropdown Menu -->
           <div class="user-dropdown" [class.show]="showUserMenu">
-            <a [routerLink]="['/profile']" class="dropdown-item" (click)="goToProfile()">
+            <a
+              [routerLink]="['/profile']"
+              class="dropdown-item"
+              (click)="goToProfile()"
+            >
               <i class="pi pi-user me-2"></i>
               الملف الشخصي
             </a>

@@ -90,20 +90,20 @@
 
             <!-- Filtered Courses -->
             <div class="mt-3">
-              <div class="row mb-3">
+              <div class="row g-4 mb-3">
                 <!-- Display filtered courses -->
                 <div
-                  class="col-12 col-md-6 col-lg-4 mb-3"
-                  *ngFor="let course of filteredCourses$ | async"
+                  class="col-12 col-md-6 col-lg-4 col-xl-4 mb-3"
+                  *ngFor="let course of allCourses"
                 >
-                  <app-course-card [course]="course"></app-course-card>
+                  <app-course-card
+                    [course]="course"
+                    class="h-100"
+                  ></app-course-card>
                 </div>
 
                 <!-- No courses message -->
-                <div
-                  class="col-12 text-center"
-                  *ngIf="((filteredCourses$ | async) || []).length === 0"
-                >
+                <div class="col-12 text-center" *ngIf="allCourses.length === 0">
                   <div class="alert alert-info">
                     <h4>لا توجد كورسات تدريبية</h4>
                     <p
@@ -142,77 +142,20 @@
                 </div>
               </div>
 
-              <!-- Pagination -->
-              <div class="text-center mt-4" *ngIf="totalPages > 1">
-                <!-- Pagination Info -->
-                <div class="mb-3">
-                  <small class="text-muted">{{ getPaginationInfo() }}</small>
-                </div>
-
-                <nav>
-                  <ul class="pagination justify-content-center">
-                    <!-- First Page -->
-                    <li class="page-item" [class.disabled]="!hasPreviousPage()">
-                      <button
-                        class="page-link"
-                        (click)="goToFirstPage()"
-                        [disabled]="!hasPreviousPage()"
-                        title="الصفحة الأولى"
-                      >
-                        <i class="pi pi-angle-double-left"></i>
-                      </button>
-                    </li>
-
-                    <!-- Previous Page -->
-                    <li class="page-item" [class.disabled]="!hasPreviousPage()">
-                      <button
-                        class="page-link"
-                        (click)="previousPage()"
-                        [disabled]="!hasPreviousPage()"
-                      >
-                        السابق
-                      </button>
-                    </li>
-
-                    <!-- Page Numbers -->
-                    <li
-                      class="page-item"
-                      *ngFor="let page of getPageNumbers()"
-                      [class.active]="page === currentPage"
-                    >
-                      <button
-                        class="page-link"
-                        (click)="goToPage(page)"
-                        [disabled]="page === currentPage"
-                      >
-                        {{ page }}
-                      </button>
-                    </li>
-
-                    <!-- Next Page -->
-                    <li class="page-item" [class.disabled]="!hasNextPage()">
-                      <button
-                        class="page-link"
-                        (click)="nextPage()"
-                        [disabled]="!hasNextPage()"
-                      >
-                        التالي
-                      </button>
-                    </li>
-
-                    <!-- Last Page -->
-                    <li class="page-item" [class.disabled]="!hasNextPage()">
-                      <button
-                        class="page-link"
-                        (click)="goToLastPage()"
-                        [disabled]="!hasNextPage()"
-                        title="الصفحة الأخيرة"
-                      >
-                        <i class="pi pi-angle-double-right"></i>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+              <!-- PrimeNG Pagination -->
+              <div
+                class="card flex justify-content-center mt-4"
+                dir="ltr"
+                *ngIf="totalCourses > pageSize"
+              >
+                <p-paginator
+                  (onPageChange)="onPageChange($event)"
+                  [first]="first"
+                  [rows]="pageSize"
+                  [totalRecords]="totalCourses"
+                  [rowsPerPageOptions]="[10, 20, 30]"
+                >
+                </p-paginator>
               </div>
             </div>
           </div>

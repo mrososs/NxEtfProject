@@ -14,8 +14,7 @@ import { SerachBarComponent } from './search-bar/serach-bar.component';
 import { CourseCategoryComponent } from './course-category/course-category.component';
 import { CourseLevelComponent } from './course-level/course-level.component';
 import { CourseInstructorComponent } from './course-instructor/course-instructor.component';
-import { BehaviorSubject, Observable, combineLatest, Subject } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { HomePageService } from '../courses/services/home-page.service';
 import { Course } from '../courses/model/course.model';
 import { EnrollmentService } from '../courses/services/enrollment.service';
@@ -25,6 +24,7 @@ import {
   SearchService,
   SearchResult,
 } from '../courses/services/search.service';
+import { PaginatorModule } from 'primeng/paginator';
 
 @Component({
   selector: 'app-homepage',
@@ -36,6 +36,7 @@ import {
     CourseCategoryComponent,
     CourseLevelComponent,
     CourseInstructorComponent,
+    PaginatorModule,
   ],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.scss',
@@ -64,20 +65,12 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedInstructors: string[] = [];
   showFilters = false;
 
-  // Filter subjects
-  private searchSubject$ = new BehaviorSubject<string>('');
-  private categoriesSubject$ = new BehaviorSubject<number[]>([]);
-  private levelsSubject$ = new BehaviorSubject<string[]>([]);
-  private instructorsSubject$ = new BehaviorSubject<string[]>([]);
-
   private destroy$ = new Subject<void>();
-
-  // Filtered courses observable
-  filteredCourses$: Observable<Course[]>;
 
   // Pagination
   pageSize = 10;
   currentPage = 1;
+  first = 0; // Paginator zero-based index
   totalPages = 1;
   totalCourses = 0;
 
@@ -98,22 +91,7 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('instructorComponentSidebar')
   instructorComponentSidebar!: CourseInstructorComponent;
 
-  constructor(private router: Router) {
-    // Setup filtered courses observable - now just returns the current courses
-    this.filteredCourses$ = combineLatest([
-      this.searchSubject$.pipe(startWith('')),
-      this.categoriesSubject$.pipe(startWith([])),
-      this.levelsSubject$.pipe(startWith([])),
-      this.instructorsSubject$.pipe(startWith([])),
-    ]).pipe(
-      map(() => {
-        // Simply return the current courses from API
-        return this.allCourses;
-      })
-    );
-
-    // Search is now handled directly in onSearchSectionChange
-  }
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
     // Load user name from localStorage
@@ -152,6 +130,12 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalPages = result.totalPages;
         this.currentPage = result.currentPage;
         this.loading = false;
+
+        console.log('Search Result:', {
+          courses: this.allCourses.length,
+          total: this.totalCourses,
+          page: this.currentPage,
+        });
       },
       error: (error) => {
         console.error('Search error:', error);
@@ -266,6 +250,7 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   onSearchSectionChange(term: string) {
     this.searchTerm = term;
     this.currentPage = 1; // Reset to first page when searching
+    this.first = 0; // Reset paginator
 
     // Show loading state immediately for better UX
     if (term && term.trim()) {
@@ -274,14 +259,13 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Perform search immediately since search-bar already has debounce
     this.performSearch(term);
-    this.searchSubject$.next(term);
   }
 
   onCategoryChange(selected: number[]) {
     this.selectedCategories = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.first = 0; // Reset paginator
     this.performSearch(this.searchTerm); // Reload with new filter
-    this.categoriesSubject$.next(selected);
   }
 
   onSelectedCoursesChange(selectedCourses: Course[]) {
@@ -291,15 +275,25 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   onLevelChange(selected: string[]) {
     this.selectedLevels = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.first = 0; // Reset paginator
     this.performSearch(this.searchTerm); // Reload with new filter
-    this.levelsSubject$.next(selected);
   }
 
   onInstructorChange(selected: string[]) {
     this.selectedInstructors = selected;
     this.currentPage = 1; // Reset to first page when filtering
+    this.first = 0; // Reset paginator
     this.performSearch(this.searchTerm); // Reload with new filter
-    this.instructorsSubject$.next(selected);
+  }
+
+  onPageChange(event: any) {
+    this.first = event.first;
+    this.currentPage = event.page + 1;
+    this.pageSize = event.rows;
+    this.performSearch(this.searchTerm);
+
+    // Scroll to top of course list
+    window.scrollTo({ top: 300, behavior: 'smooth' });
   }
 
   // Check profile before accessing protected features
@@ -334,6 +328,7 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedLevels = [];
     this.selectedInstructors = [];
     this.currentPage = 1; // Reset to first page
+    this.first = 0; // Reset paginator
 
     // Clear UI component selections first
     this.clearComponentSelections();
@@ -343,11 +338,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Reload all courses
     this.performSearch('');
-
-    // Update subjects after a small delay to ensure UI updates
-    setTimeout(() => {
-      this.updateFilterSubjects();
-    }, 50);
   }
 
   /**
@@ -375,127 +365,6 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.instructorComponentSidebar) {
       this.instructorComponentSidebar.clearSelection();
     }
-  }
-
-  /**
-   * Update all filter subjects
-   */
-  private updateFilterSubjects(): void {
-    this.searchSubject$.next(this.searchTerm);
-    this.categoriesSubject$.next(this.selectedCategories);
-    this.levelsSubject$.next(this.selectedLevels);
-    this.instructorsSubject$.next(this.selectedInstructors);
-  }
-
-  /**
-   * Get paginated courses
-   */
-  getPaginatedCourses(courses: Course[]): Course[] {
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    return courses.slice(startIndex, endIndex);
-  }
-
-  /**
-   * Navigate to next page
-   */
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.performSearch(this.searchTerm);
-    }
-  }
-
-  /**
-   * Navigate to previous page
-   */
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.performSearch(this.searchTerm);
-    }
-  }
-
-  /**
-   * Navigate to specific page
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.performSearch(this.searchTerm);
-    }
-  }
-
-  /**
-   * Navigate to first page
-   */
-  goToFirstPage(): void {
-    this.currentPage = 1;
-    this.performSearch(this.searchTerm);
-  }
-
-  /**
-   * Navigate to last page
-   */
-  goToLastPage(): void {
-    this.currentPage = this.totalPages;
-    this.performSearch(this.searchTerm);
-  }
-
-  /**
-   * Get page numbers for pagination display
-   */
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-
-    if (this.totalPages <= maxPagesToShow) {
-      // Show all pages if total is small
-      for (let i = 1; i <= this.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Show pages around current page
-      const startPage = Math.max(1, this.currentPage - 2);
-      const endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-
-    return pages;
-  }
-
-  /**
-   * Check if previous page is available
-   */
-  hasPreviousPage(): boolean {
-    return this.currentPage > 1;
-  }
-
-  /**
-   * Check if next page is available
-   */
-  hasNextPage(): boolean {
-    return this.currentPage < this.totalPages;
-  }
-
-  /**
-   * Get pagination info text
-   */
-  getPaginationInfo(): string {
-    if (this.totalCourses === 0) {
-      return 'لا توجد دورات';
-    }
-
-    const startItem = (this.currentPage - 1) * this.pageSize + 1;
-    const endItem = Math.min(
-      this.currentPage * this.pageSize,
-      this.totalCourses
-    );
-
-    return `عرض ${startItem}-${endItem} من ${this.totalCourses} دورة`;
   }
 
   /**
